@@ -20,7 +20,7 @@ def get_workshops(
         c = conn.cursor()
 
         # Build query with filters
-        query = "SELECT id, city, location, date, time, style, difficulty, instructor_name, description FROM workshops WHERE 1=1"
+        query = "SELECT id, city, location, date, time, style, difficulty, instructor_name, description, cards FROM workshops WHERE 1=1"
         params = []
 
         if style:

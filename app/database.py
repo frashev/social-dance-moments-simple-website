@@ -36,7 +36,8 @@ def init_db() -> None:
         description TEXT,
         max_participants INTEGER DEFAULT 0,
         lat REAL,
-        lon REAL
+        lon REAL,
+        cards TEXT
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS registrations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
