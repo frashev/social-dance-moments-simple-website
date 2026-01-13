@@ -491,6 +491,7 @@
 
                 // Filter to show only current week by default
                 const weekRange = getWeekDateRange();
+                activeDateFilter = { type: 'week', data: null };
                 const currentWeekWorkshops = allWorkshops.filter(w =>
                     w.date >= weekRange.start && w.date <= weekRange.end
                 );
@@ -657,11 +658,12 @@
 
         function filterWorkshops() {
             const style = document.getElementById('styleFilter').value;
-            const city = document.getElementById('cityFilter').value.toLowerCase();
+            const city = document.getElementById('cityFilter').value.toLowerCase().trim();
 
             let filtered = allWorkshops.filter(w => {
                 const matchStyle = !style || w.style === style;
-                const matchCity = !city || w.city.toLowerCase().includes(city);
+                // Match city by exact match (case-insensitive) or partial match
+                const matchCity = !city || w.city.toLowerCase() === city || w.city.toLowerCase().includes(city);
                 return matchStyle && matchCity;
             });
 
