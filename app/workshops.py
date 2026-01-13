@@ -118,14 +118,15 @@ def create_workshop(
     style: str = Form(...),
     difficulty: str = Form("intermediate"),
     instructor_name: str = Form(None),
-    description: str = Form(None)
+    description: str = Form(None),
+    cards: str = Form(None)
 ):
     """Create a new workshop."""
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO workshops (city, location, date, time, style, difficulty, instructor_name, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (city, location, date, time, style, difficulty, instructor_name, description)
+            "INSERT INTO workshops (city, location, date, time, style, difficulty, instructor_name, description, cards) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (city, location, date, time, style, difficulty, instructor_name, description, cards)
         )
         conn.commit()
     return {"msg": "Workshop created!"}

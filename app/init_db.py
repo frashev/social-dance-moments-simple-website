@@ -27,6 +27,7 @@ def init_db(db_path: Path):
         difficulty TEXT,
         instructor_name TEXT,
         description TEXT,
+        cards TEXT,
         FOREIGN KEY(user_id) REFERENCES users(id)
     )''')
     conn.commit()

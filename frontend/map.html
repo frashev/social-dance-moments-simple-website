@@ -109,6 +109,57 @@
         @keyframes slideOut { to { transform: translateX(400px); opacity: 0; } }
         .toast.removing { animation: slideOut 0.3s ease-in forwards; }
 
+        /* Scroll to top button */
+        #scrollToTopBtn {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            right: 20px;
+            z-index: 99;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        #scrollToTopBtn:hover {
+            background: #764ba2;
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
+        }
+
+        #scrollToTopBtn.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            #scrollToTopBtn {
+                bottom: 20px;
+                right: 15px;
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #scrollToTopBtn {
+                bottom: 15px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
             nav { padding: 10px; }
@@ -325,6 +376,8 @@
         </div>
     </div>
 
+    <button id="scrollToTopBtn" onclick="scrollToTop()" title="Back to top">⬆️</button>
+
     <script>
         // Auth check using sessionStorage
         const token = sessionStorage.getItem('access_token');
@@ -419,10 +472,19 @@
                     sorted.map(w => `
                     <div class="workshop-item" onclick="centerOnWorkshop(${w.id})">
                         <strong style="color: ${styleColors[w.style]}">${w.style.toUpperCase()}</strong>
+                        ${w.cards ? `<div style="margin-top: 5px; display: flex; gap: 3px; flex-wrap: wrap;">
+                            ${w.cards.split(',').map(card => {
+                                const cardName = card.trim();
+                                let badgeColor = '#667eea';
+                                if (cardName === 'Multisport') badgeColor = '#e74c3c';
+                                if (cardName === 'Coolfit') badgeColor = '#3498db';
+                                return `<span style="background: ${badgeColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold;">${cardName}</span>`;
+                            }).join('')}
+                        </div>` : ''}
                         <small>
                             <strong>📍 ${w.location}</strong><br>
                             🏙️ ${w.city}<br>
-                            📅 ${w.date} at ${w.time}<br>
+                            📅 ${formatDate(w.date)} at ${w.time}<br>
                             👨‍🏫 <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}<br>
                             🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}<br>
                             ${w.description ? `<em style="color: #555; display: block; margin-top: 5px;">"${w.description}"</em>` : ''}
@@ -462,6 +524,15 @@
                 marker.bindPopup(`
                     <div style="padding: 10px; min-width: 150px; text-align: center; word-wrap: break-word; overflow-wrap: break-word;">
                         <strong style="color: ${markerColor}; font-size: 16px;">${w.style.toUpperCase()}</strong><br>
+                        ${w.cards ? `<div style="margin-top: 8px; display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                            ${w.cards.split(',').map(card => {
+                                const cardName = card.trim();
+                                let badgeColor = '#667eea';
+                                if (cardName === 'Multisport') badgeColor = '#e74c3c';
+                                if (cardName === 'Coolfit') badgeColor = '#3498db';
+                                return `<span style="background: ${badgeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${cardName}</span>`;
+                            }).join('')}
+                        </div>` : ''}
                         <div style="margin-top: 10px; border-top: 2px solid ${markerColor}; padding-top: 10px; text-align: left; word-wrap: break-word; overflow-wrap: break-word;">
                             <strong style="word-wrap: break-word;">📍 ${w.location}</strong><br>
                             <span style="color: #666; word-wrap: break-word;">🏙️ ${w.city}</span><br>
@@ -786,6 +857,27 @@
 
         // Load workshops on page load
         loadWorkshops();
+
+        // Scroll to top button functionality
+        const scrollBtn = document.getElementById('scrollToTopBtn');
+        const sidebar = document.querySelector('.sidebar');
+
+        // Listen for scroll on sidebar
+        sidebar.addEventListener('scroll', () => {
+            if (sidebar.scrollTop > 100) {
+                scrollBtn.classList.add('show');
+            } else {
+                scrollBtn.classList.remove('show');
+            }
+        });
+
+        function scrollToTop() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
     </script>
 </body>
 </html>

@@ -23,14 +23,15 @@ def admin_create_workshop(
     instructor_name: str = Form(None),
     description: str = Form(None),
     max_participants: int = Form(0),
+    cards: str = Form(None),
     admin: dict = Depends(verify_admin)
 ):
     """Admin: Create a new workshop."""
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO workshops (city, location, date, time, style, difficulty, instructor_name, description, max_participants) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (city, location, date, time, style, difficulty, instructor_name, description, max_participants)
+            "INSERT INTO workshops (city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards)
         )
         conn.commit()
         workshop_id = c.lastrowid
@@ -48,6 +49,7 @@ def admin_update_workshop(
     difficulty: str = Form(None),
     instructor_name: str = Form(None),
     description: str = Form(None),
+    cards: str = Form(None),
     admin: dict = Depends(verify_admin)
 ):
     """Admin: Update a workshop."""
@@ -78,6 +80,9 @@ def admin_update_workshop(
     if description:
         updates.append("description = ?")
         params.append(description)
+    if cards is not None:
+        updates.append("cards = ?")
+        params.append(cards)
 
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
