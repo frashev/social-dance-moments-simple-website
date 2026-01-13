@@ -20,7 +20,7 @@ def get_workshops(
         c = conn.cursor()
 
         # Build query with filters
-        query = "SELECT id, city, location, date, time, style, difficulty, instructor_name, description, cards FROM workshops WHERE 1=1"
+        query = "SELECT id, city, location, date, time, style, difficulty, instructor_name, description, cards, lat, lon FROM workshops WHERE 1=1"
         params = []
 
         if style:
@@ -42,34 +42,10 @@ def get_workshops(
         c.execute(query, params)
         workshops = c.fetchall()
 
-    # Add geocoding and participant count
+    # Add participant count
     result = []
     for w in workshops:
         w_dict = dict(w)
-
-        # Try to get coordinates from cache first (fast path)
-        coords = None
-        cache_key = f"{w['location'].lower().strip()}|{w['city'].lower().strip()}"
-
-        # Check if we have cached coordinates
-        if cache_key in WORKSHOP_GEOCODING_CACHE:
-            coords = WORKSHOP_GEOCODING_CACHE[cache_key]
-        else:
-            # If not cached, try with timeout to avoid hanging
-            try:
-                coords = get_workshop_coordinates(w['location'], w['city'])
-            except Exception as e:
-                # If geocoding fails or times out, fallback to city coords
-                coords = get_city_coordinates(w['city'])
-                logger.warning(f"Geocoding timeout/error for {w['location']}, {w['city']}: {e}")
-
-        if coords:
-            w_dict['lat'] = coords[0]
-            w_dict['lon'] = coords[1]
-        else:
-            # Final fallback: return None coords (frontend will handle)
-            w_dict['lat'] = None
-            w_dict['lon'] = None
 
         # Count participants
         with get_db() as conn:
@@ -121,15 +97,25 @@ def create_workshop(
     description: str = Form(None),
     cards: str = Form(None)
 ):
-    """Create a new workshop."""
+    """Create a new workshop and geocode coordinates."""
+    # Geocode the workshop location
+    coords = get_workshop_coordinates(location, city)
+    lat, lon = None, None
+
+    if coords:
+        lat, lon = coords
+        logger.info(f"✅ Geocoded {location}, {city} -> ({lat}, {lon})")
+    else:
+        logger.warning(f"⚠️  Failed to geocode {location}, {city}")
+
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO workshops (city, location, date, time, style, difficulty, instructor_name, description, cards) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (city, location, date, time, style, difficulty, instructor_name, description, cards)
+            "INSERT INTO workshops (city, location, date, time, style, difficulty, instructor_name, description, cards, lat, lon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (city, location, date, time, style, difficulty, instructor_name, description, cards, lat, lon)
         )
         conn.commit()
-    return {"msg": "Workshop created!"}
+    return {"msg": "Workshop created!", "lat": lat, "lon": lon}
 
 @router.post("/workshops/{workshop_id}/register")
 def register_for_workshop(workshop_id: int, user_id: int = Query(...)):

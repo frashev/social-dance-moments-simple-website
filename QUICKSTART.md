@@ -7,7 +7,7 @@
 
 ## 2️⃣ Start the Server
 ```powershell
-python -m uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 Wait for:
