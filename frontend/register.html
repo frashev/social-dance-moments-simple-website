@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dance Song Recommender</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 400px; width: 90%; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #555; font-weight: 600; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; transition: border-color 0.3s; }
+        input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 5px rgba(102, 126, 234, 0.2); }
+        input.error { border-color: #e74c3c; }
+        .error-msg { color: #e74c3c; font-size: 12px; margin-top: 5px; display: none; }
+        button { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        button:hover { background: #764ba2; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+        button:disabled { background: #bdc3c7; cursor: not-allowed; transform: none; }
+        .link { text-align: center; margin-top: 20px; font-size: 14px; }
+        .link a { color: #667eea; text-decoration: none; transition: 0.3s; }
+        .link a:hover { text-decoration: underline; }
+        .success-msg { background: #d5f4e6; color: #27ae60; padding: 12px; border-radius: 5px; margin-bottom: 20px; display: none; text-align: center; }
+        .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #fff; border-top-color: #667eea; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💃 Dance Song Recommender</h1>
+        <div class="success-msg" id="successMsg">✅ Registration successful! Redirecting...</div>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required minlength="3" maxlength="50">
+                <div class="error-msg" id="usernameError"></div>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required minlength="6">
+                <div class="error-msg" id="passwordError"></div>
+            </div>
+            <button type="submit" id="submitBtn">Register</button>
+        </form>
+        <div class="link">
+            Already have an account? <a href="/login.html">Login here</a>
+        </div>
+    </div>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+
+            // Clear previous errors
+            document.getElementById('usernameError').style.display = 'none';
+            document.getElementById('passwordError').style.display = 'none';
+
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span>Registering...';
+
+            try {
+                const res = await fetch('/register', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.getElementById('registerForm').style.display = 'none';
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 1500);
+                } else {
+                    // Handle specific error cases
+                    if (res.status === 400) {
+                        if (data.detail && data.detail.includes('username')) {
+                            showError('usernameError', '❌ Username already exists');
+                        } else {
+                            showError('usernameError', `❌ ${data.detail || 'Registration failed'}`);
+                        }
+                    } else {
+                        showError('usernameError', `❌ ${data.detail || 'An error occurred'}`);
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Register';
+                }
+            } catch (err) {
+                showError('usernameError', `❌ Error: ${err.message}`);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register';
+            }
+        });
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            document.getElementById(elementId.replace('Error', '')).classList.add('error');
+        }
+
+        // Clear error on input
+        document.getElementById('username').addEventListener('input', () => {
+            document.getElementById('usernameError').style.display = 'none';
+            document.getElementById('username').classList.remove('error');
+        });
+    </script>
+</body>
+</html>
+

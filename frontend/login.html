@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Dance Song Recommender</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 400px; width: 90%; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #555; font-weight: 600; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        button { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+        button:hover { background: #764ba2; }
+        .link { text-align: center; margin-top: 20px; font-size: 14px; }
+        .link a { color: #667eea; text-decoration: none; }
+        .error { color: #e74c3c; text-align: center; margin-bottom: 15px; }
+        .loading { display: none; text-align: center; color: #667eea; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💃 Dance Song Recommender</h1>
+        <div id="error" class="error"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <div class="loading" id="loading">Logging in...</div>
+        <div class="link">
+            Don't have an account? <a href="/register.html">Register here</a>
+        </div>
+    </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').textContent = '';
+
+            const formData = new FormData(e.target);
+            try {
+                const res = await fetch('/login', { method: 'POST', body: formData });
+                const data = await res.json();
+
+                if (res.ok) {
+                    // Store JWT token and user info
+                    sessionStorage.setItem('access_token', data.access_token);
+                    sessionStorage.setItem('user_id', data.user_id);
+                    sessionStorage.setItem('username', data.username);
+                    sessionStorage.setItem('is_admin', data.is_admin);
+
+                    // Redirect to admin panel or home based on role
+                    if (data.is_admin) {
+                        window.location.href = '/admin.html';
+                    } else {
+                        window.location.href = '/home.html';
+                    }
+                } else {
+                    document.getElementById('error').textContent = data.detail || 'Login failed';
+                    document.getElementById('loading').style.display = 'none';
+                }
+            } catch (err) {
+                document.getElementById('error').textContent = 'Error: ' + err.message;
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+

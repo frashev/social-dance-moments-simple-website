@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Dance Song Recommender</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        nav { background: #667eea; color: white; padding: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        nav h1 { flex: none; }
+        nav .button-group { display: flex; gap: 15px; align-items: center; }
+        .view-map-btn { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); transition: all 0.3s ease; text-decoration: none; }
+        .view-map-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
+        .view-map-btn:active { transform: translateY(-1px); }
+        h1 { margin-bottom: 10px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .section { background: white; padding: 30px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        h2 { color: #667eea; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button.active { background: #764ba2; }
+        form { display: flex; flex-direction: column; gap: 15px; }
+        input, textarea { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        textarea { resize: vertical; min-height: 100px; }
+        .song-list { display: grid; gap: 10px; }
+        .song-item { background: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 4px solid #667eea; }
+        .song-item strong { color: #333; }
+        .workshop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .workshop-card { background: #f9f9f9; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea; }
+        .workshop-card strong { color: #667eea; }
+        button.logout { background: #e74c3c; }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>💃 Social Dance Workshops Recommender</h1>
+        <div class="button-group">
+            <button class="view-map-btn" onclick="window.location.href='/map.html'">🗺️ View Map</button>
+            <button class="logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+    <div class="container">
+        <!-- Song Recommendation Section -->
+        <div class="section">
+            <h2>🎵 Add Your Favorite Song</h2>
+            <div class="tabs">
+                <button class="active" onclick="switchTab('manual')">Manual Entry</button>
+                <button onclick="switchTab('photo')">Upload Photo</button>
+            </div>
+            <form id="manualForm" onsubmit="addSongManual(event)">
+                <input type="text" id="songName" placeholder="Song name" required>
+                <button type="submit">Add Song</button>
+            </form>
+            <form id="photoForm" onsubmit="addSongPhoto(event)" style="display: none;">
+                <input type="file" id="photoFile" accept="image/*" required>
+                <button type="submit">Upload Photo</button>
+            </form>
+        </div>
+
+        <!-- Your Songs Section -->
+        <div class="section">
+            <h2>📝 Your Uploaded Songs</h2>
+            <div class="song-list" id="songList">
+                <p>Loading...</p>
+            </div>
+        </div>
+
+        <!-- Workshops Section -->
+        <div class="section">
+            <h2>📍 Dance Workshops Near You</h2>
+            <div class="workshop-grid" id="workshopList">
+                <p>Loading workshops...</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Auth check using sessionStorage (consistent with admin.html)
+        const token = sessionStorage.getItem('access_token');
+        const userId = sessionStorage.getItem('user_id');
+        const username = sessionStorage.getItem('username');
+
+        if (!token || !userId) {
+            window.location.href = '/login.html';
+        }
+
+        function switchTab(tab) {
+            document.getElementById('manualForm').style.display = tab === 'manual' ? 'flex' : 'none';
+            document.getElementById('photoForm').style.display = tab === 'photo' ? 'flex' : 'none';
+        }
+
+        async function addSongManual(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('user_id', userId);
+            formData.append('song_name', document.getElementById('songName').value);
+            try {
+                const res = await fetch('/recommend/song/manual', { method: 'POST', body: formData });
+                const data = await res.json();
+                alert(data.msg);
+                document.getElementById('manualForm').reset();
+                loadSongs();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function addSongPhoto(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('user_id', userId);
+            formData.append('file', document.getElementById('photoFile').files[0]);
+            try {
+                const res = await fetch('/recommend/song/photo', { method: 'POST', body: formData });
+                const data = await res.json();
+                alert(data.msg);
+                document.getElementById('photoForm').reset();
+                loadSongs();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function loadSongs() {
+            try {
+                const res = await fetch(`/songs/${userId}`);
+                const data = await res.json();
+                const list = document.getElementById('songList');
+                if (data.songs.length === 0) {
+                    list.innerHTML = '<p>No songs yet. Add one above!</p>';
+                } else {
+                    list.innerHTML = data.songs.map(s => `<div class="song-item"><strong>${s.name}</strong><br><small>${s.created_at}</small></div>`).join('');
+                }
+            } catch (err) {
+                document.getElementById('songList').innerHTML = '<p>Error loading songs</p>';
+            }
+        }
+
+        async function loadWorkshops() {
+            try {
+                const res = await fetch('/workshops');
+                const data = await res.json();
+                const list = document.getElementById('workshopList');
+                if (data.workshops.length === 0) {
+                    list.innerHTML = '<p>No workshops available yet.</p>';
+                } else {
+                    list.innerHTML = data.workshops.map(w => `
+                        <div class="workshop-card">
+                            <strong>🎉 ${w.style.toUpperCase()}</strong><br>
+                            📍 ${w.location}, ${w.city}<br>
+                            📅 ${w.date} at ${w.time}<br>
+                            👥 ${w.participant_count || 0} registered<br>
+                            <button onclick="registerForWorkshop(${w.id}, '${w.location}')" style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Register</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                document.getElementById('workshopList').innerHTML = '<p>Error loading workshops</p>';
+            }
+        }
+
+        async function registerForWorkshop(workshopId, location) {
+            try {
+                const res = await fetch(`/workshops/${workshopId}/register?user_id=${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`✅ Registered for ${location}!`);
+                    // Reload workshops to update participant count
+                    loadWorkshops();
+                } else {
+                    alert(`❌ Registration failed: ${data.detail || 'Unknown error'}`);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear sessionStorage
+                sessionStorage.removeItem('access_token');
+                sessionStorage.removeItem('user_id');
+                sessionStorage.removeItem('is_admin');
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Load data on page load
+        loadSongs();
+        loadWorkshops();
+    </script>
+</body>
+</html>
+

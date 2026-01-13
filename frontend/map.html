@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop Map - Dance Song Recommender</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        nav { background: #667eea; color: white; padding: 20px; text-align: center; }
+        h1 { margin-bottom: 10px; }
+        nav button { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-left: 20px; transition: 0.3s; }
+        nav button:hover { background: #c0392b; transform: scale(1.05); }
+        .container { display: grid; grid-template-columns: 1fr 300px; gap: 20px; max-width: 1400px; margin: 0 auto; padding: 20px; }
+        #map { height: 600px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); filter: brightness(1.0); }
+        .sidebar { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); max-height: 600px; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar { width: 8px; }
+        .sidebar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #667eea; border-radius: 10px; }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: #764ba2; }
+        .sidebar h3 { color: #667eea; margin-bottom: 15px; }
+        .workshop-item { padding: 15px; margin-bottom: 10px; background: #f9f9f9; border-left: 4px solid #667eea; border-radius: 5px; cursor: pointer; transition: all 0.3s; }
+        .workshop-item:hover { background: #e8e8ff; transform: translateX(5px); }
+        .workshop-item strong { color: #667eea; }
+        .workshop-item small { color: #666; display: block; margin-top: 5px; }
+        .filter-box { margin-bottom: 20px; }
+        .filter-box input, .filter-box select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; transition: 0.3s; }
+        .filter-box input:focus, .filter-box select:focus { border-color: #667eea; box-shadow: 0 0 5px rgba(102, 126, 234, 0.2); outline: none; }
+        .filter-box button { width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .filter-box button:hover { background: #764ba2; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+        .legend { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); margin-bottom: 20px; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 8px; }
+        .legend-color { width: 14px; height: 14px; border-radius: 50%; margin-right: 10px; }
+        .color-salsa { background: #c0392b; }
+        .color-bachata { background: #2980b9; }
+        .color-kizomba { background: #27ae60; }
+        .color-zouk { background: #8e44ad; }
+
+        /* Layer selector */
+        .layer-selector { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); margin-bottom: 15px; }
+        .layer-selector select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; cursor: pointer; }
+        .layer-selector label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #333; }
+
+        /* Toast notifications */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+        .toast { background: white; padding: 14px 20px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); animation: slideIn 0.3s ease-out; min-width: 280px; border-left: 3px solid #999; font-size: 13px; }
+        .toast.success { border-left-color: #666; background: #f0f0f0; color: #333; }
+        .toast.error { border-left-color: #666; background: #f0f0f0; color: #333; }
+        .toast.warning { border-left-color: #999; background: #f8f8f8; color: #555; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { to { transform: translateX(400px); opacity: 0; } }
+        .toast.removing { animation: slideOut 0.3s ease-in forwards; }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>🗺️ Social Dance Workshops Map</h1>
+        <button onclick="window.location.href='/home.html'" style="background: #27ae60;">Home</button>
+        <button onclick="logout()">Logout</button>
+    </nav>
+    <div class="container">
+        <div id="map"></div>
+        <div class="sidebar">
+            <div class="layer-selector">
+                <label for="layerSelect">🗺️ Map Layer</label>
+                <select id="layerSelect" onchange="changeLayer(this.value)">
+                    <option value="osm">Standard (OSM)</option>
+                    <option value="satellite">Satellite (Esri)</option>
+                    <option value="cartodb-light">CartoDB Light</option>
+                    <option value="cartodb-voyager" selected>CartoDB Voyager</option>
+                </select>
+            </div>
+
+            <div class="legend">
+                <h4 style="margin-bottom: 10px;">🎵 Dance Styles</h4>
+                <div class="legend-item">
+                    <div class="legend-color color-salsa"></div>
+                    <span>Salsa</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color color-bachata"></div>
+                    <span>Bachata</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color color-kizomba"></div>
+                    <span>Kizomba</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color color-zouk"></div>
+                    <span>Zouk</span>
+                </div>
+            </div>
+
+            <div class="filter-box">
+                <h4 style="margin-bottom: 10px;">🔍 Filter</h4>
+                <select id="styleFilter" onchange="filterWorkshops()">
+                    <option value="">All Styles</option>
+                    <option value="salsa">Salsa</option>
+                    <option value="bachata">Bachata</option>
+                    <option value="kizomba">Kizomba</option>
+                    <option value="zouk">Zouk</option>
+                </select>
+                <input type="text" id="cityFilter" placeholder="Search by city...">
+
+                <!-- Date Filter Section -->
+                <h5 style="margin-top: 15px; margin-bottom: 8px; color: #667eea;">📅 Date Filter</h5>
+                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                    <button onclick="filterByToday()" style="flex: 1; padding: 8px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Today</button>
+                    <button onclick="toggleDateRangeMode()" style="flex: 1; padding: 8px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Range</button>
+                    <button onclick="toggleSpecificDateMode()" style="flex: 1; padding: 8px; background: #8e44ad; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Date</button>
+                    <button onclick="clearDateFilters()" style="flex: 1; padding: 8px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Clear</button>
+                </div>
+
+                <!-- Date Range Inputs (hidden by default) -->
+                <div id="dateRangeInputs" style="display: none; margin-bottom: 10px;">
+                    <label style="font-size: 12px; color: #555;">From:</label>
+                    <input type="date" id="dateFrom" style="margin-bottom: 5px;">
+                    <label style="font-size: 12px; color: #555;">To:</label>
+                    <input type="date" id="dateTo" style="margin-bottom: 5px;">
+                    <button onclick="filterByDateRange()" style="width: 100%; padding: 8px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Apply Range</button>
+                </div>
+
+                <!-- Specific Date Input (hidden by default) -->
+                <div id="specificDateInput" style="display: none; margin-bottom: 10px;">
+                    <label style="font-size: 12px; color: #555;">Select Date:</label>
+                    <input type="date" id="specificDate" style="margin-bottom: 5px;">
+                    <button onclick="filterBySpecificDate()" style="width: 100%; padding: 8px; background: #8e44ad; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Apply Date</button>
+                </div>
+
+                <button onclick="resetFilter()" style="width: 100%; background: #95a5a6; margin-top: 10px; padding: 10px;">Reset All</button>
+            </div>
+
+            <h3>📍 Workshops</h3>
+            <div id="workshopList">
+                <p>Loading workshops...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auth check using sessionStorage
+        const token = sessionStorage.getItem('access_token');
+        const userId = sessionStorage.getItem('user_id');
+
+        if (!token || !userId) {
+            window.location.href = '/login.html';
+        }
+
+        // Initialize map centered on Europe (dance capital!)
+        const map = L.map('map').setView([48.8566, 2.3522], 3); // Paris
+
+        // Store current layer reference
+        let currentLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '© CartoDB, © OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Layer configurations
+        const layers = {
+            'osm': {
+                url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                attribution: '© OpenStreetMap contributors'
+            },
+            'satellite': {
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                attribution: '© Esri'
+            },
+            'cartodb-light': {
+                url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                attribution: '© CartoDB, © OpenStreetMap contributors'
+            },
+            'cartodb-voyager': {
+                url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                attribution: '© CartoDB, © OpenStreetMap contributors'
+            }
+        };
+
+        function changeLayer(layerName) {
+            const layerConfig = layers[layerName];
+            if (!layerConfig) return;
+
+            // Remove current layer
+            map.removeLayer(currentLayer);
+
+            // Add new layer
+            currentLayer = L.tileLayer(layerConfig.url, {
+                attribution: layerConfig.attribution,
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        let allWorkshops = [];
+        let markers = [];
+
+        const styleColors = {
+            'salsa': '#c0392b',
+            'bachata': '#2980b9',
+            'kizomba': '#27ae60',
+            'zouk': '#8e44ad'
+        };
+
+        async function loadWorkshops() {
+            try {
+                const res = await fetch('/workshops');
+                const data = await res.json();
+                allWorkshops = data.workshops;
+                displayWorkshops(allWorkshops);
+                addMarkersToMap(allWorkshops);
+            } catch (err) {
+                document.getElementById('workshopList').innerHTML = '<p>Error loading workshops</p>';
+            }
+        }
+
+        function displayWorkshops(workshops) {
+            const list = document.getElementById('workshopList');
+            if (workshops.length === 0) {
+                list.innerHTML = '<p>No workshops found.</p>';
+            } else {
+                list.innerHTML = `<p style="color: #667eea; font-weight: bold; margin-bottom: 10px;">📊 ${workshops.length} workshop(s)</p>` +
+                    workshops.map(w => `
+                    <div class="workshop-item" onclick="centerOnWorkshop(${w.id})">
+                        <strong style="color: ${styleColors[w.style]}">${w.style.toUpperCase()}</strong>
+                        <small>
+                            <strong>📍 ${w.location}</strong><br>
+                            🏙️ ${w.city}<br>
+                            📅 ${w.date} at ${w.time}<br>
+                            👨‍🏫 <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}<br>
+                            🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}<br>
+                            ${w.description ? `<em style="color: #555; display: block; margin-top: 5px;">"${w.description}"</em>` : ''}
+                        </small>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function addMarkersToMap(workshops) {
+            // Clear existing markers
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            workshops.forEach(w => {
+                // Use actual coordinates from geocoding
+                const lat = w.lat
+                const lon = w.lon
+                const markerColor = styleColors[w.style] || '#667eea';
+
+                const marker = L.circleMarker([lat, lon], {
+                    radius: 11,
+                    fillColor: markerColor,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 1.0
+                }).addTo(map);
+
+                marker.bindPopup(`
+                    <strong>${w.location}</strong><br>
+                    <strong>Style:</strong> ${w.style.toUpperCase()}<br>
+                    <strong>City:</strong> ${w.city}<br>
+                    <strong>Date:</strong> ${w.date}<br>
+                    <strong>Time:</strong> ${w.time}<br>
+                    <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}<br>
+                    <button onclick="registerForWorkshop(${w.id}, '${w.location}')" style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Register</button>
+                `);
+
+                markers.push(marker);
+            });
+        }
+
+        function centerOnWorkshop(workshopId) {
+            const workshop = allWorkshops.find(w => w.id === workshopId);
+            if (workshop && markers[workshopId - 1]) {
+                map.setView(markers[workshopId - 1].getLatLng(), 15);
+                markers[workshopId - 1].openPopup();
+            }
+        }
+
+        function filterWorkshops() {
+            const style = document.getElementById('styleFilter').value;
+            const city = document.getElementById('cityFilter').value.toLowerCase();
+
+            const filtered = allWorkshops.filter(w => {
+                const matchStyle = !style || w.style === style;
+                const matchCity = !city || w.city.toLowerCase().includes(city);
+                return matchStyle && matchCity;
+            });
+
+            displayWorkshops(filtered);
+            addMarkersToMap(filtered);
+        }
+
+        function resetFilter() {
+            document.getElementById('styleFilter').value = '';
+            document.getElementById('cityFilter').value = '';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            document.getElementById('specificDate').value = '';
+            document.getElementById('dateRangeInputs').style.display = 'none';
+            document.getElementById('specificDateInput').style.display = 'none';
+            displayWorkshops(allWorkshops);
+            addMarkersToMap(allWorkshops);
+        }
+
+        function toggleDateRangeMode() {
+            const rangeInputs = document.getElementById('dateRangeInputs');
+            const specificInputs = document.getElementById('specificDateInput');
+            specificInputs.style.display = 'none';
+            rangeInputs.style.display = rangeInputs.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleSpecificDateMode() {
+            const specificInputs = document.getElementById('specificDateInput');
+            const rangeInputs = document.getElementById('dateRangeInputs');
+            rangeInputs.style.display = 'none';
+            specificInputs.style.display = specificInputs.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function filterByToday() {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const style = document.getElementById('styleFilter').value;
+            const city = document.getElementById('cityFilter').value.toLowerCase();
+
+            const filtered = allWorkshops.filter(w => {
+                const matchStyle = !style || w.style === style;
+                const matchCity = !city || w.city.toLowerCase().includes(city);
+                const matchDate = w.date === today;
+                return matchStyle && matchCity && matchDate;
+            });
+
+            displayWorkshops(filtered);
+            addMarkersToMap(filtered);
+            showToast(`📅 Showing workshops for today (${today})`, 'success');
+        }
+
+        function filterByDateRange() {
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+
+            if (!dateFrom || !dateTo) {
+                showToast('⚠️ Please select both start and end dates', 'warning');
+                return;
+            }
+
+            const style = document.getElementById('styleFilter').value;
+            const city = document.getElementById('cityFilter').value.toLowerCase();
+
+            const filtered = allWorkshops.filter(w => {
+                const matchStyle = !style || w.style === style;
+                const matchCity = !city || w.city.toLowerCase().includes(city);
+                const matchDate = w.date >= dateFrom && w.date <= dateTo;
+                return matchStyle && matchCity && matchDate;
+            });
+
+            displayWorkshops(filtered);
+            addMarkersToMap(filtered);
+            showToast(`📅 Showing workshops from ${dateFrom} to ${dateTo}`, 'success');
+        }
+
+        function filterBySpecificDate() {
+            const specificDate = document.getElementById('specificDate').value;
+
+            if (!specificDate) {
+                showToast('⚠️ Please select a date', 'warning');
+                return;
+            }
+
+            const style = document.getElementById('styleFilter').value;
+            const city = document.getElementById('cityFilter').value.toLowerCase();
+
+            const filtered = allWorkshops.filter(w => {
+                const matchStyle = !style || w.style === style;
+                const matchCity = !city || w.city.toLowerCase().includes(city);
+                const matchDate = w.date === specificDate;
+                return matchStyle && matchCity && matchDate;
+            });
+
+            displayWorkshops(filtered);
+            addMarkersToMap(filtered);
+            showToast(`📅 Showing workshops for ${specificDate}`, 'success');
+        }
+
+        function clearDateFilters() {
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            document.getElementById('specificDate').value = '';
+            document.getElementById('dateRangeInputs').style.display = 'none';
+            document.getElementById('specificDateInput').style.display = 'none';
+            displayWorkshops(allWorkshops);
+            addMarkersToMap(allWorkshops);
+            showToast('📅 Date filters cleared', 'success');
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear sessionStorage
+                sessionStorage.removeItem('access_token');
+                sessionStorage.removeItem('user_id');
+                sessionStorage.removeItem('is_admin');
+                window.location.href = '/login.html';
+            }
+        }
+
+        async function registerForWorkshop(workshopId, location) {
+            try {
+                const res = await fetch(`/workshops/${workshopId}/register?user_id=${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showToast(`✅ Registered for ${location}!`, 'success');
+                    // Reload workshops to update participant count
+                    setTimeout(loadWorkshops, 500);
+                } else {
+                    // Handle different error codes with friendly messages
+                    if (res.status === 409) {
+                        showToast('🎫 You\'re already registered for this workshop!', 'warning');
+                    } else if (res.status === 404) {
+                        showToast('❌ Workshop not found', 'error');
+                    } else {
+                        showToast(`❌ ${data.detail || 'Registration failed'}`, 'error');
+                    }
+                }
+            } catch (err) {
+                showToast(`❌ Error: ${err.message}`, 'error');
+            }
+        }
+
+        // Toast notification helper
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer') || createToastContainer();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+            return container;
+        }
+
+        // Geocode city and relocate map
+        async function relocateMapToCity(cityName) {
+            if (!cityName.trim()) {
+                showToast('🏙️ Please enter a city name', 'warning');
+                return;
+            }
+
+            try {
+                // Use Nominatim API to geocode the city
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&format=json&limit=1`);
+                const data = await res.json();
+
+                if (data.length > 0) {
+                    const { lat, lon, display_name } = data[0];
+                    map.setView([parseFloat(lat), parseFloat(lon)], 12);
+                    showToast(`📍 Relocated to ${display_name}`, 'success');
+                } else {
+                    showToast(`❌ City "${cityName}" not found`, 'error');
+                }
+            } catch (err) {
+                showToast(`❌ Error geocoding city: ${err.message}`, 'error');
+            }
+        }
+
+        // Add Enter key listener to cityFilter
+        document.getElementById('cityFilter').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const city = document.getElementById('cityFilter').value;
+                relocateMapToCity(city);
+                filterWorkshops();
+            }
+        });
+
+        // Load workshops on page load
+        loadWorkshops();
+    </script>
+</body>
+</html>
+
