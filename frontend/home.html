@@ -10,7 +10,7 @@
         nav { background: #667eea; color: white; padding: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 15px; }
         nav h1 { flex: none; }
         nav .button-group { display: flex; gap: 15px; align-items: center; }
-        .view-map-btn { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); transition: all 0.3s ease; text-decoration: none; }
+        .view-map-btn { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); transition: all 0.3s ease; text-decoration: none; }
         .view-map-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
         .view-map-btn:active { transform: translateY(-1px); }
         h1 { margin-bottom: 10px; }
@@ -34,9 +34,9 @@
 </head>
 <body>
     <nav>
-        <h1>💃 Social Dance Workshops Recommender</h1>
+        <h1>💃 Social Dance Moments 🕺</h1>
         <div class="button-group">
-            <button class="view-map-btn" onclick="window.location.href='/map.html'">🗺️ View Map</button>
+            <button class="view-map-btn" onclick="window.location.href='/map.html'">View Workshops Map</button>
             <button class="logout" onclick="logout()">Logout</button>
         </div>
     </nav>
@@ -63,14 +63,6 @@
             <h2>📝 Your Uploaded Songs</h2>
             <div class="song-list" id="songList">
                 <p>Loading...</p>
-            </div>
-        </div>
-
-        <!-- Workshops Section -->
-        <div class="section">
-            <h2>📍 Dance Workshops Near You</h2>
-            <div class="workshop-grid" id="workshopList">
-                <p>Loading workshops...</p>
             </div>
         </div>
     </div>
@@ -136,51 +128,6 @@
             }
         }
 
-        async function loadWorkshops() {
-            try {
-                const res = await fetch('/workshops');
-                const data = await res.json();
-                const list = document.getElementById('workshopList');
-                if (data.workshops.length === 0) {
-                    list.innerHTML = '<p>No workshops available yet.</p>';
-                } else {
-                    list.innerHTML = data.workshops.map(w => `
-                        <div class="workshop-card">
-                            <strong>🎉 ${w.style.toUpperCase()}</strong><br>
-                            📍 ${w.location}, ${w.city}<br>
-                            📅 ${w.date} at ${w.time}<br>
-                            👥 ${w.participant_count || 0} registered<br>
-                            <button onclick="registerForWorkshop(${w.id}, '${w.location}')" style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Register</button>
-                        </div>
-                    `).join('');
-                }
-            } catch (err) {
-                document.getElementById('workshopList').innerHTML = '<p>Error loading workshops</p>';
-            }
-        }
-
-        async function registerForWorkshop(workshopId, location) {
-            try {
-                const res = await fetch(`/workshops/${workshopId}/register?user_id=${userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    alert(`✅ Registered for ${location}!`);
-                    // Reload workshops to update participant count
-                    loadWorkshops();
-                } else {
-                    alert(`❌ Registration failed: ${data.detail || 'Unknown error'}`);
-                }
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
-        }
-
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 // Clear sessionStorage
@@ -193,7 +140,6 @@
 
         // Load data on page load
         loadSongs();
-        loadWorkshops();
     </script>
 </body>
 </html>

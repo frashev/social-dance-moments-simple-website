@@ -596,7 +596,7 @@
                     return new Date(a.date) - new Date(b.date);
                 });
 
-                list.innerHTML = `<p style="color: #667eea; font-weight: bold; margin-bottom: 10px;">📊 ${workshops.length} workshop(s)</p>` +
+                list.innerHTML = `<p style="color: #667eea; font-weight: bold; margin-bottom: 10px;">📊 ${workshops.length} workshop(s) <span style="color: #999; font-weight: normal; font-size: 12px;">(ordered by date)</span></p>` +
                     sorted.map(w => `
                     <div class="workshop-item" onclick="centerOnWorkshop(${w.id})">
                         <strong style="color: ${styleColors[w.style]}">${w.style.toUpperCase()}</strong>
@@ -708,7 +708,7 @@
                 // console.log(`📍 Marker originalColor: ${targetMarker.originalColor}`);
 
                 // Center map on the marker
-                map.setView(targetMarker.getLatLng(), 15);
+                map.setView(targetMarker.getLatLng(), 16);
 
                 // Close all open popups first
                 map.closePopup();
@@ -738,7 +738,7 @@
                 // Re-add with new style
                 targetMarker.addTo(map);
                 targetMarker.setStyle({
-                    radius: 15, // Increase size for visibility
+                    radius: 11, // Increase size for visibility
                     fillColor: workshopColor, // Use the correct dance style color from workshop data
                     color: '#000', // Black border for contrast
                     weight: 3, // Thicker border for emphasis
