@@ -38,6 +38,62 @@
         .color-kizomba { background: #27ae60; }
         .color-zouk { background: #8e44ad; }
 
+        /* Hide Leaflet default controls */
+        .leaflet-control-zoom,
+        .leaflet-bar,
+        .leaflet-control {
+            display: none !important;
+        }
+
+        /* Leaflet popup styling */
+        .leaflet-popup-content-wrapper {
+            max-width: 300px !important;
+            width: 300px !important;
+            padding: 0 !important;
+        }
+
+        .leaflet-popup-content {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            overflow-wrap: break-word !important;
+            word-wrap: break-word !important;
+            word-break: break-word !important;
+        }
+
+        .leaflet-popup-content * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            overflow-wrap: break-word !important;
+            word-wrap: break-word !important;
+            word-break: break-word !important;
+        }
+
+        @media (max-width: 768px) {
+            .leaflet-popup-content-wrapper {
+                max-width: 200px !important;
+                width: 200px !important;
+            }
+
+            .leaflet-popup-content {
+                width: 100% !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .leaflet-popup-content-wrapper {
+                max-width: 150px !important;
+                width: 150px !important;
+            }
+
+            .leaflet-popup-content {
+                width: 100% !important;
+            }
+        }
+
         /* Layer selector */
         .layer-selector { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); margin-bottom: 15px; }
         .layer-selector select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; cursor: pointer; }
@@ -331,6 +387,12 @@
             'zouk': '#8e44ad'
         };
 
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${months[date.getMonth()]} ${date.getDate()} ${date.getFullYear()}`;
+        }
+
         async function loadWorkshops() {
             try {
                 const res = await fetch('/workshops');
@@ -376,9 +438,16 @@
             markers = [];
 
             workshops.forEach(w => {
-                // Use actual coordinates from geocoding
-                const lat = w.lat
-                const lon = w.lon
+                // Check if coordinates exist and are valid
+                const lat = parseFloat(w.lat);
+                const lon = parseFloat(w.lon);
+
+                // Skip workshops without valid coordinates
+                if (isNaN(lat) || isNaN(lon) || lat === null || lon === null) {
+                    console.warn(`Workshop "${w.location}" missing coordinates, skipping marker`);
+                    return;
+                }
+
                 const markerColor = styleColors[w.style] || '#667eea';
 
                 const marker = L.circleMarker([lat, lon], {
@@ -391,15 +460,15 @@
                 }).addTo(map);
 
                 marker.bindPopup(`
-                    <div style="padding: 5px; min-width: 130px;">
+                    <div style="padding: 10px; min-width: 150px; text-align: center; word-wrap: break-word; overflow-wrap: break-word;">
                         <strong style="color: ${markerColor}; font-size: 16px;">${w.style.toUpperCase()}</strong><br>
-                        <div style="margin-top: 10px; border-top: 2px solid ${markerColor}; padding-top: 10px;">
-                            <strong>📍 ${w.location}</strong><br>
-                            <span style="color: #666;">🏙️ ${w.city}</span><br>
-                            <span style="color: #666;">📅 ${w.date} at ${w.time}</span><br>
-                            <span style="color: #666;">👨‍🏫 <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}</span><br>
-                            <span style="color: #666;">🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}</span>
-                            ${w.description ? `<br><em style="color: #555; display: block; margin-top: 8px; font-style: italic;">"${w.description}"</em>` : ''}
+                        <div style="margin-top: 10px; border-top: 2px solid ${markerColor}; padding-top: 10px; text-align: left; word-wrap: break-word; overflow-wrap: break-word;">
+                            <strong style="word-wrap: break-word;">📍 ${w.location}</strong><br>
+                            <span style="color: #666; word-wrap: break-word;">🏙️ ${w.city}</span><br>
+                            <span style="color: #666; word-wrap: break-word;">📅 ${formatDate(w.date)} at ${w.time}</span><br>
+                            <span style="color: #666; word-wrap: break-word;">👨‍🏫 <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}</span><br>
+                            <span style="color: #666; word-wrap: break-word;">🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}</span>
+                            ${w.description ? `<br><em style="color: #555; display: block; margin-top: 8px; font-style: italic; word-wrap: break-word;">"${w.description}"</em>` : ''}
                         </div>
                     </div>
                 `);
@@ -410,9 +479,32 @@
 
         function centerOnWorkshop(workshopId) {
             const workshop = allWorkshops.find(w => w.id === workshopId);
-            if (workshop && markers[workshopId - 1]) {
-                map.setView(markers[workshopId - 1].getLatLng(), 15);
-                markers[workshopId - 1].openPopup();
+            if (!workshop) {
+                showToast('❌ Workshop not found', 'error');
+                return;
+            }
+
+            // Check if workshop has valid coordinates
+            const lat = parseFloat(workshop.lat);
+            const lon = parseFloat(workshop.lon);
+
+            if (isNaN(lat) || isNaN(lon) || lat === null || lon === null) {
+                showToast(`❌ Workshop location data unavailable. City: ${workshop.city}`, 'warning');
+                return;
+            }
+
+            // Find and center on the marker
+            const marker = markers.find(m => {
+                const markerLat = m.getLatLng().lat;
+                const markerLon = m.getLatLng().lng;
+                return Math.abs(markerLat - lat) < 0.0001 && Math.abs(markerLon - lon) < 0.0001;
+            });
+
+            if (marker) {
+                map.setView(marker.getLatLng(), 15);
+                marker.openPopup();
+            } else {
+                showToast('⚠️ Marker not found on map', 'warning');
             }
         }
 

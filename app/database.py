@@ -34,7 +34,9 @@ def init_db() -> None:
         difficulty TEXT DEFAULT 'intermediate',
         instructor_name TEXT,
         description TEXT,
-        max_participants INTEGER DEFAULT 0
+        max_participants INTEGER DEFAULT 0,
+        lat REAL,
+        lon REAL
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS registrations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
