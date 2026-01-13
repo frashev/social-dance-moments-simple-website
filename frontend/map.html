@@ -596,29 +596,53 @@
                     return new Date(a.date) - new Date(b.date);
                 });
 
-                list.innerHTML = `<p style="color: #667eea; font-weight: bold; margin-bottom: 10px;">📊 ${workshops.length} workshop(s) <span style="color: #999; font-weight: normal; font-size: 12px;">(ordered by date)</span></p>` +
-                    sorted.map(w => `
-                    <div class="workshop-item" onclick="centerOnWorkshop(${w.id})">
-                        <strong style="color: ${styleColors[w.style]}">${w.style.toUpperCase()}</strong>
-                        ${w.cards ? `<div style="margin-top: 5px; display: flex; gap: 3px; flex-wrap: wrap;">
-                            ${w.cards.split(',').map(card => {
-                                const cardName = card.trim();
-                                let badgeColor = '#667eea';
-                                if (cardName === 'Multisport') badgeColor = '#e74c3c';
-                                if (cardName === 'Coolfit') badgeColor = '#3498db';
-                                return `<span style="background: ${badgeColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold;">${cardName}</span>`;
-                            }).join('')}
-                        </div>` : ''}
-                        <small>
-                            <strong>📍 ${w.location}</strong><br>
-                            🏙️ ${w.city}<br>
-                            📅 ${formatDate(w.date)} at ${w.time}<br>
-                            👨‍🏫 <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}<br>
-                            🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}<br>
-                            ${w.description ? `<em style="color: #555; display: block; margin-top: 5px;">"${w.description}"</em>` : ''}
-                        </small>
-                    </div>
-                `).join('');
+                // Group workshops by date
+                const groupedByDate = {};
+                sorted.forEach(w => {
+                    if (!groupedByDate[w.date]) {
+                        groupedByDate[w.date] = [];
+                    }
+                    groupedByDate[w.date].push(w);
+                });
+
+                // Build HTML with date separators
+                let html = `<p style="color: #667eea; font-weight: bold; margin-bottom: 10px;">📊 ${workshops.length} workshop(s) <span style="color: #999; font-weight: normal; font-size: 12px;">(ordered by date)</span></p>`;
+
+                Object.keys(groupedByDate).forEach(date => {
+                    const dateObj = new Date(date + 'T00:00:00');
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                    const dateStr = `${dayNames[dateObj.getDay()]} ${months[dateObj.getMonth()]} ${dateObj.getDate()}`;
+
+                    html += `<div style="background: linear-gradient(to right, #667eea20, transparent); padding: 10px 8px; margin: 15px 0 10px 0; border-left: 3px solid #667eea; border-radius: 3px;">
+                        <strong style="color: #667eea; font-size: 13px;">📅 ${dateStr}</strong>
+                    </div>`;
+
+                    html += groupedByDate[date].map(w => `
+                        <div class="workshop-item" onclick="centerOnWorkshop(${w.id})">
+                            <strong style="color: ${styleColors[w.style]}">${w.style.toUpperCase()}</strong>
+                            ${w.cards ? `<div style="margin-top: 5px; display: flex; gap: 3px; flex-wrap: wrap;">
+                                ${w.cards.split(',').map(card => {
+                                    const cardName = card.trim();
+                                    let badgeColor = '#667eea';
+                                    if (cardName === 'Multisport') badgeColor = '#e74c3c';
+                                    if (cardName === 'Coolfit') badgeColor = '#3498db';
+                                    return `<span style="background: ${badgeColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold;">${cardName}</span>`;
+                                }).join('')}
+                            </div>` : ''}
+                            <small>
+                                <strong>📍 ${w.location}</strong><br>
+                                🏙️ ${w.city}<br>
+                                📅 ${formatDate(w.date)} at ${w.time}<br>
+                                👨‍🏫 <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}<br>
+                                🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}<br>
+                                ${w.description ? `<em style="color: #555; display: block; margin-top: 5px;">"${w.description}"</em>` : ''}
+                            </small>
+                        </div>
+                    `).join('');
+                });
+
+                list.innerHTML = html;
             }
         }
 
