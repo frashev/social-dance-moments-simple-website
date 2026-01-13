@@ -9,13 +9,13 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
-        nav { background: #667eea; color: white; padding: 20px; text-align: center; }
-        h1 { margin-bottom: 10px; }
-        nav button { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-left: 20px; transition: 0.3s; }
+        nav { background: #667eea; color: white; padding: 15px; text-align: center; }
+        nav h1 { font-size: 18px; margin-bottom: 10px; }
+        nav button { background: #e74c3c; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; transition: 0.3s; font-size: 14px; }
         nav button:hover { background: #c0392b; transform: scale(1.05); }
-        .container { display: grid; grid-template-columns: 1fr 300px; gap: 20px; max-width: 1400px; margin: 0 auto; padding: 20px; }
-        #map { height: 600px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); filter: brightness(1.0); }
-        .sidebar { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); max-height: 600px; overflow-y: auto; }
+        .container { display: grid; grid-template-columns: 1fr 300px; gap: 20px; max-width: 1400px; margin: 0 auto; padding: 20px; height: calc(100vh - 120px); }
+        #map { height: 100%; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); filter: brightness(1.0); }
+        .sidebar { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); max-height: 100%; overflow-y: auto; }
         .sidebar::-webkit-scrollbar { width: 8px; }
         .sidebar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         .sidebar::-webkit-scrollbar-thumb { background: #667eea; border-radius: 10px; }
@@ -52,6 +52,157 @@
         @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOut { to { transform: translateX(400px); opacity: 0; } }
         .toast.removing { animation: slideOut 0.3s ease-in forwards; }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            nav { padding: 10px; }
+            nav h1 { font-size: 16px; margin-bottom: 8px; }
+            nav button { padding: 8px 12px; margin-left: 5px; font-size: 12px; }
+
+            .container {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 10px;
+                height: auto;
+            }
+
+            #map {
+                height: 400px;
+                border-radius: 8px;
+            }
+
+            .sidebar {
+                max-height: 60vh;
+                padding: 15px;
+            }
+
+            .filter-box {
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            #cityFilter {
+                font-size: 16px !important;
+                padding: 12px !important;
+                margin: 10px 0 !important;
+                width: 100%;
+                border: 2px solid #667eea;
+                border-radius: 5px;
+            }
+
+            .filter-box input,
+            .filter-box select {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            .workshop-item {
+                padding: 12px;
+                margin-bottom: 8px;
+            }
+
+            .workshop-item small {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            nav { padding: 8px; }
+            nav h1 { font-size: 14px; margin-bottom: 5px; }
+            nav button { padding: 6px 10px; margin-left: 3px; font-size: 11px; }
+
+            .container {
+                padding: 8px;
+                gap: 5px;
+            }
+
+            #map {
+                height: 300px;
+            }
+
+            .sidebar {
+                max-height: 50vh;
+                padding: 12px;
+            }
+
+            .filter-box {
+                background: white;
+                padding: 12px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            #cityFilter {
+                font-size: 16px !important;
+                padding: 10px !important;
+                margin: 8px 0 !important;
+                width: 100%;
+                border: 2px solid #667eea;
+                border-radius: 5px;
+            }
+
+            .filter-box h4,
+            .filter-box h5 {
+                font-size: 13px;
+                margin-bottom: 5px;
+            }
+
+            .filter-box input,
+            .filter-box select {
+                font-size: 12px;
+                padding: 6px;
+                margin: 3px 0;
+            }
+
+            .workshop-item {
+                padding: 10px;
+                margin-bottom: 6px;
+                border-left-width: 3px;
+            }
+
+            .workshop-item small {
+                font-size: 11px;
+                line-height: 1.4;
+            }
+
+            .legend {
+                padding: 10px;
+                margin-bottom: 15px;
+            }
+
+            .legend h4 {
+                font-size: 12px;
+                margin-bottom: 8px;
+            }
+
+            .legend-item {
+                margin-bottom: 5px;
+                font-size: 11px;
+            }
+
+            .layer-selector {
+                padding: 8px;
+                margin-bottom: 10px;
+            }
+
+            .layer-selector label {
+                font-size: 11px;
+                margin-bottom: 4px;
+            }
+
+            .layer-selector select {
+                padding: 6px;
+                font-size: 11px;
+            }
+
+            .toast {
+                min-width: 200px;
+                padding: 10px 14px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -63,36 +214,6 @@
     <div class="container">
         <div id="map"></div>
         <div class="sidebar">
-            <div class="layer-selector">
-                <label for="layerSelect">🗺️ Map Layer</label>
-                <select id="layerSelect" onchange="changeLayer(this.value)">
-                    <option value="osm">Standard (OSM)</option>
-                    <option value="satellite">Satellite (Esri)</option>
-                    <option value="cartodb-light">CartoDB Light</option>
-                    <option value="cartodb-voyager" selected>CartoDB Voyager</option>
-                </select>
-            </div>
-
-            <div class="legend">
-                <h4 style="margin-bottom: 10px;">🎵 Dance Styles</h4>
-                <div class="legend-item">
-                    <div class="legend-color color-salsa"></div>
-                    <span>Salsa</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color color-bachata"></div>
-                    <span>Bachata</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color color-kizomba"></div>
-                    <span>Kizomba</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color color-zouk"></div>
-                    <span>Zouk</span>
-                </div>
-            </div>
-
             <div class="filter-box">
                 <h4 style="margin-bottom: 10px;">🔍 Filter</h4>
                 <select id="styleFilter" onchange="filterWorkshops()">
@@ -102,15 +223,16 @@
                     <option value="kizomba">Kizomba</option>
                     <option value="zouk">Zouk</option>
                 </select>
-                <input type="text" id="cityFilter" placeholder="Search by city...">
+                <input type="text" id="cityFilter" placeholder="Search by city..." style="margin-bottom: 10px;">
+                <button onclick="searchCity()" style="width: 100%; padding: 8px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; margin-bottom: 10px;">Search City</button>
 
                 <!-- Date Filter Section -->
                 <h5 style="margin-top: 15px; margin-bottom: 8px; color: #667eea;">📅 Date Filter</h5>
-                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                    <button onclick="filterByToday()" style="flex: 1; padding: 8px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Today</button>
-                    <button onclick="toggleDateRangeMode()" style="flex: 1; padding: 8px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Range</button>
-                    <button onclick="toggleSpecificDateMode()" style="flex: 1; padding: 8px; background: #8e44ad; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Date</button>
-                    <button onclick="clearDateFilters()" style="flex: 1; padding: 8px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Clear</button>
+                <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
+                    <button onclick="filterByToday()" style="flex: 1; min-width: 70px; padding: 8px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Today</button>
+                    <button onclick="toggleDateRangeMode()" style="flex: 1; min-width: 70px; padding: 8px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Range</button>
+                    <button onclick="toggleSpecificDateMode()" style="flex: 1; min-width: 70px; padding: 8px; background: #8e44ad; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Date</button>
+                    <button onclick="clearDateFilters()" style="flex: 1; min-width: 70px; padding: 8px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Clear</button>
                 </div>
 
                 <!-- Date Range Inputs (hidden by default) -->
@@ -130,6 +252,16 @@
                 </div>
 
                 <button onclick="resetFilter()" style="width: 100%; background: #95a5a6; margin-top: 10px; padding: 10px;">Reset All</button>
+            </div>
+
+            <div class="layer-selector">
+                <label for="layerSelect">🗺️ Map Layer</label>
+                <select id="layerSelect" onchange="changeLayer(this.value)">
+                    <option value="osm">Standard (OSM)</option>
+                    <option value="satellite">Satellite (Esri)</option>
+                    <option value="cartodb-light">CartoDB Light</option>
+                    <option value="cartodb-voyager" selected>CartoDB Voyager</option>
+                </select>
             </div>
 
             <h3>📍 Workshops</h3>
@@ -256,13 +388,17 @@
                 }).addTo(map);
 
                 marker.bindPopup(`
-                    <strong>${w.location}</strong><br>
-                    <strong>Style:</strong> ${w.style.toUpperCase()}<br>
-                    <strong>City:</strong> ${w.city}<br>
-                    <strong>Date:</strong> ${w.date}<br>
-                    <strong>Time:</strong> ${w.time}<br>
-                    <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}<br>
-                    <button onclick="registerForWorkshop(${w.id}, '${w.location}')" style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Register</button>
+                    <div style="padding: 5px; min-width: 130px;">
+                        <strong style="color: ${markerColor}; font-size: 16px;">${w.style.toUpperCase()}</strong><br>
+                        <div style="margin-top: 10px; border-top: 2px solid ${markerColor}; padding-top: 10px;">
+                            <strong>📍 ${w.location}</strong><br>
+                            <span style="color: #666;">🏙️ ${w.city}</span><br>
+                            <span style="color: #666;">📅 ${w.date} at ${w.time}</span><br>
+                            <span style="color: #666;">👨‍🏫 <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}</span><br>
+                            <span style="color: #666;">🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}</span>
+                            ${w.description ? `<br><em style="color: #555; display: block; margin-top: 8px; font-style: italic;">"${w.description}"</em>` : ''}
+                        </div>
+                    </div>
                 `);
 
                 markers.push(marker);
@@ -461,30 +597,97 @@
             }
 
             try {
-                // Use Nominatim API to geocode the city
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&format=json&limit=1`);
+                // Try with User-Agent header for better compatibility
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&format=json&limit=1`, {
+                    headers: {
+                        'User-Agent': 'DanceWorkshopsApp/1.0'
+                    }
+                });
+
+                if (!res.ok) {
+                    throw new Error(`API returned ${res.status}`);
+                }
+
                 const data = await res.json();
 
                 if (data.length > 0) {
                     const { lat, lon, display_name } = data[0];
-                    map.setView([parseFloat(lat), parseFloat(lon)], 12);
-                    showToast(`📍 Relocated to ${display_name}`, 'success');
+                    const latNum = parseFloat(lat);
+                    const lonNum = parseFloat(lon);
+
+                    // Validate coordinates
+                    if (!isNaN(latNum) && !isNaN(lonNum)) {
+                        map.setView([latNum, lonNum], 12);
+                        // Ensure map properly updates on mobile
+                        setTimeout(() => {
+                            map.invalidateSize();
+                        }, 100);
+                        showToast(`📍 Relocated to ${display_name}`, 'success');
+                    } else {
+                        showToast(`❌ Invalid coordinates received`, 'error');
+                    }
                 } else {
                     showToast(`❌ City "${cityName}" not found`, 'error');
                 }
             } catch (err) {
-                showToast(`❌ Error geocoding city: ${err.message}`, 'error');
+                console.error('Geocoding error:', err);
+                // Fallback: Try to relocate to a default location if the city name is recognized
+                const commonCities = {
+                    'sofia': [42.6977, 23.3219],
+                    'berlin': [52.5200, 13.4050],
+                    'paris': [48.8566, 2.3522],
+                    'london': [51.5074, -0.1278],
+                    'barcelona': [41.3851, 2.1734],
+                    'madrid': [40.4168, -3.7038],
+                    'amsterdam': [52.3676, 4.9041],
+                    'prague': [50.0755, 14.4378],
+                    'budapest': [47.4979, 19.0402],
+                    'warsaw': [52.2297, 21.0122],
+                    'vienna': [48.2082, 16.3738],
+                    'rome': [41.9028, 12.4964],
+                    'lisbon': [38.7223, -9.1393],
+                    'athens': [37.9838, 23.7275]
+                };
+
+                const cityLower = cityName.toLowerCase().trim();
+                if (commonCities[cityLower]) {
+                    const [lat, lon] = commonCities[cityLower];
+                    map.setView([lat, lon], 12);
+                    setTimeout(() => map.invalidateSize(), 100);
+                    showToast(`📍 Relocated to ${cityName}`, 'success');
+                } else {
+                    showToast(`❌ Failed to locate "${cityName}". ${err.message}`, 'error');
+                }
+            }
+        }
+
+        // Function to search city from button or Enter key
+        function searchCity() {
+            const city = document.getElementById('cityFilter').value;
+            if (city.trim()) {
+                relocateMapToCity(city);
+                filterWorkshops();
+            } else {
+                showToast('🏙️ Please enter a city name', 'warning');
             }
         }
 
         // Add Enter key listener to cityFilter
-        document.getElementById('cityFilter').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const city = document.getElementById('cityFilter').value;
-                relocateMapToCity(city);
-                filterWorkshops();
+        setTimeout(() => {
+            const cityInput = document.getElementById('cityFilter');
+            if (cityInput) {
+                cityInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        searchCity();
+                        // Blur the input on mobile to dismiss keyboard
+                        document.getElementById('cityFilter').blur();
+                    }
+                });
+            } else {
+                console.warn('cityFilter element not found');
             }
-        });
+        }, 100);
 
         // Load workshops on page load
         loadWorkshops();
