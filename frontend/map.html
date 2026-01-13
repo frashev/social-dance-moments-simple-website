@@ -649,6 +649,11 @@
                     fillOpacity: 1.0
                 }).addTo(map);
 
+                // Store workshop ID and original color on the marker
+                marker.workshopId = w.id;
+                marker.originalColor = markerColor;
+                marker.originalRadius = 11;
+
                 marker.bindPopup(`
                     <div style="padding: 10px; min-width: 150px; text-align: center; word-wrap: break-word; overflow-wrap: break-word;">
                         <strong style="color: ${markerColor}; font-size: 16px;">${w.style.toUpperCase()}</strong><br>
@@ -670,7 +675,7 @@
                             ${w.description ? `<br><em style="color: #555; display: block; margin-top: 8px; font-style: italic; word-wrap: break-word;">"${w.description}"</em>` : ''}
                         </div>
                     </div>
-                `);
+                `, { closeButton: true, autoClose: false, maxWidth: 300 });
 
                 markers.push(marker);
             });
@@ -692,16 +697,86 @@
                 return;
             }
 
-            // Find and center on the marker
-            const marker = markers.find(m => {
-                const markerLat = m.getLatLng().lat;
-                const markerLon = m.getLatLng().lng;
-                return Math.abs(markerLat - lat) < 0.0001 && Math.abs(markerLon - lon) < 0.0001;
-            });
+            // Find the marker by workshop ID
+            const targetMarker = markers.find(m => m.workshopId === workshopId);
 
-            if (marker) {
-                map.setView(marker.getLatLng(), 15);
-                marker.openPopup();
+            if (targetMarker) {
+                // Get the correct color for this workshop's dance style
+                const workshopColor = styleColors[workshop.style] || '#667eea';
+                // console.log(`🎯 Selected workshop: ${workshop.style.toUpperCase()}`);
+                // console.log(`🎨 Color from styleColors: ${workshopColor}`);
+                // console.log(`📍 Marker originalColor: ${targetMarker.originalColor}`);
+
+                // Center map on the marker
+                map.setView(targetMarker.getLatLng(), 15);
+
+                // Close all open popups first
+                map.closePopup();
+
+                // Reset all markers to original state
+                markers.forEach(m => {
+                    if (m !== targetMarker) {
+                        m.setStyle({
+                            radius: m.originalRadius,
+                            fillColor: m.originalColor,
+                            color: '#fff', // White border (original)
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 1.0,
+                            fill: true,
+                            dashArray: null
+                        });
+                    }
+                });
+
+                // Highlight the selected marker with its original dance style color, larger size and darker border
+                // console.log(`🔄 Setting fillColor to: ${workshopColor}`);
+
+                // Remove marker from map
+                map.removeLayer(targetMarker);
+
+                // Re-add with new style
+                targetMarker.addTo(map);
+                targetMarker.setStyle({
+                    radius: 15, // Increase size for visibility
+                    fillColor: workshopColor, // Use the correct dance style color from workshop data
+                    color: '#000', // Black border for contrast
+                    weight: 3, // Thicker border for emphasis
+                    fill: true, // Ensure fill is enabled
+                    fillOpacity: 1.0, // Full opacity for fill
+                    opacity: 1.0, // Full opacity for stroke
+                    dashArray: null // No dashed lines
+                });
+
+                // Force redraw to update the marker on the map
+                targetMarker.redraw();
+
+                // Also directly set the SVG fill attribute to ensure it's applied
+                if (targetMarker._path) {
+                    targetMarker._path.setAttribute('fill', workshopColor);
+                    targetMarker._path.setAttribute('fill-opacity', '1');
+                    // console.log(`🎨 SVG fill set directly to: ${workshopColor}`);
+                }
+
+                // console.log(`✅ Marker redrawn with color: ${workshopColor}`);
+
+                // Open the popup with a small delay to ensure map rendering is complete
+                // setTimeout(() => {
+                //     // Close any other popups on the map first
+                //     map.eachLayer((layer) => {
+                //         if (layer.closePopup) {
+                //             layer.closePopup();
+                //         }
+                //     });
+
+                //     // Now open the target marker's popup
+                //     if (targetMarker && targetMarker.getPopup()) {
+                //         targetMarker.openPopup();
+                //         console.log('✅ Popup opened for workshop:', workshopId);
+                //     } else {
+                //         console.warn('❌ Popup not found for workshop:', workshopId);
+                //     }
+                // }, 150);
             } else {
                 showToast('⚠️ Marker not found on map', 'warning');
             }
