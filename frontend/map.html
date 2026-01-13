@@ -341,9 +341,9 @@
                 <!-- Date Filter Section -->
                 <h5 style="margin-top: 15px; margin-bottom: 8px; color: #667eea;">📅 Date Filter</h5>
                 <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
-                    <button onclick="filterByCurrentWeek()" style="flex: 1; min-width: 70px; padding: 8px; background: #16a085; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Week</button>
+                    <button onclick="filterByCurrentWeek()" style="flex: 1; min-width: 70px; padding: 8px; background: #16a085; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">This Week</button>
+                    <button onclick="filterByNextWeek()" style="flex: 1; min-width: 70px; padding: 8px; background: #1abc9c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Next Week</button>
                     <button onclick="filterByToday()" style="flex: 1; min-width: 70px; padding: 8px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Today</button>
-                    <button onclick="toggleDateRangeMode()" style="flex: 1; min-width: 70px; padding: 8px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Range</button>
                     <button onclick="toggleSpecificDateMode()" style="flex: 1; min-width: 70px; padding: 8px; background: #8e44ad; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Date</button>
                     <button onclick="clearDateFilters()" style="flex: 1; min-width: 70px; padding: 8px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Clear</button>
                 </div>
@@ -483,6 +483,37 @@
             };
         }
 
+        function getNextWeekDateRange() {
+            const today = new Date();
+            const currentDay = today.getDay();
+
+            // Calculate Monday of current week
+            const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1;
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - daysFromMonday);
+
+            // Calculate Monday of next week (7 days from current Monday)
+            const nextMonday = new Date(monday);
+            nextMonday.setDate(monday.getDate() + 7);
+
+            // Calculate Sunday of next week
+            const nextSunday = new Date(nextMonday);
+            nextSunday.setDate(nextMonday.getDate() + 6);
+
+            // Format as YYYY-MM-DD
+            const formatDate = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            return {
+                start: formatDate(nextMonday),
+                end: formatDate(nextSunday)
+            };
+        }
+
         async function loadWorkshops() {
             try {
                 const res = await fetch('/workshops');
@@ -533,6 +564,26 @@
             addMarkersToMap(filtered);
             updateWeekDisplayMessage(weekRange);
             showToast(`📅 Showing workshops for current week (${weekRange.start} to ${weekRange.end})`, 'success');
+        }
+
+        function filterByNextWeek() {
+            const nextWeekRange = getNextWeekDateRange();
+            activeDateFilter = { type: 'nextWeek', data: null };
+
+            const style = document.getElementById('styleFilter').value;
+            const city = document.getElementById('cityFilter').value.toLowerCase();
+
+            const filtered = allWorkshops.filter(w => {
+                const matchStyle = !style || w.style === style;
+                const matchCity = !city || w.city.toLowerCase().includes(city);
+                const matchDate = w.date >= nextWeekRange.start && w.date <= nextWeekRange.end;
+                return matchStyle && matchCity && matchDate;
+            });
+
+            displayWorkshops(filtered);
+            addMarkersToMap(filtered);
+            updateWeekDisplayMessage(nextWeekRange);
+            showToast(`📅 Showing workshops for next week (${nextWeekRange.start} to ${nextWeekRange.end})`, 'success');
         }
 
         function displayWorkshops(workshops) {
@@ -678,6 +729,9 @@
             if (activeDateFilter.type === 'week') {
                 const weekRange = getWeekDateRange();
                 return workshops.filter(w => w.date >= weekRange.start && w.date <= weekRange.end);
+            } else if (activeDateFilter.type === 'nextWeek') {
+                const nextWeekRange = getNextWeekDateRange();
+                return workshops.filter(w => w.date >= nextWeekRange.start && w.date <= nextWeekRange.end);
             } else if (activeDateFilter.type === 'today') {
                 const today = new Date().toISOString().split('T')[0];
                 return workshops.filter(w => w.date === today);
@@ -689,25 +743,6 @@
                 return workshops.filter(w => w.date === specificDate);
             }
             return workshops;
-        }
-
-        function resetFilter() {
-            document.getElementById('styleFilter').value = '';
-            document.getElementById('cityFilter').value = '';
-            document.getElementById('dateFrom').value = '';
-            document.getElementById('dateTo').value = '';
-            document.getElementById('specificDate').value = '';
-            document.getElementById('dateRangeInputs').style.display = 'none';
-            document.getElementById('specificDateInput').style.display = 'none';
-            displayWorkshops(allWorkshops);
-            addMarkersToMap(allWorkshops);
-        }
-
-        function toggleDateRangeMode() {
-            const rangeInputs = document.getElementById('dateRangeInputs');
-            const specificInputs = document.getElementById('specificDateInput');
-            specificInputs.style.display = 'none';
-            rangeInputs.style.display = rangeInputs.style.display === 'none' ? 'block' : 'none';
         }
 
         function toggleSpecificDateMode() {
