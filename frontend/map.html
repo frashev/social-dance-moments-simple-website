@@ -322,7 +322,7 @@
         <div id="map"></div>
         <div class="sidebar">
             <div style="background: #e8f4f8; padding: 12px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #2980b9;">
-                <p style="color: #2980b9; font-weight: bold; margin: 0; font-size: 13px;">📅 Current Week Only</p>
+                <p style="color: #2980b9; font-weight: bold; margin: 0; font-size: 13px;">📅 Workshops for Dates</p>
                 <p id="weekDisplayRange" style="color: #555; font-size: 12px; margin: 5px 0 0 0;">Loading...</p>
             </div>
 
@@ -438,6 +438,10 @@
 
         let allWorkshops = [];
         let markers = [];
+        let activeDateFilter = {
+            type: 'week', // 'week', 'today', 'range', 'date', or null
+            data: null // stores range dates, specific date, etc.
+        };
 
         const styleColors = {
             'salsa': '#c0392b',
@@ -512,6 +516,8 @@
 
         function filterByCurrentWeek() {
             const weekRange = getWeekDateRange();
+            activeDateFilter = { type: 'week', data: null };
+
             const style = document.getElementById('styleFilter').value;
             const city = document.getElementById('cityFilter').value.toLowerCase();
 
@@ -524,6 +530,7 @@
 
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
+            updateWeekDisplayMessage(weekRange);
             showToast(`📅 Showing workshops for current week (${weekRange.start} to ${weekRange.end})`, 'success');
         }
 
@@ -652,14 +659,34 @@
             const style = document.getElementById('styleFilter').value;
             const city = document.getElementById('cityFilter').value.toLowerCase();
 
-            const filtered = allWorkshops.filter(w => {
+            let filtered = allWorkshops.filter(w => {
                 const matchStyle = !style || w.style === style;
                 const matchCity = !city || w.city.toLowerCase().includes(city);
                 return matchStyle && matchCity;
             });
 
+            // Apply active date filter
+            filtered = applyActiveDateFilter(filtered);
+
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
+        }
+
+        function applyActiveDateFilter(workshops) {
+            if (activeDateFilter.type === 'week') {
+                const weekRange = getWeekDateRange();
+                return workshops.filter(w => w.date >= weekRange.start && w.date <= weekRange.end);
+            } else if (activeDateFilter.type === 'today') {
+                const today = new Date().toISOString().split('T')[0];
+                return workshops.filter(w => w.date === today);
+            } else if (activeDateFilter.type === 'range') {
+                const { start, end } = activeDateFilter.data;
+                return workshops.filter(w => w.date >= start && w.date <= end);
+            } else if (activeDateFilter.type === 'date') {
+                const specificDate = activeDateFilter.data;
+                return workshops.filter(w => w.date === specificDate);
+            }
+            return workshops;
         }
 
         function resetFilter() {
@@ -690,6 +717,8 @@
 
         function filterByToday() {
             const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            activeDateFilter = { type: 'today', data: null };
+
             const style = document.getElementById('styleFilter').value;
             const city = document.getElementById('cityFilter').value.toLowerCase();
 
@@ -702,6 +731,13 @@
 
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
+
+            // Update header to show "Today"
+            const todayDate = new Date(today + 'T00:00:00');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const todayStr = `${months[todayDate.getMonth()]} ${todayDate.getDate()}, ${todayDate.getFullYear()}`;
+            document.getElementById('weekDisplayRange').textContent = `Today: ${todayStr}`;
+
             showToast(`📅 Showing workshops for today (${today})`, 'success');
         }
 
@@ -713,6 +749,8 @@
                 showToast('⚠️ Please select both start and end dates', 'warning');
                 return;
             }
+
+            activeDateFilter = { type: 'range', data: { start: dateFrom, end: dateTo } };
 
             const style = document.getElementById('styleFilter').value;
             const city = document.getElementById('cityFilter').value.toLowerCase();
@@ -726,6 +764,15 @@
 
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
+
+            // Update header to show selected range
+            const fromDate = new Date(dateFrom + 'T00:00:00');
+            const toDate = new Date(dateTo + 'T00:00:00');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const fromStr = `${months[fromDate.getMonth()]} ${fromDate.getDate()}`;
+            const toStr = `${months[toDate.getMonth()]} ${toDate.getDate()}`;
+            document.getElementById('weekDisplayRange').textContent = `${fromStr} – ${toStr}, ${toDate.getFullYear()}`;
+
             showToast(`📅 Showing workshops from ${dateFrom} to ${dateTo}`, 'success');
         }
 
@@ -736,6 +783,8 @@
                 showToast('⚠️ Please select a date', 'warning');
                 return;
             }
+
+            activeDateFilter = { type: 'date', data: specificDate };
 
             const style = document.getElementById('styleFilter').value;
             const city = document.getElementById('cityFilter').value.toLowerCase();
@@ -749,6 +798,13 @@
 
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
+
+            // Update header to show selected date
+            const selectedDate = new Date(specificDate + 'T00:00:00');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const dateStr = `${months[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`;
+            document.getElementById('weekDisplayRange').textContent = `${dateStr}`;
+
             showToast(`📅 Showing workshops for ${specificDate}`, 'success');
         }
 
@@ -756,11 +812,22 @@
             document.getElementById('dateFrom').value = '';
             document.getElementById('dateTo').value = '';
             document.getElementById('specificDate').value = '';
+            document.getElementById('styleFilter').value = '';
+            document.getElementById('cityFilter').value = '';
             document.getElementById('dateRangeInputs').style.display = 'none';
             document.getElementById('specificDateInput').style.display = 'none';
-            displayWorkshops(allWorkshops);
-            addMarkersToMap(allWorkshops);
-            showToast('📅 Date filters cleared', 'success');
+
+            // Reset to current week view
+            activeDateFilter = { type: 'week', data: null };
+            const weekRange = getWeekDateRange();
+            const filtered = allWorkshops.filter(w =>
+                w.date >= weekRange.start && w.date <= weekRange.end
+            );
+
+            displayWorkshops(filtered);
+            addMarkersToMap(filtered);
+            updateWeekDisplayMessage(weekRange);
+            showToast('✅ Filters cleared - showing current week', 'success');
         }
 
         function logout() {

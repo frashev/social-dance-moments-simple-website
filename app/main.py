@@ -21,25 +21,6 @@ app = FastAPI(
 # Initialize database on startup
 init_db()
 
-# Pre-cache all workshop coordinates to prevent API hangs
-def precache_workshops():
-    """Pre-load all workshop coordinates into cache."""
-    try:
-        from .database import get_db
-        with get_db() as conn:
-            c = conn.cursor()
-            c.execute('SELECT DISTINCT location, city FROM workshops ORDER BY city, location')
-            locations = c.fetchall()
-
-        logger.info(f"🔄 Pre-caching {len(locations)} workshop coordinates...")
-        for location, city in locations:
-            get_workshop_coordinates(location, city)
-
-        logger.info(f"✅ Pre-caching complete! {len(WORKSHOP_GEOCODING_CACHE)} coordinates cached")
-    except Exception as e:
-        logger.warning(f"⚠️  Pre-caching failed: {e}")
-
-precache_workshops()
 
 # Enable CORS for frontend
 app.add_middleware(
