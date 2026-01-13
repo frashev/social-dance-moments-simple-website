@@ -250,8 +250,6 @@
                     <input type="date" id="specificDate" style="margin-bottom: 5px;">
                     <button onclick="filterBySpecificDate()" style="width: 100%; padding: 8px; background: #8e44ad; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Apply Date</button>
                 </div>
-
-                <button onclick="resetFilter()" style="width: 100%; background: #95a5a6; margin-top: 10px; padding: 10px;">Reset All</button>
             </div>
 
             <div class="layer-selector">
@@ -350,8 +348,13 @@
             if (workshops.length === 0) {
                 list.innerHTML = '<p>No workshops found.</p>';
             } else {
+                // Sort workshops by date (closest/soonest first)
+                const sorted = [...workshops].sort((a, b) => {
+                    return new Date(a.date) - new Date(b.date);
+                });
+
                 list.innerHTML = `<p style="color: #667eea; font-weight: bold; margin-bottom: 10px;">📊 ${workshops.length} workshop(s)</p>` +
-                    workshops.map(w => `
+                    sorted.map(w => `
                     <div class="workshop-item" onclick="centerOnWorkshop(${w.id})">
                         <strong style="color: ${styleColors[w.style]}">${w.style.toUpperCase()}</strong>
                         <small>
