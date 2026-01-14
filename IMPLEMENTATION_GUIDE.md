@@ -1,4 +1,4 @@
-# Dance Song Recommender Web App - Implementation Guide
+# SDM Web App - Implementation Guide
 
 ## ✅ Status: Phase 2 Complete!
 

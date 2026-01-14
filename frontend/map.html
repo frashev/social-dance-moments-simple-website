@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workshop Map - Dance Song Recommender</title>
+    <title>Workshop Map - SDM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
@@ -315,7 +315,8 @@
     <nav>
         <h1>🗺️ Social Dance Workshops Map</h1>
         <button onclick="window.location.href='/home.html'" style="background: #27ae60;">Home</button>
-        <button onclick="logout()">Logout</button>
+        <button id="logoutBtn" onclick="logout()" style="display: none;">Logout</button>
+        <button id="loginBtn" onclick="window.location.href='/login.html'" style="display: none; background: #3498db;">Login</button>
     </nav>
     <div class="container">
         <div id="map"></div>
@@ -384,12 +385,16 @@
     <button id="scrollToTopBtn" onclick="scrollToTop()" title="Back to top">⬆️</button>
 
     <script>
-        // Auth check using sessionStorage
+        // Get auth token if available (optional for public map view)
         const token = sessionStorage.getItem('access_token');
         const userId = sessionStorage.getItem('user_id');
 
-        if (!token || !userId) {
-            window.location.href = '/login.html';
+        // Map is publicly accessible - no auth required
+        // Show appropriate nav button based on auth status
+        if (token && userId) {
+            document.getElementById('logoutBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('loginBtn').style.display = 'inline-block';
         }
 
         // Initialize map centered on Europe (dance capital!)

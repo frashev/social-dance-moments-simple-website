@@ -13,7 +13,7 @@ from .geocoding import get_workshop_coordinates, WORKSHOP_GEOCODING_CACHE
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="Dance Song Recommender",
+    title="SDM",
     description="A platform for discovering dance songs and workshops",
     version="3.0.0"
 )

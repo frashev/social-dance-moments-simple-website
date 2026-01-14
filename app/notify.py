@@ -30,7 +30,7 @@ You have successfully registered for the {style} workshop!
 We look forward to seeing you there!
 
 ---
-Dance Song Recommender
+SDM
 """
 
 WORKSHOP_REMINDER = """
@@ -45,7 +45,7 @@ This is a reminder that your {style} workshop is coming up tomorrow!
 See you there! 💃
 
 ---
-Dance Song Recommender
+SDM
 """
 
 
