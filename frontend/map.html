@@ -647,6 +647,7 @@
                                 <strong>📍 ${w.location}</strong><br>
                                 🏙️ ${w.city}<br>
                                 📅 ${formatDate(w.date)} at ${w.time}<br>
+                                ${w.recurrence === 'weekly' ? '🔄 <strong>Weekly Event</strong>' : '📅 <strong>Single Event</strong>'}<br>
                                 👨‍🏫 <strong>Instructors:</strong> ${w.instructor_name || 'TBA'}<br>
                                 🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}<br>
                                 ${w.facebook_url ? `📘 <a href="${w.facebook_url}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">Facebook Event</a><br>` : ''}
@@ -708,6 +709,7 @@
                             <strong style="word-wrap: break-word;">📍 ${w.location}</strong><br>
                             <span style="color: #666; word-wrap: break-word;">🏙️ ${w.city}</span><br>
                             <span style="color: #666; word-wrap: break-word;">📅 ${formatDate(w.date)} at ${w.time}</span><br>
+                            <span style="color: #666; word-wrap: break-word;">${w.recurrence === 'weekly' ? '🔄 <strong>Weekly Event</strong>' : '📅 <strong>Single Event</strong>'}</span><br>
                             <span style="color: #666; word-wrap: break-word;">👨‍🏫 <strong>Instructors:</strong> ${w.instructor_name || 'TBA'}</span><br>
                             <span style="color: #666; word-wrap: break-word;">🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}</span>
                             ${w.facebook_url ? `<br><span style="color: #666; word-wrap: break-word;">📘 <a href="${w.facebook_url}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">Facebook Event</a></span>` : ''}
