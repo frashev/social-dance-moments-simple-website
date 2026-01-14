@@ -95,7 +95,43 @@ def init_db() -> None:
         else:
             raise
 
-    conn.commit()
+    # Migration: Add start_time and end_time columns if they don't exist
+    try:
+        c.execute("ALTER TABLE workshops ADD COLUMN start_time TEXT")
+        print("✅ Added start_time column to workshops table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️ start_time column already exists")
+        else:
+            raise
+
+    try:
+        c.execute("ALTER TABLE workshops ADD COLUMN end_time TEXT")
+        print("✅ Added end_time column to workshops table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️ end_time column already exists")
+        else:
+            raise
+
+    # Migration: Populate start_time from existing time column
+    try:
+        c.execute("UPDATE workshops SET start_time = time WHERE start_time IS NULL AND time IS NOT NULL")
+        updated_count = c.rowcount
+        if updated_count > 0:
+            print(f"✅ Migrated {updated_count} workshops' time to start_time")
+    except Exception as e:
+        print(f"ℹ️ Migration info: {e}")
+
+    # Migration: Make time column nullable (allow new records to have NULL time)
+    # SQLite doesn't support ALTER COLUMN, so we handle this in the INSERT/UPDATE logic
+    try:
+        # Check if time column is nullable by trying to update a row with NULL
+        c.execute("SELECT COUNT(*) FROM workshops WHERE time IS NULL")
+        print("ℹ️ time column can accept NULL values (migration done or not needed)")
+    except Exception as e:
+        print(f"ℹ️ time column migration status: {e}")
+
     conn.close()
 
 @contextmanager

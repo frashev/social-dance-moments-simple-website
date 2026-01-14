@@ -20,7 +20,7 @@ def get_workshops(
         c = conn.cursor()
 
         # Build query with filters
-        query = "SELECT id, city, location, date, time, style, difficulty, instructor_name, description, cards, lat, lon, facebook_url, recurrence FROM workshops WHERE 1=1"
+        query = "SELECT id, city, location, date, start_time, end_time, style, difficulty, instructor_name, description, cards, lat, lon, facebook_url, recurrence FROM workshops WHERE 1=1"
         params = []
 
         if style:
@@ -66,7 +66,7 @@ def get_nearby_workshops(
     """Get workshops within a radius of user location."""
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("SELECT id, city, location, date, time, style, difficulty FROM workshops")
+        c.execute("SELECT id, city, location, date, start_time, end_time, style, difficulty FROM workshops")
         workshops = c.fetchall()
 
     nearby = []
@@ -90,7 +90,8 @@ def create_workshop(
     city: str = Form(...),
     location: str = Form(...),
     date: str = Form(...),
-    time: str = Form(...),
+    start_time: str = Form(...),
+    end_time: str = Form(...),
     style: str = Form(...),
     difficulty: str = Form("intermediate"),
     instructor_name: str = Form(None),
@@ -111,8 +112,8 @@ def create_workshop(
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO workshops (city, location, date, time, style, difficulty, instructor_name, description, cards, lat, lon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (city, location, date, time, style, difficulty, instructor_name, description, cards, lat, lon)
+            "INSERT INTO workshops (city, location, date, time, start_time, end_time, style, difficulty, instructor_name, description, cards, lat, lon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (city, location, date, start_time, start_time, end_time, style, difficulty, instructor_name, description, cards, lat, lon)
         )
         conn.commit()
     return {"msg": "Workshop created!", "lat": lat, "lon": lon}

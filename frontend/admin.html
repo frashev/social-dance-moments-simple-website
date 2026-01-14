@@ -171,8 +171,12 @@
                         <input type="date" id="date" required>
                     </div>
                     <div class="form-group">
-                        <label>Time *</label>
-                        <input type="time" id="time" required>
+                        <label>Start Time *</label>
+                        <input type="time" id="start_time" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Time *</label>
+                        <input type="time" id="end_time" required>
                     </div>
                     <div class="form-group">
                         <label>Style *</label>
@@ -422,6 +426,26 @@
             }, 100);
         });
 
+        // Add event listener for start_time to auto-calculate end_time (1 hour duration)
+        document.getElementById('start_time')?.addEventListener('change', function() {
+            const startTime = this.value;
+            if (startTime) {
+                // Parse start time (HH:MM format)
+                const [hours, minutes] = startTime.split(':').map(Number);
+                // Add 1 hour
+                let endHours = hours + 1;
+                let endMinutes = minutes;
+                // Handle day overflow
+                if (endHours >= 24) {
+                    endHours = endHours % 24;
+                }
+                // Format as HH:MM
+                const endTimeValue = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+                document.getElementById('end_time').value = endTimeValue;
+            }
+        });
+
+
         function toggleCreateForm() {
             const form = document.getElementById('createForm');
             const btn = document.getElementById('createBtn');
@@ -659,7 +683,7 @@
                             return dayA - dayB;
                         }
                         // Same day, sort by time
-                        return a.time.localeCompare(b.time);
+                        return (a.start_time || a.time || '').localeCompare(b.start_time || b.time || '');
                     });
 
                     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -679,12 +703,17 @@
                             currentDay = day;
                         }
 
+                        // Display time range (start - end) with fallback to old 'time' field
+                        const startTime = w.start_time || w.time || '';
+                        const endTime = w.end_time || '';
+                        const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
+
                         html += `
                             <tr>
                                 <td data-label="Description">${w.description || '-'}</td>
                                 <td data-label="City">${w.city}</td>
                                 <td data-label="Location">${w.location}</td>
-                                <td data-label="Date & Time">${getDayOfWeek(w.date)} ${w.date} ${w.time}</td>
+                                <td data-label="Date & Time">${getDayOfWeek(w.date)} ${w.date} ${timeRange}</td>
                                 <td data-label="Recurrence">${w.recurrence === 'weekly' ? '🔄 Weekly' : '📅 Single'}</td>
                                 <td data-label="Style"><strong>${w.style}</strong></td>
                                 <td data-label="Instructor">${w.instructor_name || '-'}</td>
@@ -741,15 +770,17 @@
             const city = document.getElementById('city').value.trim();
             const location = document.getElementById('location').value.trim();
             const date = document.getElementById('date').value;
-            const time = document.getElementById('time').value;
+            const start_time = document.getElementById('start_time').value;
+            const end_time = document.getElementById('end_time').value;
             const style = document.getElementById('style').value;
 
-            console.log('📝 Form data:', { city, location, date, time, style, isEditing });
+            console.log('📝 Form data:', { city, location, date, start_time, end_time, style, isEditing });
 
             formData.append('city', city);
             formData.append('location', location);
             formData.append('date', date);
-            formData.append('time', time);
+            formData.append('start_time', start_time);
+            formData.append('end_time', end_time);
             formData.append('style', style);
             formData.append('difficulty', document.getElementById('difficulty').value);
             formData.append('instructor_name', document.getElementById('instructor_name').value.trim());
@@ -817,10 +848,22 @@
 
         async function editWorkshop(workshopId) {
             try {
+                console.log('✏️ Starting edit for workshop ID:', workshopId);
+
                 // Fetch workshop data
                 const res = await fetch(`/admin/workshops?token=${token}`);
+                console.log('📥 API Response status:', res.status);
+
+                if (!res.ok) {
+                    throw new Error(`API error: ${res.status} ${res.statusText}`);
+                }
+
                 const data = await res.json();
+                console.log('📦 Fetched workshops count:', data.workshops?.length);
+                console.log('📊 All workshops:', data.workshops);
+
                 const workshop = data.workshops.find(w => w.id === workshopId);
+                console.log('🎯 Found workshop:', workshop);
 
                 if (!workshop) {
                     alert('Workshop not found');
@@ -829,48 +872,62 @@
 
                 console.log('📝 Editing workshop:', workshop);
 
-                // Populate the create form with existing data
-                document.getElementById('city').value = workshop.city;
-                document.getElementById('location').value = workshop.location;
-                document.getElementById('date').value = workshop.date;
-                document.getElementById('time').value = workshop.time;
-                document.getElementById('style').value = workshop.style;
-                document.getElementById('difficulty').value = workshop.difficulty;
+                // Show form and change button text FIRST (so elements exist in DOM)
+                const form = document.getElementById('createForm');
+                form.classList.remove('hidden');
+                document.getElementById('createBtn').style.display = 'none';
+                document.querySelector('h2').textContent = '✏️ Edit Workshop';
+                document.getElementById('submitBtn').textContent = 'Update Workshop';
+
+                // NOW populate the form with existing data (elements are in DOM)
+                console.log('📝 Populating form fields...');
+                document.getElementById('city').value = workshop.city || '';
+                document.getElementById('location').value = workshop.location || '';
+                document.getElementById('date').value = workshop.date || '';
+                document.getElementById('start_time').value = workshop.start_time || workshop.time || '';
+                document.getElementById('end_time').value = workshop.end_time || '';
+                document.getElementById('style').value = workshop.style || '';
+                document.getElementById('difficulty').value = workshop.difficulty || '';
                 document.getElementById('instructor_name').value = workshop.instructor_name || '';
                 document.getElementById('cards').value = workshop.cards || '';
                 document.getElementById('facebook_url').value = workshop.facebook_url || '';
                 document.getElementById('recurrence').value = workshop.recurrence || 'single';
                 document.getElementById('description').value = workshop.description || '';
+                console.log('✅ Form fields populated');
 
                 // Store workshop ID for update
-                const form = document.getElementById('createForm');
                 form.dataset.workshopId = workshopId;
-
-                // Change button text and form title
-                document.querySelector('h2').textContent = '✏️ Edit Workshop';
-                document.getElementById('submitBtn').textContent = 'Update Workshop';
-
-                // Show form
-                form.classList.remove('hidden');
-                document.getElementById('createBtn').style.display = 'none';
 
                 // Scroll to form
                 form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
                 // Load locations for autocomplete
                 loadLocationsForAutocomplete();
+                console.log('✨ Edit form ready');
             } catch (err) {
-                console.error('Error loading workshop:', err);
-                alert('Error loading workshop data');
+                console.error('❌ Error loading workshop:', err);
+                alert('Error loading workshop data: ' + err.message);
             }
         }
 
         async function duplicateWorkshop(workshopId) {
             try {
+                console.log('🔄 Starting duplicate for workshop ID:', workshopId);
+
                 // Fetch workshop data
                 const res = await fetch(`/admin/workshops?token=${token}`);
+                console.log('📥 API Response status:', res.status);
+
+                if (!res.ok) {
+                    throw new Error(`API error: ${res.status} ${res.statusText}`);
+                }
+
                 const data = await res.json();
+                console.log('📦 Fetched workshops count:', data.workshops?.length);
+                console.log('📊 All workshops:', data.workshops);
+
                 const workshop = data.workshops.find(w => w.id === workshopId);
+                console.log('🎯 Found workshop:', workshop);
 
                 if (!workshop) {
                     alert('Workshop not found');
@@ -879,30 +936,32 @@
 
                 console.log('📋 Duplicating workshop:', workshop);
 
-                // Populate the create form with existing data
-                document.getElementById('city').value = workshop.city;
-                document.getElementById('location').value = workshop.location;
-                document.getElementById('date').value = workshop.date;
-                document.getElementById('time').value = workshop.time;
-                document.getElementById('style').value = workshop.style;
-                document.getElementById('difficulty').value = workshop.difficulty;
+                // Show form and change button text FIRST (so elements exist in DOM)
+                const form = document.getElementById('createForm');
+                form.classList.remove('hidden');
+                document.getElementById('createBtn').style.display = 'none';
+                document.querySelector('h2').textContent = '📋 Duplicate Workshop';
+                document.getElementById('submitBtn').textContent = 'Create Duplicate';
+
+                // NOW populate the form with existing data (elements are in DOM)
+                console.log('📝 Populating form fields...');
+                document.getElementById('city').value = workshop.city || '';
+                document.getElementById('location').value = workshop.location || '';
+                document.getElementById('date').value = workshop.date || '';
+                document.getElementById('start_time').value = workshop.start_time || workshop.time || '';
+                document.getElementById('end_time').value = workshop.end_time || '';
+                document.getElementById('style').value = workshop.style || '';
+                document.getElementById('difficulty').value = workshop.difficulty || '';
                 document.getElementById('instructor_name').value = workshop.instructor_name || '';
                 document.getElementById('cards').value = workshop.cards || '';
                 document.getElementById('facebook_url').value = workshop.facebook_url || '';
                 document.getElementById('recurrence').value = workshop.recurrence || 'single';
                 document.getElementById('description').value = workshop.description || '';
+                console.log('✅ Form fields populated');
 
                 // Clear workshop ID (so it will create new, not update)
-                const form = document.getElementById('createForm');
-                delete form.dataset.workshopId;
-
-                // Change button text and form title
-                document.querySelector('h2').textContent = '📋 Duplicate Workshop';
-                document.getElementById('submitBtn').textContent = 'Create Duplicate';
-
-                // Show form
-                form.classList.remove('hidden');
-                document.getElementById('createBtn').style.display = 'none';
+                const formData = document.getElementById('createForm');
+                delete formData.dataset.workshopId;
 
                 // Scroll to form
                 form.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -916,9 +975,10 @@
                 messageDiv.style.color = '#155724';
                 messageDiv.textContent = '✅ Workshop data loaded. Modify as needed and click "Create Duplicate"';
                 messageDiv.style.display = 'block';
+                console.log('✨ Duplicate form ready');
             } catch (err) {
-                console.error('Error duplicating workshop:', err);
-                alert('Error loading workshop data');
+                console.error('❌ Error duplicating workshop:', err);
+                alert('Error loading workshop data: ' + err.message);
             }
         }
 
