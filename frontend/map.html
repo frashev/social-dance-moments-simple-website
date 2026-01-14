@@ -13,7 +13,7 @@
         nav h1 { font-size: 18px; margin-bottom: 10px; }
         nav button { background: #e74c3c; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; transition: 0.3s; font-size: 14px; }
         nav button:hover { background: #c0392b; transform: scale(1.05); }
-        .container { display: grid; grid-template-columns: 1fr 300px; gap: 20px; max-width: 1400px; margin: 0 auto; padding: 20px; height: calc(100vh - 100px); }
+        .container { display: grid; grid-template-columns: 1fr 600px; gap: 20px; max-width: 1400px; margin: 0 auto; padding: 20px; height: calc(100vh - 100px); }
         #map { height: 100%; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); filter: brightness(1.0); position: sticky; top: 20px; z-index: 10; }
         .sidebar { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); max-height: 100%; overflow-y: auto; z-index: 5; position: relative; }
         .sidebar::-webkit-scrollbar { width: 8px; }
@@ -313,7 +313,7 @@
 </head>
 <body>
     <nav>
-        <h1>🗺️ Social Dance Workshops Map</h1>
+        <h1>🗺️ Social Dance Workshops & Parties Map</h1>
         <button onclick="goHome()" style="background: #27ae60;">Home</button>
         <button id="logoutBtn" onclick="logout()" style="display: none;">Logout</button>
         <button id="loginBtn" onclick="window.location.href='/login.html'" style="display: none; background: #3498db;">Login</button>
@@ -322,7 +322,7 @@
         <div id="map"></div>
         <div class="sidebar">
             <div style="background: #e8f4f8; padding: 12px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #2980b9;">
-                <p style="color: #2980b9; font-weight: bold; margin: 0; font-size: 13px;">📅 Workshops for Dates</p>
+                <p style="color: #2980b9; font-weight: bold; margin: 0; font-size: 13px;">📅 Dates</p>
                 <p id="weekDisplayRange" style="color: #555; font-size: 12px; margin: 5px 0 0 0;">Loading...</p>
             </div>
 
@@ -375,9 +375,9 @@
                 </select>
             </div>
 
-            <h3>📍 Workshops</h3>
+            <h3>📍 Workshops & Parties</h3>
             <div id="workshopList">
-                <p>Loading workshops...</p>
+                <p>Loading workshops & parties...</p>
             </div>
         </div>
     </div>
@@ -492,6 +492,18 @@
             const date = new Date(dateStr + 'T00:00:00');
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             return `${months[date.getMonth()]} ${date.getDate()} ${date.getFullYear()}`;
+        }
+
+        function getFullWeekdayName(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            return weekdays[date.getDay()];
+        }
+
+        function formatDateWithWeekday(dateStr) {
+            const weekday = getFullWeekdayName(dateStr);
+            const formattedDate = formatDate(dateStr);
+            return `${weekday}, ${formattedDate}`;
         }
 
         function getWeekDateRange() {
@@ -686,7 +698,7 @@
                 });
 
                 // Build HTML with date separators
-                let html = `<p style="color: #667eea; font-weight: bold; margin-bottom: 10px;">📊 ${workshops.length} workshop(s) <span style="color: #999; font-weight: normal; font-size: 12px;">(ordered by date)</span></p>`;
+                let html = `<p style="color: #667eea; font-weight: bold; margin-bottom: 10px;">📊 ${workshops.length} items <span style="color: #999; font-weight: normal; font-size: 12px;">(ordered by date)</span></p>`;
 
                 Object.keys(groupedByDate).forEach(date => {
                     const dateObj = new Date(date + 'T00:00:00');
@@ -714,7 +726,7 @@
                             <small>
                                 <strong>📍 ${w.location}</strong><br>
                                 🏙️ ${w.city}<br>
-                                📅 ${formatDate(w.date)} at ${w.time}<br>
+                                📅 ${formatDateWithWeekday(w.date)} at ${w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : w.time || 'TBA'}<br>
                                 ${w.recurrence === 'weekly' ? '🔄 <strong>Weekly Event</strong>' : '📅 <strong>Single Event</strong>'}<br>
                                 👨‍🏫 <strong>Instructors:</strong> ${w.instructor_name || 'TBA'}<br>
                                 🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}<br>
@@ -777,7 +789,7 @@
                         <div style="margin-top: 10px; border-top: 2px solid ${markerColor}; padding-top: 10px; text-align: left; word-wrap: break-word; overflow-wrap: break-word;">
                             <strong style="word-wrap: break-word;">📍 ${w.location}</strong><br>
                             <span style="color: #666; word-wrap: break-word;">🏙️ ${w.city}</span><br>
-                            <span style="color: #666; word-wrap: break-word;">📅 ${formatDate(w.date)} at ${w.time}</span><br>
+                            <span style="color: #666; word-wrap: break-word;">📅 ${formatDateWithWeekday(w.date)} at ${w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : w.time || 'TBA'}</span><br>
                             <span style="color: #666; word-wrap: break-word;">${w.recurrence === 'weekly' ? '🔄 <strong>Weekly Event</strong>' : '📅 <strong>Single Event</strong>'}</span><br>
                             <span style="color: #666; word-wrap: break-word;">👨‍🏫 <strong>Instructors:</strong> ${w.instructor_name || 'TBA'}</span><br>
                             <span style="color: #666; word-wrap: break-word;">🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}</span>

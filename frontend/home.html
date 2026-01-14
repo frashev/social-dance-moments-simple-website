@@ -129,7 +129,9 @@
         const token = sessionStorage.getItem('access_token');
         const userId = sessionStorage.getItem('user_id');
         const username = sessionStorage.getItem('username');
-        const isAdmin = sessionStorage.getItem('is_admin') === 'true';
+        const isAdminRaw = sessionStorage.getItem('is_admin');
+        // Handle both string 'true' and integer 1 from backend
+        const isAdmin = isAdminRaw === 'true' || isAdminRaw === '1' || isAdminRaw === 1;
 
         if (!token || !userId) {
             window.location.href = '/login.html';
