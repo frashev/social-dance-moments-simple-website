@@ -1,15 +1,25 @@
 from fastapi import APIRouter, Form, HTTPException, Depends, Query
 from .database import get_db
-from .utils import verify_token
+from .utils import verify_token, verify_token_with_refresh
 from datetime import datetime
+from fastapi import APIRouter, Form, Query, HTTPException
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 def verify_admin(token: str = Query(...)) -> dict:
-    """Verify that user is admin."""
+    """Verify that user is admin. Attempts to refresh if token is expired."""
+    # First try normal verification
     payload = verify_token(token)
+    if payload and payload.get("is_admin"):
+        return payload
+
+    # If normal verification failed, try with refresh
+    payload, new_token = verify_token_with_refresh(token)
     if not payload or not payload.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin access required")
+
+    # Return payload with new_token info if refreshed
+    payload["new_token"] = new_token  # Will be None if not refreshed
     return payload
 
 @router.post("/workshops")

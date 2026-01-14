@@ -312,9 +312,34 @@
     </div>
 
     <script>
-        const token = sessionStorage.getItem('access_token');
+        let token = sessionStorage.getItem('access_token');
         const userId = sessionStorage.getItem('user_id');
         const isAdmin = sessionStorage.getItem('is_admin') === 'true';
+
+        // Refresh token automatically
+        async function refreshTokenIfNeeded() {
+            if (!token) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('token', token);
+
+                const res = await fetch('/refresh', { method: 'POST', body: formData });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.access_token) {
+                        token = data.access_token;
+                        sessionStorage.setItem('access_token', token);
+                        console.log('✅ Token refreshed');
+                    }
+                }
+            } catch (err) {
+                console.error('Token refresh failed:', err);
+            }
+        }
+
+        // Check token every 5 minutes
+        setInterval(refreshTokenIfNeeded, 5 * 60 * 1000);
 
         // Check if user is admin on page load
         if (!token || !userId || !isAdmin) {

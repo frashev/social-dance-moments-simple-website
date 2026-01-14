@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Form, HTTPException
 from .database import get_db
-from .utils import hash_password, verify_password, create_access_token
+from .utils import hash_password, verify_password, create_access_token, verify_token_with_refresh
 
 router = APIRouter()
 
@@ -33,4 +33,30 @@ def login(username: str = Form(...), password: str = Form(...)):
         is_admin = bool(user[2])
         token = create_access_token(user_id, is_admin=is_admin)
         return {"msg": "Login successful", "access_token": token, "user_id": user_id, "username": username, "is_admin": is_admin}
+
+@router.post("/refresh")
+def refresh_token(token: str = Form(...)):
+    """Refresh an expired or expiring token."""
+    payload, new_token = verify_token_with_refresh(token)
+
+    if payload is None:
+        raise HTTPException(status_code=401, detail="Invalid or unrefreshable token")
+
+    if new_token:
+        # Token was refreshed
+        return {
+            "msg": "Token refreshed successfully",
+            "access_token": new_token,
+            "user_id": payload.get("user_id"),
+            "is_admin": payload.get("is_admin")
+        }
+    else:
+        # Token still valid
+        return {
+            "msg": "Token still valid",
+            "access_token": token,
+            "user_id": payload.get("user_id"),
+            "is_admin": payload.get("is_admin")
+        }
+
 
