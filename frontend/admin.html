@@ -188,10 +188,10 @@
                         <label>Difficulty</label>
                         <input type="text" id="difficulty" placeholder="e.g., Beginner, Intermediate, Advanced">
                     </div>
-                    <div class="form-group">
-                        <label>Instructor Name</label>
-                        <input type="text" id="instructor_name" placeholder="e.g., Juan Martinez">
-                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Instructor Name</label>
+                    <input type="text" id="instructor_name" placeholder="e.g., Juan Martinez">
                 </div>
                 <div class="form-group">
                     <label>Cards (Dance Card Types)</label>
@@ -227,12 +227,14 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Description</th>
                         <th>City</th>
                         <th>Location</th>
                         <th>Date & Time</th>
-                        <th>Style</th>
-                        <th>Description</th>
                         <th>Recurrence</th>
+                        <th>Style</th>
+                        <th>Instructor</th>
+                        <th>Cards</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -626,6 +628,19 @@
             }
         }
 
+        function getDayOfWeek(dateString) {
+            const date = new Date(dateString + 'T00:00:00');
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            return days[date.getDay()];
+        }
+
+        function getDayIndex(dateString) {
+            const date = new Date(dateString + 'T00:00:00');
+            let dayIndex = date.getDay();
+            // Convert to Monday = 0, Sunday = 6
+            return dayIndex === 0 ? 6 : dayIndex - 1;
+        }
+
         async function loadWorkshops() {
             try {
                 const res = await fetch(`/admin/workshops?token=${token}`);
@@ -633,23 +648,57 @@
                 const tbody = document.getElementById('workshopsList');
 
                 if (data.workshops.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7">No workshops yet</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="10">No workshops yet</td></tr>';
                 } else {
-                    tbody.innerHTML = data.workshops.map(w => `
-                        <tr>
-                            <td data-label="City">${w.city}</td>
-                            <td data-label="Location">${w.location}</td>
-                            <td data-label="Date & Time">${w.date} ${w.time}</td>
-                            <td data-label="Style"><strong>${w.style}</strong></td>
-                            <td data-label="Description">${w.description || '-'}</td>
-                            <td data-label="Recurrence">${w.recurrence === 'weekly' ? '🔄 Weekly' : '📅 Single'}</td>
-                            <td data-label="Actions">
-                                <button class="action-btn edit-btn" onclick="editWorkshop(${w.id})">Edit</button>
-                                <button class="action-btn" style="background: #f39c12;" onclick="duplicateWorkshop(${w.id})">Duplicate</button>
-                                <button class="action-btn delete-btn" onclick="deleteWorkshop(${w.id})">Delete</button>
-                            </td>
-                        </tr>
-                    `).join('');
+                    // Sort workshops by day of week (Monday to Sunday) then by time
+                    const sortedWorkshops = data.workshops.sort((a, b) => {
+                        const dayA = getDayIndex(a.date);
+                        const dayB = getDayIndex(b.date);
+
+                        if (dayA !== dayB) {
+                            return dayA - dayB;
+                        }
+                        // Same day, sort by time
+                        return a.time.localeCompare(b.time);
+                    });
+
+                    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                    let html = '';
+                    let currentDay = null;
+
+                    sortedWorkshops.forEach(w => {
+                        const day = getDayIndex(w.date);
+                        const dayName = dayNames[day];
+
+                        // Add delimiter row when day changes
+                        if (currentDay !== day) {
+                            if (currentDay !== null) {
+                                html += '<tr style="height: 8px; background: linear-gradient(90deg, transparent, #667eea, transparent); border: none;"><td colspan="10"></td></tr>';
+                            }
+                            html += `<tr style="background: #667eea; color: white; font-weight: bold; height: 40px;"><td colspan="10" style="text-align: center; padding: 10px; font-size: 16px;">📅 ${dayName}</td></tr>`;
+                            currentDay = day;
+                        }
+
+                        html += `
+                            <tr>
+                                <td data-label="Description">${w.description || '-'}</td>
+                                <td data-label="City">${w.city}</td>
+                                <td data-label="Location">${w.location}</td>
+                                <td data-label="Date & Time">${getDayOfWeek(w.date)} ${w.date} ${w.time}</td>
+                                <td data-label="Recurrence">${w.recurrence === 'weekly' ? '🔄 Weekly' : '📅 Single'}</td>
+                                <td data-label="Style"><strong>${w.style}</strong></td>
+                                <td data-label="Instructor">${w.instructor_name || '-'}</td>
+                                <td data-label="Cards">${w.cards || '-'}</td>
+                                <td data-label="Actions">
+                                    <button class="action-btn edit-btn" onclick="editWorkshop(${w.id})">Edit</button>
+                                    <button class="action-btn" style="background: #f39c12;" onclick="duplicateWorkshop(${w.id})">Duplicate</button>
+                                    <button class="action-btn delete-btn" onclick="deleteWorkshop(${w.id})">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    tbody.innerHTML = html;
                 }
             } catch (err) {
                 console.error('Error loading workshops:', err);
