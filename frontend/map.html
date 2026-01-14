@@ -314,7 +314,7 @@
 <body>
     <nav>
         <h1>🗺️ Social Dance Workshops Map</h1>
-        <button onclick="window.location.href='/home.html'" style="background: #27ae60;">Home</button>
+        <button onclick="goHome()" style="background: #27ae60;">Home</button>
         <button id="logoutBtn" onclick="logout()" style="display: none;">Logout</button>
         <button id="loginBtn" onclick="window.location.href='/login.html'" style="display: none; background: #3498db;">Login</button>
     </nav>
@@ -395,6 +395,15 @@
             document.getElementById('logoutBtn').style.display = 'inline-block';
         } else {
             document.getElementById('loginBtn').style.display = 'inline-block';
+        }
+
+        // Navigate to Home with auth check - prevents flashing home.html if not logged in
+        function goHome() {
+            if (token && userId) {
+                window.location.href = '/home.html';
+            } else {
+                window.location.href = '/login.html';
+            }
         }
 
         // Initialize map centered on Europe (dance capital!)
