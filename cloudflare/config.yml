@@ -1,0 +1,7 @@
+tunnel: social-dance-app
+credentials-file: C:\Users\frash\.cloudflared\f341793d-9d49-4118-84b3-3d4fc1ae6571.json
+
+ingress:
+  - hostname: social-dance.org
+    service: http://localhost:8000
+  - service: http_status:404
