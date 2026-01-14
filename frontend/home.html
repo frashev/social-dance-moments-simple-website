@@ -14,18 +14,56 @@
         .view-map-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
         .view-map-btn:active { transform: translateY(-1px); }
         h1 { margin-bottom: 10px; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .section { background: white; padding: 30px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 8px; }
+        .section { background: white; padding: 14px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
         h2 { color: #667eea; margin-bottom: 20px; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        button { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        button { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        button.active { background: #764ba2; }
+        @media (max-width: 768px) {
+            .tabs { gap: 8px; }
+            button { padding: 8px 12px; font-size: 12px; flex: 1; min-width: 80px; }
+        }
+        @media (max-width: 480px) {
+            .tabs { gap: 5px; }
+            button { padding: 8px 10px; font-size: 11px; flex: 1; min-width: 70px; }
+        }
         button.active { background: #764ba2; }
         form { display: flex; flex-direction: column; gap: 15px; }
         input, textarea { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
         textarea { resize: vertical; min-height: 100px; }
         .song-list { display: grid; gap: 10px; }
-        .song-item { background: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 4px solid #667eea; }
-        .song-item strong { color: #333; }
+        .song-item { background: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 4px solid #667eea; word-wrap: break-word; overflow-wrap: break-word; }
+        .song-item strong { color: #333; display: block; margin-bottom: 5px; word-break: break-word; }
+        .song-item small { display: block; margin: 5px 0; color: #666; word-break: break-word; }
+        .song-photo { width: 100%; max-width: 200px; height: 200px; object-fit: cover; border-radius: 5px; margin-top: 10px; cursor: pointer; transition: transform 0.3s ease; display: block; }
+        .song-photo:hover { transform: scale(1.05); }
+        .song-url { display: inline-block; margin-top: 10px; padding: 10px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); word-break: break-word; }
+        .song-url:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5); }
+        @media (max-width: 768px) {
+            .song-list { gap: 8px; }
+            .song-item { padding: 12px; }
+            .song-item strong { font-size: 14px; }
+            .song-item small { font-size: 12px; }
+            .song-photo { max-width: 150px; height: 150px; }
+            .song-url { padding: 8px 12px; font-size: 13px; }
+        }
+        @media (max-width: 480px) {
+            .song-list { gap: 8px; }
+            .song-item { padding: 10px; border-left-width: 3px; }
+            .song-item strong { font-size: 13px; margin-bottom: 3px; }
+            .song-item small { font-size: 11px; margin: 3px 0; }
+            .song-photo { max-width: 100%; height: auto; max-height: 150px; }
+            .song-url { display: block; padding: 10px 12px; font-size: 12px; text-align: center; width: 100%; margin-top: 8px; }
+        }
+        /* Lightbox Modal */
+        .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 1000; align-items: center; justify-content: center; }
+        .lightbox.active { display: flex; }
+        .lightbox-content { position: relative; width: 90%; height: 90%; display: flex; align-items: center; justify-content: center; }
+        .lightbox-image { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .lightbox-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; background: rgba(0, 0, 0, 0.5); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; transition: background 0.3s; }
+        .lightbox-close:hover { background: rgba(0, 0, 0, 0.8); }
+        .lightbox-hint { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: #999; font-size: 12px; }
         .workshop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .workshop-card { background: #f9f9f9; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea; }
         .workshop-card strong { color: #667eea; }
@@ -45,8 +83,9 @@
         <div class="section">
             <h2>🎵 Add Your Favorite Song</h2>
             <div class="tabs">
-                <button class="active" onclick="switchTab('manual')">Manual Entry</button>
+                <button class="active" onclick="switchTab('manual')">Song Name & Artist</button>
                 <button onclick="switchTab('photo')">Upload Photo</button>
+                <button onclick="switchTab('url')">Add URL Link</button>
             </div>
             <form id="manualForm" onsubmit="addSongManual(event)">
                 <input type="text" id="songName" placeholder="Song name" required>
@@ -56,16 +95,31 @@
                 <input type="file" id="photoFile" accept="image/*" required>
                 <button type="submit">Upload Photo</button>
             </form>
+            <form id="urlForm" onsubmit="addSongURL(event)" style="display: none;">
+                <input type="text" id="songURL" placeholder="Paste YouTube or Spotify URL..." required>
+                <small style="color: #666;">Example: Youtube, Spotify etc.</small>
+                <button type="submit">Add URL</button>
+            </form>
         </div>
 
         <!-- Your Songs Section -->
         <div class="section">
-            <h2>📝 Your Uploaded Songs</h2>
+            <h2>📝 Your Songs</h2>
             <div class="song-list" id="songList">
                 <p>Loading...</p>
             </div>
         </div>
     </div>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox" id="lightbox">
+        <div class="lightbox-content">
+            <img id="lightboxImage" class="lightbox-image" src="" alt="">
+            <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+            <div class="lightbox-hint">Press H to close</div>
+        </div>
+    </div>
+
     <script>
         // Auth check using sessionStorage (consistent with admin.html)
         const token = sessionStorage.getItem('access_token');
@@ -79,6 +133,7 @@
         function switchTab(tab) {
             document.getElementById('manualForm').style.display = tab === 'manual' ? 'flex' : 'none';
             document.getElementById('photoForm').style.display = tab === 'photo' ? 'flex' : 'none';
+            document.getElementById('urlForm').style.display = tab === 'url' ? 'flex' : 'none';
         }
 
         async function addSongManual(e) {
@@ -113,6 +168,39 @@
             }
         }
 
+        async function addSongURL(e) {
+            e.preventDefault();
+            const url = document.getElementById('songURL').value;
+
+            // Validate URL
+            try {
+                new URL(url);
+            } catch {
+                alert('❌ Invalid URL format');
+                return;
+            }
+
+            // Check if it's a YouTube or Spotify URL
+            if (!url.includes('youtube.com') && !url.includes('youtu.be') && !url.includes('spotify.com')) {
+                alert('❌ Please use a valid YouTube or Spotify URL');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('user_id', userId);
+            formData.append('song_url', url);
+
+            try {
+                const res = await fetch('/recommend/song/url', { method: 'POST', body: formData });
+                const data = await res.json();
+                alert(data.msg);
+                document.getElementById('urlForm').reset();
+                loadSongs();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
         async function loadSongs() {
             try {
                 const res = await fetch(`/songs/${userId}`);
@@ -121,12 +209,53 @@
                 if (data.songs.length === 0) {
                     list.innerHTML = '<p>No songs yet. Add one above!</p>';
                 } else {
-                    list.innerHTML = data.songs.map(s => `<div class="song-item"><strong>${s.name}</strong><br><small>${s.created_at}</small></div>`).join('');
+                    list.innerHTML = data.songs.map(s => {
+                        // Check if image_path is a URL (YouTube/Spotify) or an actual image path
+                        const isURL = s.image_path && (s.image_path.includes('youtube') || s.image_path.includes('youtu.be') || s.image_path.includes('spotify'));
+
+                        return `
+                            <div class="song-item">
+                                <strong>🎵 ${s.name}</strong><br>
+                                <small>📅 ${s.created_at}</small>
+                                ${s.image_path ? (
+                                    isURL ?
+                                    `<br><a href="${s.image_path}" target="_blank" class="song-url">🔗 Open Link</a>` :
+                                    `<br><img src="${s.image_path}" alt="${s.name}" class="song-photo" onclick="openLightbox('${s.image_path}')">`
+                                ) : ''}
+                            </div>
+                        `;
+                    }).join('');
                 }
             } catch (err) {
                 document.getElementById('songList').innerHTML = '<p>Error loading songs</p>';
             }
         }
+
+        function openLightbox(imageSrc) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImage = document.getElementById('lightboxImage');
+            lightboxImage.src = imageSrc;
+            lightbox.classList.add('active');
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+        }
+
+        // Add keyboard event listener for closing lightbox with H key
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'h') {
+                closeLightbox();
+            }
+        });
+
+        // Close lightbox when clicking outside the image
+        document.getElementById('lightbox').addEventListener('click', (e) => {
+            if (e.target.id === 'lightbox') {
+                closeLightbox();
+            }
+        });
 
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
