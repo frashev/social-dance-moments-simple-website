@@ -6,6 +6,37 @@ from fastapi import APIRouter, Form, Query, HTTPException
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+# Style-based coordinate deviations to prevent marker overlap on map
+STYLE_DEVIATIONS = {
+    "salsa": (0.00005, 0.00005),      # Northeast
+    "bachata": (-0.00005, 0.00005),   # Northwest
+    "kizomba": (-0.00005, -0.00005),  # Southwest
+    "zouk": (0.00005, -0.00005),      # Southeast
+}
+
+def apply_style_deviation(lat: float, lon: float, style: str) -> tuple:
+    """
+    Apply small coordinate deviation based on dance style.
+    This spreads markers on the map so they don't overlap.
+
+    Args:
+        lat: Base latitude
+        lon: Base longitude
+        style: Dance style (salsa, bachata, kizomba, zouk)
+
+    Returns:
+        Tuple of (adjusted_lat, adjusted_lon)
+    """
+    if style not in STYLE_DEVIATIONS:
+        return (lat, lon)
+
+    lat_dev, lon_dev = STYLE_DEVIATIONS[style]
+    adjusted_lat = lat + lat_dev
+    adjusted_lon = lon + lon_dev
+
+    print(f"✅ Applied {style} deviation: ({lat}, {lon}) → ({adjusted_lat}, {adjusted_lon})")
+    return (adjusted_lat, adjusted_lon)
+
 def verify_admin(token: str = Query(...)) -> dict:
     """Verify that user is admin. Attempts to refresh if token is expired."""
     # First try normal verification
@@ -56,6 +87,10 @@ def admin_create_workshop(
                 lat = result['lat']
                 lon = result['lon']
                 print(f"✅ Inherited coordinates from predefined_locations: {lat}, {lon}")
+
+    # Apply style-based coordinate deviation to prevent marker overlap
+    if lat is not None and lon is not None:
+        lat, lon = apply_style_deviation(lat, lon, style)
 
     with get_db() as conn:
         c = conn.cursor()
@@ -116,9 +151,56 @@ def admin_update_workshop(
     if time:
         updates.append("time = ?")
         params.append(time)
+
+    # Handle style and coordinate updates
+    current_style = style
+
+    # Get current workshop data to use if not being updated
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("SELECT style, city, location FROM workshops WHERE id = ?", (workshop_id,))
+        current_workshop = c.fetchone()
+        if not current_workshop:
+            raise HTTPException(status_code=404, detail="Workshop not found")
+
+        current_style = current_workshop['style']
+        current_city = current_workshop['city']
+        current_location = current_workshop['location']
+
+    # Use new values if provided, otherwise use current
+    updated_style = style if style else current_style
+    updated_city = city if city else current_city
+    updated_location = location if location else current_location
+
     if style:
         updates.append("style = ?")
         params.append(style)
+        current_style = style
+
+    # Handle coordinates - fetch from predefined_locations if location changed
+    if location or (lat is not None or lon is not None):
+        # If location changed, fetch new coordinates from predefined_locations
+        if location:
+            with get_db() as conn:
+                c = conn.cursor()
+                c.execute(
+                    "SELECT lat, lon FROM predefined_locations WHERE location_name = ? AND city = ?",
+                    (location, updated_city)
+                )
+                result = c.fetchone()
+                if result:
+                    lat = result['lat']
+                    lon = result['lon']
+                    print(f"✅ Fetched coordinates for {location}: ({lat}, {lon})")
+
+        # Apply style-based deviation to coordinates
+        if lat is not None and lon is not None:
+            lat, lon = apply_style_deviation(lat, lon, updated_style)
+            updates.append("lat = ?")
+            params.append(lat)
+            updates.append("lon = ?")
+            params.append(lon)
+
     if difficulty:
         updates.append("difficulty = ?")
         params.append(difficulty)
