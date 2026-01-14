@@ -10,6 +10,8 @@
         nav { background: #2c3e50; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         nav h1 { font-size: 24px; }
         nav button { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        nav button:first-of-type { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); transition: all 0.3s ease; }
+        nav button:first-of-type:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
         .tab-btn { padding: 12px 24px; background: #ecf0f1; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
@@ -46,7 +48,10 @@
 <body>
     <nav>
         <h1>🎪 Admin Dashboard</h1>
-        <button onclick="logout()">Logout</button>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.location.href='/home.html'">🏠 Home</button>
+            <button onclick="logout()">Logout</button>
+        </div>
     </nav>
 
     <div class="container">
@@ -65,16 +70,11 @@
                 <h3>👥 Total Users</h3>
                 <div class="value" id="totalUsers">0</div>
             </div>
-            <div class="stat-card">
-                <h3>✅ Total Registrations</h3>
-                <div class="value" id="totalRegistrations">0</div>
-            </div>
         </div>
 
         <!-- Tabs -->
         <div class="tabs" id="tabs" style="display: none;">
             <button class="tab-btn active" onclick="switchTab('workshops')">📝 Manage Workshops</button>
-            <button class="tab-btn" onclick="switchTab('participants')">👥 View Participants</button>
             <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
         </div>
 

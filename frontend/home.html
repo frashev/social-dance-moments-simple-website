@@ -13,6 +13,9 @@
         .view-map-btn { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); transition: all 0.3s ease; text-decoration: none; }
         .view-map-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
         .view-map-btn:active { transform: translateY(-1px); }
+        .admin-dashboard-btn { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3); transition: all 0.3s ease; }
+        .admin-dashboard-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(243, 156, 18, 0.5); }
+        .admin-dashboard-btn:active { transform: translateY(-1px); }
         h1 { margin-bottom: 10px; }
         .container { max-width: 1200px; margin: 0 auto; padding: 8px; }
         .section { background: white; padding: 14px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
@@ -75,6 +78,7 @@
         <h1>💃 Social Dance Moments 🕺</h1>
         <div class="button-group">
             <button class="view-map-btn" onclick="window.location.href='/map.html'">View Workshops Map</button>
+            <button class="admin-dashboard-btn" id="adminBtn" style="display: none;" onclick="window.location.href='/admin.html'">Admin Dashboard</button>
             <button class="logout" onclick="logout()">Logout</button>
         </div>
     </nav>
@@ -125,9 +129,15 @@
         const token = sessionStorage.getItem('access_token');
         const userId = sessionStorage.getItem('user_id');
         const username = sessionStorage.getItem('username');
+        const isAdmin = sessionStorage.getItem('is_admin') === 'true';
 
         if (!token || !userId) {
             window.location.href = '/login.html';
+        }
+
+        // Show admin button only if user is admin
+        if (isAdmin) {
+            document.getElementById('adminBtn').style.display = 'block';
         }
 
         function switchTab(tab) {
