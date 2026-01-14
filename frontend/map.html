@@ -666,7 +666,16 @@
                 const matchStyle = !style || w.style === style;
                 const matchCity = !city || w.city.toLowerCase().includes(city);
                 const matchDate = w.date >= weekRange.start && w.date <= weekRange.end;
-                return matchStyle && matchCity && matchDate;
+
+                // Apply workshop/party type filter
+                let matchType = true;
+                if (styleTypeFilter === 'workshops') {
+                    matchType = w.style !== 'lets_party';
+                } else if (styleTypeFilter === 'parties') {
+                    matchType = w.style === 'lets_party';
+                }
+
+                return matchStyle && matchCity && matchDate && matchType;
             });
 
             displayWorkshops(filtered);
@@ -686,13 +695,22 @@
                 const matchStyle = !style || w.style === style;
                 const matchCity = !city || w.city.toLowerCase().includes(city);
                 const matchDate = w.date >= nextWeekRange.start && w.date <= nextWeekRange.end;
-                return matchStyle && matchCity && matchDate;
+
+                // Apply workshop/party type filter
+                let matchType = true;
+                if (styleTypeFilter === 'workshops') {
+                    matchType = w.style !== 'lets_party';
+                } else if (styleTypeFilter === 'parties') {
+                    matchType = w.style === 'lets_party';
+                }
+
+                return matchStyle && matchCity && matchDate && matchType;
             });
 
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
             updateWeekDisplayMessage(nextWeekRange);
-            showToast(`📅 Showing workshops for next week (${nextWeekRange.start} to ${nextWeekRange.end})`, 'success');
+            showToast(`📅 Showing items for next week (${nextWeekRange.start} to ${nextWeekRange.end})`, 'success');
         }
 
         function displayWorkshops(workshops) {
@@ -999,7 +1017,16 @@
                 const matchStyle = !style || w.style === style;
                 const matchCity = !city || w.city.toLowerCase().includes(city);
                 const matchDate = w.date === today;
-                return matchStyle && matchCity && matchDate;
+
+                // Apply workshop/party type filter
+                let matchType = true;
+                if (styleTypeFilter === 'workshops') {
+                    matchType = w.style !== 'lets_party';
+                } else if (styleTypeFilter === 'parties') {
+                    matchType = w.style === 'lets_party';
+                }
+
+                return matchStyle && matchCity && matchDate && matchType;
             });
 
             displayWorkshops(filtered);
@@ -1011,7 +1038,7 @@
             const todayStr = `${months[todayDate.getMonth()]} ${todayDate.getDate()}, ${todayDate.getFullYear()}`;
             document.getElementById('weekDisplayRange').textContent = `Today: ${todayStr}`;
 
-            showToast(`📅 Showing workshops for today (${today})`, 'success');
+            showToast(`📅 Showing items for today (${today})`, 'success');
         }
 
         function filterByDateRange() {
@@ -1032,7 +1059,16 @@
                 const matchStyle = !style || w.style === style;
                 const matchCity = !city || w.city.toLowerCase().includes(city);
                 const matchDate = w.date >= dateFrom && w.date <= dateTo;
-                return matchStyle && matchCity && matchDate;
+
+                // Apply workshop/party type filter
+                let matchType = true;
+                if (styleTypeFilter === 'workshops') {
+                    matchType = w.style !== 'lets_party';
+                } else if (styleTypeFilter === 'parties') {
+                    matchType = w.style === 'lets_party';
+                }
+
+                return matchStyle && matchCity && matchDate && matchType;
             });
 
             displayWorkshops(filtered);
@@ -1046,7 +1082,7 @@
             const toStr = `${months[toDate.getMonth()]} ${toDate.getDate()}`;
             document.getElementById('weekDisplayRange').textContent = `${fromStr} – ${toStr}, ${toDate.getFullYear()}`;
 
-            showToast(`📅 Showing workshops from ${dateFrom} to ${dateTo}`, 'success');
+            showToast(`📅 Showing items from ${dateFrom} to ${dateTo}`, 'success');
         }
 
         function filterBySpecificDate() {
@@ -1066,7 +1102,16 @@
                 const matchStyle = !style || w.style === style;
                 const matchCity = !city || w.city.toLowerCase().includes(city);
                 const matchDate = w.date === specificDate;
-                return matchStyle && matchCity && matchDate;
+
+                // Apply workshop/party type filter
+                let matchType = true;
+                if (styleTypeFilter === 'workshops') {
+                    matchType = w.style !== 'lets_party';
+                } else if (styleTypeFilter === 'parties') {
+                    matchType = w.style === 'lets_party';
+                }
+
+                return matchStyle && matchCity && matchDate && matchType;
             });
 
             displayWorkshops(filtered);
@@ -1078,7 +1123,7 @@
             const dateStr = `${months[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`;
             document.getElementById('weekDisplayRange').textContent = `${dateStr}`;
 
-            showToast(`📅 Showing workshops for ${specificDate}`, 'success');
+            showToast(`📅 Showing items for ${specificDate}`, 'success');
         }
 
         function clearDateFilters() {
