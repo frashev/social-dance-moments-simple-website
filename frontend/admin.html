@@ -37,6 +37,50 @@
         th { background: #667eea; color: white; padding: 15px; text-align: left; font-weight: 600; }
         td { padding: 15px; border-bottom: 1px solid #ecf0f1; }
         tr:hover { background: #f9f9f9; }
+
+        /* Mobile responsive table */
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+                width: 100%;
+            }
+            thead {
+                display: none;
+            }
+            tr {
+                margin-bottom: 20px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                overflow: hidden;
+                background: white;
+            }
+            td {
+                padding: 12px 15px;
+                text-align: right;
+                border: none;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding-left: 50%;
+            }
+            td:last-child {
+                border-bottom: none;
+            }
+            td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 15px;
+                font-weight: 600;
+                color: #667eea;
+                text-align: left;
+            }
+            .action-btn {
+                padding: 6px 12px;
+                margin-right: 3px;
+                margin-bottom: 5px;
+                font-size: 11px;
+                display: inline-block;
+            }
+        }
         .action-btn { padding: 8px 16px; margin-right: 5px; font-size: 12px; }
         .delete-btn { background: #e74c3c; }
         .edit-btn { background: #3498db; }
@@ -137,19 +181,11 @@
                     </div>
                     <div class="form-group">
                         <label>Difficulty</label>
-                        <select id="difficulty">
-                            <option value="beginner">🌱 Beginner</option>
-                            <option value="intermediate" selected>📈 Intermediate</option>
-                            <option value="advanced">🚀 Advanced</option>
-                        </select>
+                        <input type="text" id="difficulty" placeholder="e.g., Beginner, Intermediate, Advanced">
                     </div>
                     <div class="form-group">
                         <label>Instructor Name</label>
                         <input type="text" id="instructor_name" placeholder="e.g., Juan Martinez">
-                    </div>
-                    <div class="form-group">
-                        <label>Max Participants</label>
-                        <input type="number" id="max_participants" min="1" placeholder="e.g., 30">
                     </div>
                 </div>
                 <div class="form-group">
@@ -318,6 +354,11 @@
                 btn.style.display = 'block';
                 form.reset();
                 document.getElementById('formMessage').style.display = 'none';
+
+                // Reset form title and button
+                delete form.dataset.workshopId;
+                document.querySelector('h2').textContent = '✨ Create New Workshop';
+                document.getElementById('submitBtn').textContent = 'Create Workshop';
             }
         }
 
@@ -555,6 +596,11 @@
             const messageDiv = document.getElementById('formMessage');
             messageDiv.style.display = 'none';
 
+            // Check if we're editing or creating
+            const form = document.getElementById('createForm');
+            const workshopId = form.dataset.workshopId;
+            const isEditing = !!workshopId;
+
             // Collect form data
             const formData = new FormData();
             const city = document.getElementById('city').value.trim();
@@ -563,7 +609,7 @@
             const time = document.getElementById('time').value;
             const style = document.getElementById('style').value;
 
-            console.log('📝 Form data:', { city, location, date, time, style });
+            console.log('📝 Form data:', { city, location, date, time, style, isEditing });
 
             formData.append('city', city);
             formData.append('location', location);
@@ -572,7 +618,6 @@
             formData.append('style', style);
             formData.append('difficulty', document.getElementById('difficulty').value);
             formData.append('instructor_name', document.getElementById('instructor_name').value.trim());
-            formData.append('max_participants', document.getElementById('max_participants').value || 0);
             formData.append('description', document.getElementById('description').value.trim());
             formData.append('cards', document.getElementById('cards').value || '');
             formData.append('facebook_url', document.getElementById('facebook_url').value.trim() || '');
@@ -584,8 +629,11 @@
             if (lonField && lonField.value) formData.append('lon', lonField.value);
 
             try {
-                console.log('📤 Sending to /admin/workshops...');
-                const res = await fetch(`/admin/workshops?token=${token}`, { method: 'POST', body: formData });
+                const url = isEditing ? `/admin/workshops/${workshopId}?token=${token}` : `/admin/workshops?token=${token}`;
+                const method = isEditing ? 'PUT' : 'POST';
+
+                console.log(`📤 Sending ${method} to ${url}...`);
+                const res = await fetch(url, { method: method, body: formData });
                 const data = await res.json();
 
                 console.log('📥 Response:', res.status, data);
@@ -594,27 +642,32 @@
                     // Success!
                     messageDiv.style.background = '#d4edda';
                     messageDiv.style.color = '#155724';
-                    messageDiv.textContent = '✅ Workshop created successfully!';
+                    messageDiv.textContent = isEditing ? '✅ Workshop updated successfully!' : '✅ Workshop created successfully!';
                     messageDiv.style.display = 'block';
 
                     // Reset form
                     document.getElementById('createForm').reset();
+                    delete form.dataset.workshopId;
 
                     // Reload workshops and close form after 2 seconds
                     setTimeout(() => {
                         loadWorkshops();
                         loadWorkshopSelect();
                         toggleCreateForm();
+
+                        // Reset form title and button
+                        document.querySelector('h2').textContent = '✨ Create New Workshop';
+                        document.getElementById('submitBtn').textContent = 'Create Workshop';
                     }, 1500);
                 } else {
                     // Error from server
                     messageDiv.style.background = '#f8d7da';
                     messageDiv.style.color = '#721c24';
-                    messageDiv.textContent = '❌ Error: ' + (data.detail || data.msg || 'Failed to create workshop');
+                    messageDiv.textContent = '❌ Error: ' + (data.detail || data.msg || 'Failed to save workshop');
                     messageDiv.style.display = 'block';
                 }
             } catch (err) {
-                console.error('❌ Create workshop error:', err);
+                console.error('❌ Workshop error:', err);
                 messageDiv.style.background = '#f8d7da';
                 messageDiv.style.color = '#721c24';
                 messageDiv.textContent = '❌ Error: ' + err.message;
@@ -623,6 +676,55 @@
                 // Reset button
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
+            }
+        }
+
+        async function editWorkshop(workshopId) {
+            try {
+                // Fetch workshop data
+                const res = await fetch(`/admin/workshops?token=${token}`);
+                const data = await res.json();
+                const workshop = data.workshops.find(w => w.id === workshopId);
+
+                if (!workshop) {
+                    alert('Workshop not found');
+                    return;
+                }
+
+                console.log('📝 Editing workshop:', workshop);
+
+                // Populate the create form with existing data
+                document.getElementById('city').value = workshop.city;
+                document.getElementById('location').value = workshop.location;
+                document.getElementById('date').value = workshop.date;
+                document.getElementById('time').value = workshop.time;
+                document.getElementById('style').value = workshop.style;
+                document.getElementById('difficulty').value = workshop.difficulty;
+                document.getElementById('instructor_name').value = workshop.instructor_name || '';
+                document.getElementById('cards').value = workshop.cards || '';
+                document.getElementById('facebook_url').value = workshop.facebook_url || '';
+                document.getElementById('description').value = workshop.description || '';
+
+                // Store workshop ID for update
+                const form = document.getElementById('createForm');
+                form.dataset.workshopId = workshopId;
+
+                // Change button text and form title
+                document.querySelector('h2').textContent = '✏️ Edit Workshop';
+                document.getElementById('submitBtn').textContent = 'Update Workshop';
+
+                // Show form
+                form.classList.remove('hidden');
+                document.getElementById('createBtn').style.display = 'none';
+
+                // Scroll to form
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Load locations for autocomplete
+                loadLocationsForAutocomplete();
+            } catch (err) {
+                console.error('Error loading workshop:', err);
+                alert('Error loading workshop data');
             }
         }
 
@@ -824,6 +926,7 @@
                 });
             }
         }
+
     </script>
 </body>
 </html>
