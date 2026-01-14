@@ -26,12 +26,14 @@ def admin_create_workshop(
     cards: str = Form(None),
     admin: dict = Depends(verify_admin)
 ):
-    """Admin: Create a new workshop."""
+    """Admin: Create a new workshop. Only admin users can create workshops."""
+    admin_id = admin.get("user_id")
+
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO workshops (city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards)
+            "INSERT INTO workshops (admin_id, city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (admin_id, city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards)
         )
         conn.commit()
         workshop_id = c.lastrowid
@@ -52,7 +54,21 @@ def admin_update_workshop(
     cards: str = Form(None),
     admin: dict = Depends(verify_admin)
 ):
-    """Admin: Update a workshop."""
+    """Admin: Update a workshop they created. Cannot update others' workshops."""
+    admin_id = admin.get("user_id")
+
+    # Verify ownership
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("SELECT admin_id FROM workshops WHERE id = ?", (workshop_id,))
+        result = c.fetchone()
+
+        if not result:
+            raise HTTPException(status_code=404, detail="Workshop not found")
+
+        if result['admin_id'] != admin_id:
+            raise HTTPException(status_code=403, detail="You can only edit your own workshops")
+
     updates = []
     params = []
 
@@ -99,9 +115,21 @@ def admin_update_workshop(
 
 @router.delete("/workshops/{workshop_id}")
 def admin_delete_workshop(workshop_id: int, admin: dict = Depends(verify_admin)):
-    """Admin: Delete a workshop."""
+    """Admin: Delete a workshop they created. Cannot delete others' workshops."""
+    admin_id = admin.get("user_id")
+
+    # Verify ownership
     with get_db() as conn:
         c = conn.cursor()
+        c.execute("SELECT admin_id FROM workshops WHERE id = ?", (workshop_id,))
+        result = c.fetchone()
+
+        if not result:
+            raise HTTPException(status_code=404, detail="Workshop not found")
+
+        if result['admin_id'] != admin_id:
+            raise HTTPException(status_code=403, detail="You can only delete your own workshops")
+
         c.execute("DELETE FROM workshops WHERE id = ?", (workshop_id,))
         c.execute("DELETE FROM registrations WHERE workshop_id = ?", (workshop_id,))
         conn.commit()
@@ -110,16 +138,19 @@ def admin_delete_workshop(workshop_id: int, admin: dict = Depends(verify_admin))
 
 @router.get("/workshops")
 def admin_list_workshops(admin: dict = Depends(verify_admin)):
-    """Admin: List all workshops with participant counts."""
+    """Admin: List only their own workshops with participant counts."""
+    admin_id = admin.get("user_id")
+
     with get_db() as conn:
         c = conn.cursor()
         c.execute("""
             SELECT w.*, COUNT(r.id) as participant_count
             FROM workshops w
             LEFT JOIN registrations r ON w.id = r.workshop_id
+            WHERE w.admin_id = ?
             GROUP BY w.id
             ORDER BY w.date DESC
-        """)
+        """, (admin_id,))
         workshops = c.fetchall()
 
     return {"workshops": [dict(w) for w in workshops]}
@@ -156,34 +187,35 @@ def admin_mark_attended(
 
 @router.get("/stats")
 def admin_get_stats(admin: dict = Depends(verify_admin)):
-    """Admin: Get dashboard statistics."""
+    """Admin: Get dashboard statistics for their own workshops."""
+    admin_id = admin.get("user_id")
+
     with get_db() as conn:
         c = conn.cursor()
 
-        # Total workshops
-        c.execute("SELECT COUNT(*) FROM workshops")
+        # Total workshops created by this admin
+        c.execute("SELECT COUNT(*) FROM workshops WHERE admin_id = ?", (admin_id,))
         total_workshops = c.fetchone()[0]
 
-        # Total registrations
-        c.execute("SELECT COUNT(*) FROM registrations")
+        # Total registrations for this admin's workshops
+        c.execute("""
+            SELECT COUNT(*) FROM registrations 
+            WHERE workshop_id IN (SELECT id FROM workshops WHERE admin_id = ?)
+        """, (admin_id,))
         total_registrations = c.fetchone()[0]
 
-        # Total users
-        c.execute("SELECT COUNT(*) FROM users")
-        total_users = c.fetchone()[0]
-
-        # Workshops by style
+        # Workshops by style for this admin
         c.execute("""
             SELECT style, COUNT(*) as count
             FROM workshops
+            WHERE admin_id = ?
             GROUP BY style
-        """)
+        """, (admin_id,))
         workshops_by_style = {row[0]: row[1] for row in c.fetchall()}
 
     return {
         "total_workshops": total_workshops,
         "total_registrations": total_registrations,
-        "total_users": total_users,
         "workshops_by_style": workshops_by_style
     }
 

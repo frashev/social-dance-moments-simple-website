@@ -26,6 +26,7 @@ def init_db() -> None:
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS workshops (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER NOT NULL,
         city TEXT NOT NULL,
         location TEXT NOT NULL,
         date TEXT NOT NULL,
@@ -37,7 +38,8 @@ def init_db() -> None:
         max_participants INTEGER DEFAULT 0,
         lat REAL,
         lon REAL,
-        cards TEXT
+        cards TEXT,
+        FOREIGN KEY(admin_id) REFERENCES users(id)
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS registrations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
