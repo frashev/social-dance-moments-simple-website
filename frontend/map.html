@@ -649,6 +649,7 @@
                                 📅 ${formatDate(w.date)} at ${w.time}<br>
                                 👨‍🏫 <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}<br>
                                 🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}<br>
+                                ${w.facebook_url ? `📘 <a href="${w.facebook_url}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">Facebook Event</a><br>` : ''}
                                 ${w.description ? `<em style="color: #555; display: block; margin-top: 5px;">"${w.description}"</em>` : ''}
                             </small>
                         </div>
@@ -709,6 +710,7 @@
                             <span style="color: #666; word-wrap: break-word;">📅 ${formatDate(w.date)} at ${w.time}</span><br>
                             <span style="color: #666; word-wrap: break-word;">👨‍🏫 <strong>Instructor:</strong> ${w.instructor_name || 'TBA'}</span><br>
                             <span style="color: #666; word-wrap: break-word;">🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}</span>
+                            ${w.facebook_url ? `<br><span style="color: #666; word-wrap: break-word;">📘 <a href="${w.facebook_url}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">Facebook Event</a></span>` : ''}
                             ${w.description ? `<br><em style="color: #555; display: block; margin-top: 8px; font-style: italic; word-wrap: break-word;">"${w.description}"</em>` : ''}
                         </div>
                     </div>

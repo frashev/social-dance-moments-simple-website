@@ -24,16 +24,33 @@ def admin_create_workshop(
     description: str = Form(None),
     max_participants: int = Form(0),
     cards: str = Form(None),
+    facebook_url: str = Form(None),
+    lat: float = Form(None),
+    lon: float = Form(None),
     admin: dict = Depends(verify_admin)
 ):
     """Admin: Create a new workshop. Only admin users can create workshops."""
     admin_id = admin.get("user_id")
 
+    # If lat/lon not provided, try to fetch from predefined_locations
+    if lat is None or lon is None:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute(
+                "SELECT lat, lon FROM predefined_locations WHERE location_name = ? AND city = ?",
+                (location, city)
+            )
+            result = c.fetchone()
+            if result:
+                lat = result['lat']
+                lon = result['lon']
+                print(f"✅ Inherited coordinates from predefined_locations: {lat}, {lon}")
+
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO workshops (admin_id, city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (admin_id, city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards)
+            "INSERT INTO workshops (admin_id, city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (admin_id, city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon)
         )
         conn.commit()
         workshop_id = c.lastrowid
@@ -219,3 +236,47 @@ def admin_get_stats(admin: dict = Depends(verify_admin)):
         "workshops_by_style": workshops_by_style
     }
 
+# Predefined Locations Management
+@router.post("/locations")
+def admin_create_location(
+    city: str = Form(...),
+    location_name: str = Form(...),
+    lat: float = Form(...),
+    lon: float = Form(...),
+    token: str = Query(...),
+    admin: dict = Depends(verify_admin)
+):
+    """Admin: Create a predefined location with coordinates."""
+    admin_id = admin.get("user_id")
+    from datetime import datetime
+
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute(
+            "INSERT INTO predefined_locations (city, location_name, lat, lon, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (city, location_name, lat, lon, admin_id, datetime.now().isoformat())
+        )
+        conn.commit()
+        location_id = c.lastrowid
+
+    return {"msg": "Location created!", "location_id": location_id}
+
+@router.get("/locations")
+def admin_get_locations(token: str = Query(...), admin: dict = Depends(verify_admin)):
+    """Get all predefined locations."""
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("SELECT id, city, location_name, lat, lon FROM predefined_locations ORDER BY city, location_name")
+        locations = [dict(row) for row in c.fetchall()]
+
+    return {"locations": locations}
+
+@router.delete("/locations/{location_id}")
+def admin_delete_location(location_id: int, token: str = Query(...), admin: dict = Depends(verify_admin)):
+    """Delete a predefined location."""
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM predefined_locations WHERE id = ?", (location_id,))
+        conn.commit()
+
+    return {"msg": "Location deleted!"}

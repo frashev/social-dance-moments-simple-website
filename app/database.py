@@ -39,6 +39,7 @@ def init_db() -> None:
         lat REAL,
         lon REAL,
         cards TEXT,
+        facebook_url TEXT,
         FOREIGN KEY(admin_id) REFERENCES users(id)
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS registrations (
@@ -52,6 +53,27 @@ def init_db() -> None:
         FOREIGN KEY(workshop_id) REFERENCES workshops(id),
         UNIQUE(user_id, workshop_id)
     )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS predefined_locations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        city TEXT NOT NULL,
+        location_name TEXT NOT NULL,
+        lat REAL NOT NULL,
+        lon REAL NOT NULL,
+        created_by INTEGER NOT NULL,
+        created_at TEXT,
+        FOREIGN KEY(created_by) REFERENCES users(id)
+    )''')
+
+    # Migration: Add facebook_url column if it doesn't exist
+    try:
+        c.execute("ALTER TABLE workshops ADD COLUMN facebook_url TEXT")
+        print("✅ Added facebook_url column to workshops table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️ facebook_url column already exists")
+        else:
+            raise
+
     conn.commit()
     conn.close()
 
