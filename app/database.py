@@ -85,6 +85,16 @@ def init_db() -> None:
         else:
             raise
 
+    # Migration: Add is_super_admin column if it doesn't exist
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN is_super_admin INTEGER DEFAULT 0")
+        print("✅ Added is_super_admin column to users table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️ is_super_admin column already exists")
+        else:
+            raise
+
     conn.commit()
     conn.close()
 

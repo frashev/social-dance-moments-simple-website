@@ -6,6 +6,7 @@ class User(BaseModel):
     id: int
     username: str
     password_hash: str
+    is_super_admin: bool = False
 
 class Song(BaseModel):
     id: int

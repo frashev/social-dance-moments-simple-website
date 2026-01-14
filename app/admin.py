@@ -53,6 +53,36 @@ def verify_admin(token: str = Query(...)) -> dict:
     payload["new_token"] = new_token  # Will be None if not refreshed
     return payload
 
+def verify_super_admin(token: str = Query(...)) -> dict:
+    """Verify that user is super_admin. Attempts to refresh if token is expired."""
+    with get_db() as conn:
+        c = conn.cursor()
+
+        # First try normal verification
+        payload = verify_token(token)
+        if payload:
+            user_id = payload.get("user_id")
+            c.execute("SELECT is_super_admin FROM users WHERE id = ?", (user_id,))
+            user = c.fetchone()
+            if user and user['is_super_admin']:
+                return payload
+
+        # If normal verification failed, try with refresh
+        payload, new_token = verify_token_with_refresh(token)
+        if not payload:
+            raise HTTPException(status_code=403, detail="Super admin access required")
+
+        user_id = payload.get("user_id")
+        c.execute("SELECT is_super_admin FROM users WHERE id = ?", (user_id,))
+        user = c.fetchone()
+
+        if not user or not user['is_super_admin']:
+            raise HTTPException(status_code=403, detail="Super admin access required")
+
+        # Return payload with new_token info if refreshed
+        payload["new_token"] = new_token
+        return payload
+
 @router.post("/workshops")
 def admin_create_workshop(
     city: str = Form(...),
@@ -389,3 +419,42 @@ def admin_delete_location(location_id: int, token: str = Query(...), admin: dict
         conn.commit()
 
     return {"msg": "Location deleted!"}
+
+# User Management (Super Admin Only)
+@router.get("/users")
+def super_admin_get_users(super_admin: dict = Depends(verify_super_admin)):
+    """Super Admin: Get all users with their admin status."""
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("SELECT id, username, is_admin, is_super_admin FROM users ORDER BY username")
+        users = [dict(row) for row in c.fetchall()]
+
+    return {"users": users}
+
+@router.put("/users/{user_id}/admin-status")
+def super_admin_toggle_user_admin(
+    user_id: int,
+    is_admin: bool = Form(...),
+    super_admin: dict = Depends(verify_super_admin)
+):
+    """Super Admin: Toggle admin status for a user."""
+    with get_db() as conn:
+        c = conn.cursor()
+
+        # Prevent modifying super_admin users (except super_admin themselves)
+        c.execute("SELECT is_super_admin FROM users WHERE id = ?", (user_id,))
+        user = c.fetchone()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        if user['is_super_admin'] and user_id != super_admin.get("user_id"):
+            raise HTTPException(status_code=403, detail="Cannot modify super_admin status of other super_admins")
+
+        # Update admin status
+        c.execute("UPDATE users SET is_admin = ? WHERE id = ?", (int(is_admin), user_id))
+        conn.commit()
+
+    status = "admin" if is_admin else "non-admin"
+    return {"msg": f"User updated to {status}", "user_id": user_id, "is_admin": is_admin}
+

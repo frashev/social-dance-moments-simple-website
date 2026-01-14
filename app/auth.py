@@ -24,15 +24,16 @@ def login(username: str = Form(...), password: str = Form(...)):
     """Login user and return JWT access token."""
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("SELECT id, password_hash, is_admin FROM users WHERE username = ?", (username,))
+        c.execute("SELECT id, password_hash, is_admin, is_super_admin FROM users WHERE username = ?", (username,))
         user = c.fetchone()
         if not user or not verify_password(password, user[1]):
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         user_id = user[0]
         is_admin = bool(user[2])
+        is_super_admin = bool(user[3])
         token = create_access_token(user_id, is_admin=is_admin)
-        return {"msg": "Login successful", "access_token": token, "user_id": user_id, "username": username, "is_admin": is_admin}
+        return {"msg": "Login successful", "access_token": token, "user_id": user_id, "username": username, "is_admin": is_admin, "is_super_admin": is_super_admin}
 
 @router.post("/refresh")
 def refresh_token(token: str = Form(...)):

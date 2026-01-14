@@ -138,6 +138,7 @@
         <div class="tabs" id="tabs" style="display: none;">
             <button class="tab-btn active" onclick="switchTab('workshops')">📝 Manage Workshops</button>
             <button class="tab-btn" onclick="switchTab('locations')">📍 Manage Locations</button>
+            <button class="tab-btn" id="usersTabBtn" onclick="switchTab('users')" style="display: none;">👥 Manage Users</button>
         </div>
 
         <!-- Workshops Tab -->
@@ -313,12 +314,41 @@
             </div>
         </div>
 
+        <!-- Users Tab (Super Admin Only) -->
+        <div id="users-tab" class="tab-content">
+            <h2>👥 Manage Users</h2>
+            <p style="color: #666; margin-bottom: 20px;">As a super admin, you can toggle user admin status below.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Username</th>
+                        <th>Admin Status</th>
+                        <th>Super Admin</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersList">
+                    <tr><td colspan="5">Loading users...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
     </div>
 
     <script>
         let token = sessionStorage.getItem('access_token');
         const userId = sessionStorage.getItem('user_id');
-        const isAdmin = sessionStorage.getItem('is_admin') === 'true';
+        const isAdminRaw = sessionStorage.getItem('is_admin');
+        const isSuperAdminRaw = sessionStorage.getItem('is_super_admin');
+
+        // Handle both string '0'/'1' and boolean true/false from API
+        const isAdmin = isAdminRaw === 'true' || isAdminRaw === '1' || isAdminRaw === true;
+        const isSuperAdmin = isSuperAdminRaw === 'true' || isSuperAdminRaw === '1' || isSuperAdminRaw === true;
+
+        console.log('🔐 Auth check:', { token: !!token, userId, isAdmin, isSuperAdmin });
+        console.log('📦 sessionStorage:', { is_admin: isAdminRaw, is_super_admin: isSuperAdminRaw });
 
         // Refresh token automatically
         async function refreshTokenIfNeeded() {
@@ -354,9 +384,21 @@
             document.getElementById('authMessage').style.display = 'none';
             document.getElementById('stats').style.display = 'grid';
             document.getElementById('tabs').style.display = 'flex';
+
+            // Show users tab only for super_admins
+            if (isSuperAdmin) {
+                document.getElementById('usersTabBtn').style.display = 'inline-block';
+                console.log('👑 Super admin detected - showing user management tab');
+            }
+
             loadStats();
             loadWorkshops();
             loadWorkshopSelect();
+
+            // Load users if super admin
+            if (isSuperAdmin) {
+                loadUsers();
+            }
         }
 
         // Add event listener for create button
@@ -413,6 +455,11 @@
             if (tabName === 'locations') {
                 setTimeout(initLocationMap, 300);
                 loadPredefinedLocations();
+            }
+
+            // Load users if users tab is clicked
+            if (tabName === 'users') {
+                loadUsers();
             }
         }
 
@@ -1022,6 +1069,93 @@
                         showLocationMessage(`✅ Map centered on ${result.city}`, 'success');
                     }
                 });
+            }
+        }
+
+        // User Management Functions (Super Admin Only)
+        async function loadUsers() {
+            if (!isSuperAdmin) {
+                console.warn('⚠️ Non-super-admin trying to access user management');
+                return;
+            }
+
+            try {
+                console.log('👥 Loading users...');
+                const res = await fetch(`/admin/users?token=${token}`);
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Failed to load users');
+                }
+
+                const tbody = document.getElementById('usersList');
+
+                if (!data.users || data.users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5">No users found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.users.map(user => `
+                    <tr>
+                        <td data-label="User ID">${user.id}</td>
+                        <td data-label="Username"><strong>${user.username}</strong></td>
+                        <td data-label="Admin Status">
+                            <span style="padding: 6px 12px; border-radius: 5px; ${user.is_admin ? 'background: #d4edda; color: #155724;' : 'background: #f8d7da; color: #721c24;'}">
+                                ${user.is_admin ? '✅ Admin' : '❌ Non-Admin'}
+                            </span>
+                        </td>
+                        <td data-label="Super Admin">${user.is_super_admin ? '👑 Yes' : '—'}</td>
+                        <td data-label="Actions">
+                            ${user.is_super_admin ?
+                                '<span style="color: #999; font-size: 12px;">Super Admin (protected)</span>' :
+                                `<button class="action-btn ${user.is_admin ? 'delete-btn' : 'edit-btn'}" onclick="toggleUserAdmin(${user.id}, ${!user.is_admin})" style="font-size: 11px; padding: 6px 12px;">
+                                    ${user.is_admin ? '🔒 Remove Admin' : '🔓 Make Admin'}
+                                </button>`
+                            }
+                        </td>
+                    </tr>
+                `).join('');
+
+                console.log(`✅ Loaded ${data.users.length} users`);
+            } catch (err) {
+                console.error('❌ Error loading users:', err);
+                document.getElementById('usersList').innerHTML = `<tr><td colspan="5" style="color: #e74c3c;">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        async function toggleUserAdmin(userId, makeAdmin) {
+            if (!isSuperAdmin) {
+                alert('⚠️ Only super admins can manage users');
+                return;
+            }
+
+            const action = makeAdmin ? 'make admin' : 'remove admin status from';
+            if (!confirm(`Are you sure you want to ${action} user #${userId}?`)) {
+                return;
+            }
+
+            try {
+                console.log(`🔄 Toggling user #${userId} admin status to: ${makeAdmin}`);
+                const formData = new FormData();
+                formData.append('is_admin', makeAdmin ? '1' : '0');
+
+                const res = await fetch(`/admin/users/${userId}/admin-status?token=${token}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    console.log(`✅ User #${userId} updated: ${data.msg}`);
+                    alert(`✅ ${data.msg}`);
+                    loadUsers(); // Refresh the table
+                } else {
+                    throw new Error(data.detail || data.msg || 'Failed to update user');
+                }
+            } catch (err) {
+                console.error('❌ Error updating user:', err);
+                alert(`❌ Error: ${err.message}`);
             }
         }
 

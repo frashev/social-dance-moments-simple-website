@@ -65,7 +65,8 @@
                     sessionStorage.setItem('access_token', data.access_token);
                     sessionStorage.setItem('user_id', data.user_id);
                     sessionStorage.setItem('username', data.username);
-                    sessionStorage.setItem('is_admin', data.is_admin);
+                    sessionStorage.setItem('is_admin', data.is_admin ? '1' : '0');
+                    sessionStorage.setItem('is_super_admin', data.is_super_admin ? '1' : '0');
 
                     // Redirect to admin panel or home based on role
                     if (data.is_admin) {
