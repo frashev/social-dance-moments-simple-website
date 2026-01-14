@@ -135,7 +135,7 @@
 
         <!-- Tabs -->
         <div class="tabs" id="tabs" style="display: none;">
-            <button class="tab-btn active" onclick="switchTab('workshops')">📝 Manage Workshops</button>
+            <button class="tab-btn active" onclick="switchTab('workshops')">📝 Manage Workshops & Parties</button>
             <button class="tab-btn" onclick="switchTab('locations')">📍 Manage Locations</button>
             <button class="tab-btn" id="usersTabBtn" onclick="switchTab('users')" style="display: none;">👥 Manage Users</button>
         </div>
@@ -143,7 +143,7 @@
         <!-- Workshops Tab -->
         <div id="workshops-tab" class="tab-content active">
             <div style="margin-bottom: 20px;">
-                <button type="button" id="createBtn" style="background: #27ae60; color: white; font-size: 16px; padding: 12px 24px; cursor: pointer; border: none; border-radius: 5px;">+ Create New Workshop</button>
+                <button type="button" id="createBtn" style="background: #27ae60; color: white; font-size: 16px; padding: 12px 24px; cursor: pointer; border: none; border-radius: 5px;">+ Create New Workshop or Party</button>
             </div>
 
             <form onsubmit="createWorkshop(event)" class="hidden" id="createForm">
@@ -185,6 +185,7 @@
                             <option value="bachata">💕 Bachata</option>
                             <option value="kizomba">🔥 Kizomba</option>
                             <option value="zouk">✨ Zouk</option>
+                            <option value="lets_party">🎉 Let's Party</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -462,7 +463,7 @@
 
                 // Reset form title and button
                 delete form.dataset.workshopId;
-                document.querySelector('h2').textContent = '✨ Create New Workshop';
+                document.querySelector('h2').textContent = '✨ Create New Workshop or Party';
                 document.getElementById('submitBtn').textContent = 'Create Workshop';
             }
         }
@@ -822,7 +823,7 @@
                         toggleCreateForm();
 
                         // Reset form title and button
-                        document.querySelector('h2').textContent = '✨ Create New Workshop';
+                        document.querySelector('h2').textContent = '✨ Create New Workshop or Party';
                         document.getElementById('submitBtn').textContent = 'Create Workshop';
                     }, 1500);
                 } else {
