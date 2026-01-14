@@ -204,6 +204,14 @@
                     <small style="color: #666; display: block; margin-top: 3px;">Optional: Link to workshop Facebook page or event</small>
                 </div>
                 <div class="form-group">
+                    <label>Recurrence</label>
+                    <select id="recurrence" required>
+                        <option value="single">📅 Single Event</option>
+                        <option value="weekly">🔄 Each Week</option>
+                    </select>
+                    <small style="color: #666; display: block; margin-top: 3px;">Select if this is a one-time or weekly recurring event</small>
+                </div>
+                <div class="form-group">
                     <label>Description</label>
                     <textarea id="description" placeholder="Describe the workshop..."></textarea>
                 </div>
@@ -218,7 +226,8 @@
                         <th>Location</th>
                         <th>Date & Time</th>
                         <th>Style</th>
-                        <th>Participants</th>
+                        <th>Description</th>
+                        <th>Recurrence</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -549,17 +558,19 @@
                 const tbody = document.getElementById('workshopsList');
 
                 if (data.workshops.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6">No workshops yet</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7">No workshops yet</td></tr>';
                 } else {
                     tbody.innerHTML = data.workshops.map(w => `
                         <tr>
-                            <td>${w.city}</td>
-                            <td>${w.location}</td>
-                            <td>${w.date} ${w.time}</td>
-                            <td><strong>${w.style}</strong></td>
-                            <td>${w.participant_count || 0}</td>
-                            <td>
+                            <td data-label="City">${w.city}</td>
+                            <td data-label="Location">${w.location}</td>
+                            <td data-label="Date & Time">${w.date} ${w.time}</td>
+                            <td data-label="Style"><strong>${w.style}</strong></td>
+                            <td data-label="Description">${w.description || '-'}</td>
+                            <td data-label="Recurrence">${w.recurrence === 'weekly' ? '🔄 Weekly' : '📅 Single'}</td>
+                            <td data-label="Actions">
                                 <button class="action-btn edit-btn" onclick="editWorkshop(${w.id})">Edit</button>
+                                <button class="action-btn" style="background: #f39c12;" onclick="duplicateWorkshop(${w.id})">Duplicate</button>
                                 <button class="action-btn delete-btn" onclick="deleteWorkshop(${w.id})">Delete</button>
                             </td>
                         </tr>
@@ -621,6 +632,7 @@
             formData.append('description', document.getElementById('description').value.trim());
             formData.append('cards', document.getElementById('cards').value || '');
             formData.append('facebook_url', document.getElementById('facebook_url').value.trim() || '');
+            formData.append('recurrence', document.getElementById('recurrence').value);
 
             // Add coordinates if available from selected location
             const latField = document.getElementById('location_lat');
@@ -703,6 +715,7 @@
                 document.getElementById('instructor_name').value = workshop.instructor_name || '';
                 document.getElementById('cards').value = workshop.cards || '';
                 document.getElementById('facebook_url').value = workshop.facebook_url || '';
+                document.getElementById('recurrence').value = workshop.recurrence || 'single';
                 document.getElementById('description').value = workshop.description || '';
 
                 // Store workshop ID for update
@@ -724,6 +737,63 @@
                 loadLocationsForAutocomplete();
             } catch (err) {
                 console.error('Error loading workshop:', err);
+                alert('Error loading workshop data');
+            }
+        }
+
+        async function duplicateWorkshop(workshopId) {
+            try {
+                // Fetch workshop data
+                const res = await fetch(`/admin/workshops?token=${token}`);
+                const data = await res.json();
+                const workshop = data.workshops.find(w => w.id === workshopId);
+
+                if (!workshop) {
+                    alert('Workshop not found');
+                    return;
+                }
+
+                console.log('📋 Duplicating workshop:', workshop);
+
+                // Populate the create form with existing data
+                document.getElementById('city').value = workshop.city;
+                document.getElementById('location').value = workshop.location;
+                document.getElementById('date').value = workshop.date;
+                document.getElementById('time').value = workshop.time;
+                document.getElementById('style').value = workshop.style;
+                document.getElementById('difficulty').value = workshop.difficulty;
+                document.getElementById('instructor_name').value = workshop.instructor_name || '';
+                document.getElementById('cards').value = workshop.cards || '';
+                document.getElementById('facebook_url').value = workshop.facebook_url || '';
+                document.getElementById('recurrence').value = workshop.recurrence || 'single';
+                document.getElementById('description').value = workshop.description || '';
+
+                // Clear workshop ID (so it will create new, not update)
+                const form = document.getElementById('createForm');
+                delete form.dataset.workshopId;
+
+                // Change button text and form title
+                document.querySelector('h2').textContent = '📋 Duplicate Workshop';
+                document.getElementById('submitBtn').textContent = 'Create Duplicate';
+
+                // Show form
+                form.classList.remove('hidden');
+                document.getElementById('createBtn').style.display = 'none';
+
+                // Scroll to form
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Load locations for autocomplete
+                loadLocationsForAutocomplete();
+
+                // Show info message
+                const messageDiv = document.getElementById('formMessage');
+                messageDiv.style.background = '#d4edda';
+                messageDiv.style.color = '#155724';
+                messageDiv.textContent = '✅ Workshop data loaded. Modify as needed and click "Create Duplicate"';
+                messageDiv.style.display = 'block';
+            } catch (err) {
+                console.error('Error duplicating workshop:', err);
                 alert('Error loading workshop data');
             }
         }
@@ -759,10 +829,10 @@
                 } else {
                     tbody.innerHTML = data.participants.map(p => `
                         <tr>
-                            <td>${p.username}</td>
-                            <td>${new Date(p.registered_at).toLocaleDateString()}</td>
-                            <td>${p.attended ? '✅ Yes' : '❌ No'}</td>
-                            <td>
+                            <td data-label="User">${p.username}</td>
+                            <td data-label="Registered">${new Date(p.registered_at).toLocaleDateString()}</td>
+                            <td data-label="Attended">${p.attended ? '✅ Yes' : '❌ No'}</td>
+                            <td data-label="Actions">
                                 <button class="action-btn edit-btn" onclick="toggleAttended(${p.id}, ${p.attended})">
                                     Mark ${p.attended ? 'Absent' : 'Attended'}
                                 </button>

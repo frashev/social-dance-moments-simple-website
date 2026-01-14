@@ -40,6 +40,7 @@ def init_db() -> None:
         lon REAL,
         cards TEXT,
         facebook_url TEXT,
+        recurrence TEXT DEFAULT 'single',
         FOREIGN KEY(admin_id) REFERENCES users(id)
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS registrations (
@@ -71,6 +72,16 @@ def init_db() -> None:
     except sqlite3.OperationalError as e:
         if "duplicate column name" in str(e):
             print("ℹ️ facebook_url column already exists")
+        else:
+            raise
+
+    # Migration: Add recurrence column if it doesn't exist
+    try:
+        c.execute("ALTER TABLE workshops ADD COLUMN recurrence TEXT DEFAULT 'single'")
+        print("✅ Added recurrence column to workshops table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️ recurrence column already exists")
         else:
             raise
 

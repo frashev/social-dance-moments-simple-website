@@ -25,6 +25,7 @@ def admin_create_workshop(
     max_participants: int = Form(0),
     cards: str = Form(None),
     facebook_url: str = Form(None),
+    recurrence: str = Form("single"),
     lat: float = Form(None),
     lon: float = Form(None),
     admin: dict = Depends(verify_admin)
@@ -49,8 +50,8 @@ def admin_create_workshop(
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO workshops (admin_id, city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (admin_id, city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon)
+            "INSERT INTO workshops (admin_id, city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon, recurrence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (admin_id, city, location, date, time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon, recurrence)
         )
         conn.commit()
         workshop_id = c.lastrowid
@@ -69,6 +70,10 @@ def admin_update_workshop(
     instructor_name: str = Form(None),
     description: str = Form(None),
     cards: str = Form(None),
+    facebook_url: str = Form(None),
+    recurrence: str = Form(None),
+    lat: float = Form(None),
+    lon: float = Form(None),
     admin: dict = Depends(verify_admin)
 ):
     """Admin: Update a workshop they created. Cannot update others' workshops."""
@@ -116,6 +121,18 @@ def admin_update_workshop(
     if cards is not None:
         updates.append("cards = ?")
         params.append(cards)
+    if facebook_url is not None:
+        updates.append("facebook_url = ?")
+        params.append(facebook_url)
+    if recurrence is not None:
+        updates.append("recurrence = ?")
+        params.append(recurrence)
+    if lat is not None:
+        updates.append("lat = ?")
+        params.append(lat)
+    if lon is not None:
+        updates.append("lon = ?")
+        params.append(lon)
 
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
