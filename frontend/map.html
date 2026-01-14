@@ -31,6 +31,12 @@
         .filter-box button { width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.3s; }
         .filter-box button:hover { background: #764ba2; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
 
+        /* Workshop/Party Filter Button Styling */
+        .style-filter-group { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+        .style-filter-group button { flex: 1; min-width: 70px; padding: 8px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; transition: all 0.3s ease; }
+        .style-filter-group button:hover { transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
+        .style-filter-group button.active { background: #2ecc71; font-weight: bold; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); }
+
         /* Hide Leaflet default controls */
         .leaflet-control-zoom,
         .leaflet-bar,
@@ -334,9 +340,18 @@
                     <option value="bachata">Bachata</option>
                     <option value="kizomba">Kizomba</option>
                     <option value="zouk">Zouk</option>
+                    <option value="lets_party">Let's Party</option>
                 </select>
-                <input type="text" id="cityFilter" placeholder="Search by city..." style="margin-bottom: 10px;">
+                <input type="text" id="cityFilter" placeholder="Search by city..." value="sofia" style="margin-bottom: 10px;">
                 <button onclick="searchCity()" style="width: 100%; padding: 8px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; margin-bottom: 10px;">Search City</button>
+
+                <!-- Workshop/Party Filter -->
+                <h5 style="margin-top: 10px; margin-bottom: 8px; color: #667eea;">🎪 Filter by Type</h5>
+                <div class="style-filter-group">
+                    <button class="active" id="filterAll" onclick="filterByType('all')">All</button>
+                    <button id="filterWorkshops" onclick="filterByType('workshops')">Workshops</button>
+                    <button id="filterParties" onclick="filterByType('parties')">Parties</button>
+                </div>
 
                 <!-- Date Filter Section -->
                 <h5 style="margin-top: 15px; margin-bottom: 8px; color: #667eea;">📅 Date Filter</h5>
@@ -432,7 +447,7 @@
         }
 
         // Initialize map centered on Europe (dance capital!)
-        const map = L.map('map').setView([48.8566, 2.3522], 3); // Paris
+        const map = L.map('map').setView([42.6977, 23.3219], 12); // Sofia
 
         // Store current layer reference
         let currentLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -476,6 +491,7 @@
 
         let allWorkshops = [];
         let markers = [];
+        let styleTypeFilter = 'all'; // 'all', 'workshops', or 'parties'
         let activeDateFilter = {
             type: 'week', // 'week', 'today', 'range', 'date', or null
             data: null // stores range dates, specific date, etc.
@@ -485,7 +501,8 @@
             'salsa': '#c0392b',
             'bachata': '#2980b9',
             'kizomba': '#27ae60',
-            'zouk': '#8e44ad'
+            'zouk': '#8e44ad',
+            'lets_party': '#e74c3c'
         };
 
         function formatDate(dateStr) {
@@ -655,7 +672,7 @@
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
             updateWeekDisplayMessage(weekRange);
-            showToast(`📅 Showing workshops for current week (${weekRange.start} to ${weekRange.end})`, 'success');
+            showToast(`📅 Showing items for current week (${weekRange.start} to ${weekRange.end})`, 'success');
         }
 
         function filterByNextWeek() {
@@ -904,6 +921,18 @@
             }
         }
 
+        function filterByType(type) {
+            styleTypeFilter = type;
+
+            // Update button states
+            document.getElementById('filterAll').classList.toggle('active', type === 'all');
+            document.getElementById('filterWorkshops').classList.toggle('active', type === 'workshops');
+            document.getElementById('filterParties').classList.toggle('active', type === 'parties');
+
+            // Apply filter
+            filterWorkshops();
+        }
+
         function filterWorkshops() {
             const style = document.getElementById('styleFilter').value;
             const city = document.getElementById('cityFilter').value.toLowerCase().trim();
@@ -912,7 +941,17 @@
                 const matchStyle = !style || w.style === style;
                 // Match city by exact match (case-insensitive) or partial match
                 const matchCity = !city || w.city.toLowerCase() === city || w.city.toLowerCase().includes(city);
-                return matchStyle && matchCity;
+
+                // Apply workshop/party type filter
+                let matchType = true;
+                if (styleTypeFilter === 'workshops') {
+                    matchType = w.style !== 'lets_party';
+                } else if (styleTypeFilter === 'parties') {
+                    matchType = w.style === 'lets_party';
+                }
+                // 'all' matches everything
+
+                return matchStyle && matchCity && matchType;
             });
 
             // Apply active date filter
@@ -1227,6 +1266,11 @@
 
         // Load workshops on page load
         loadWorkshops();
+
+        // Auto-apply Sofia city filter after a short delay to ensure data is loaded
+        setTimeout(() => {
+            filterWorkshops();
+        }, 500);
 
         // Scroll to top button functionality
         const scrollBtn = document.getElementById('scrollToTopBtn');
