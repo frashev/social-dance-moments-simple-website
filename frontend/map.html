@@ -533,6 +533,9 @@
                 const data = await res.json();
                 allWorkshops = data.workshops;
 
+                // Expand weekly events to show all future occurrences
+                allWorkshops = expandWeeklyEvents(allWorkshops);
+
                 // Filter to show only current week by default
                 const weekRange = getWeekDateRange();
                 activeDateFilter = { type: 'week', data: null };
@@ -548,6 +551,45 @@
             } catch (err) {
                 document.getElementById('workshopList').innerHTML = '<p>Error loading workshops</p>';
             }
+        }
+
+        // Expand weekly events to multiple occurrences (without creating new DB records)
+        function expandWeeklyEvents(workshops) {
+            const expandedWorkshops = [];
+            const today = new Date();
+            const maxWeeksToShow = 52; // Show up to 1 year ahead
+
+            workshops.forEach(w => {
+                if (w.recurrence === 'weekly') {
+                    // Create multiple occurrences for weekly events
+                    const startDate = new Date(w.date + 'T00:00:00');
+                    const endDate = new Date(startDate);
+                    endDate.setDate(endDate.getDate() + (maxWeeksToShow * 7)); // 52 weeks ahead
+
+                    // Generate occurrences for each week
+                    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 7)) {
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const occurrenceDate = `${year}-${month}-${day}`;
+
+                        // Only add if date is today or in the future
+                        if (new Date(occurrenceDate + 'T00:00:00') >= today) {
+                            expandedWorkshops.push({
+                                ...w,
+                                date: occurrenceDate,
+                                isRecurringInstance: true, // Mark as recurring instance
+                                originalDate: w.date // Keep original date for reference
+                            });
+                        }
+                    }
+                } else {
+                    // Single events stay as-is
+                    expandedWorkshops.push(w);
+                }
+            });
+
+            return expandedWorkshops;
         }
 
         function updateWeekDisplayMessage(weekRange) {
@@ -634,6 +676,7 @@
                     html += groupedByDate[date].map(w => `
                         <div class="workshop-item" onclick="centerOnWorkshop(${w.id})">
                             <strong style="color: ${styleColors[w.style]}">${w.style.toUpperCase()}</strong>
+                            ${w.isRecurringInstance ? '<span style="background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; margin-left: 5px;">🔄 Recurring</span>' : ''}
                             ${w.cards ? `<div style="margin-top: 5px; display: flex; gap: 3px; flex-wrap: wrap;">
                                 ${w.cards.split(',').map(card => {
                                     const cardName = card.trim();
@@ -695,7 +738,8 @@
 
                 marker.bindPopup(`
                     <div style="padding: 10px; min-width: 200px; text-align: center; word-wrap: break-word; overflow-wrap: break-word;">
-                        <strong style="color: ${markerColor}; font-size: 16px;">${w.style.toUpperCase()}</strong><br>
+                        <strong style="color: ${markerColor}; font-size: 16px;">${w.style.toUpperCase()}</strong>
+                        ${w.isRecurringInstance ? '<span style="background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; margin-left: 5px;">🔄 Recurring</span>' : ''}<br>
                         ${w.cards ? `<div style="margin-top: 8px; display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
                             ${w.cards.split(',').map(card => {
                                 const cardName = card.trim();
