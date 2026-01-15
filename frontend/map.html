@@ -37,6 +37,12 @@
         .style-filter-group button:hover { transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
         .style-filter-group button.active { background: #2ecc71; font-weight: bold; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); }
 
+        /* Date filter button styling */
+        .date-filter-group { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+        .date-filter-group button { flex: 1; min-width: 70px; padding: 8px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; transition: all 0.3s ease; }
+        .date-filter-group button:hover { transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
+        .date-filter-group button.active { background: #2ecc71; font-weight: bold; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); }
+
         /* Hide Leaflet default controls */
         .leaflet-control-zoom,
         .leaflet-bar,
@@ -355,12 +361,11 @@
 
                 <!-- Date Filter Section -->
                 <h5 style="margin-top: 15px; margin-bottom: 8px; color: #667eea;">📅 Date Filter</h5>
-                <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
-                    <button onclick="filterByCurrentWeek()" style="flex: 1; min-width: 70px; padding: 8px; background: #16a085; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">This Week</button>
-                    <button onclick="filterByNextWeek()" style="flex: 1; min-width: 70px; padding: 8px; background: #1abc9c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Next Week</button>
-                    <button onclick="filterByToday()" style="flex: 1; min-width: 70px; padding: 8px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Today</button>
-                    <button onclick="toggleSpecificDateMode()" style="flex: 1; min-width: 70px; padding: 8px; background: #8e44ad; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Date</button>
-                    <button onclick="clearDateFilters()" style="flex: 1; min-width: 70px; padding: 8px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Clear</button>
+                <div class="date-filter-group">
+                    <button class="active" id="dateCurrentWeek" onclick="filterByCurrentWeek()">This Week</button>
+                    <button id="dateNextWeek" onclick="filterByNextWeek()">Next Week</button>
+                    <button id="dateToday" onclick="filterByToday()">Today</button>
+                    <button id="dateSpecific" onclick="toggleSpecificDateMode()">Date</button>
                 </div>
 
                 <!-- Date Range Inputs (hidden by default) -->
@@ -656,6 +661,7 @@
         }
 
         function filterByCurrentWeek() {
+            updateDateFilterButtons('dateCurrentWeek');
             const weekRange = getWeekDateRange();
             activeDateFilter = { type: 'week', data: null };
 
@@ -685,6 +691,7 @@
         }
 
         function filterByNextWeek() {
+            updateDateFilterButtons('dateNextWeek');
             const nextWeekRange = getNextWeekDateRange();
             activeDateFilter = { type: 'nextWeek', data: null };
 
@@ -939,6 +946,13 @@
             }
         }
 
+        function updateDateFilterButtons(activeId) {
+            document.getElementById('dateCurrentWeek').classList.toggle('active', activeId === 'dateCurrentWeek');
+            document.getElementById('dateNextWeek').classList.toggle('active', activeId === 'dateNextWeek');
+            document.getElementById('dateToday').classList.toggle('active', activeId === 'dateToday');
+            document.getElementById('dateSpecific').classList.toggle('active', activeId === 'dateSpecific');
+        }
+
         function filterByType(type) {
             styleTypeFilter = type;
 
@@ -1007,6 +1021,7 @@
         }
 
         function filterByToday() {
+            updateDateFilterButtons('dateToday');
             const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
             activeDateFilter = { type: 'today', data: null };
 
@@ -1042,6 +1057,7 @@
         }
 
         function filterByDateRange() {
+            updateDateFilterButtons('');
             const dateFrom = document.getElementById('dateFrom').value;
             const dateTo = document.getElementById('dateTo').value;
 
@@ -1086,6 +1102,7 @@
         }
 
         function filterBySpecificDate() {
+            updateDateFilterButtons('dateSpecific');
             const specificDate = document.getElementById('specificDate').value;
 
             if (!specificDate) {
@@ -1127,6 +1144,7 @@
         }
 
         function clearDateFilters() {
+            updateDateFilterButtons('dateCurrentWeek');
             document.getElementById('dateFrom').value = '';
             document.getElementById('dateTo').value = '';
             document.getElementById('specificDate').value = '';
