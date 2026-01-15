@@ -360,7 +360,10 @@
                 </div>
 
                 <!-- Date Filter Section -->
-                <h5 style="margin-top: 15px; margin-bottom: 8px; color: #667eea;">📅 Date Filter</h5>
+                <h5 style="margin-top: 15px; margin-bottom: 8px; color: #667eea; display: flex; align-items: center; gap: 8px;">
+                    📅 Date Filter
+                    <span id="dateFilterRange" style="font-size: 13px; font-weight: 500; color: #3498db; padding: 2px 8px; border-radius: 12px; white-space: nowrap;"></span>
+                </h5>
                 <div class="date-filter-group">
                     <button class="active" id="dateCurrentWeek" onclick="filterByCurrentWeek()">This Week</button>
                     <button id="dateNextWeek" onclick="filterByNextWeek()">Next Week</button>
@@ -604,6 +607,7 @@
 
                 // Update the week display message
                 updateWeekDisplayMessage(weekRange);
+                updateDateFilterDisplay();
 
                 displayWorkshops(currentWeekWorkshops);
                 addMarkersToMap(currentWeekWorkshops);
@@ -660,6 +664,45 @@
             document.getElementById('weekDisplayRange').textContent = `${startStr} – ${endStr}, ${startDate.getFullYear()}`;
         }
 
+        function updateDateFilterDisplay() {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            let rangeText = '';
+
+            if (activeDateFilter.type === 'week') {
+                const weekRange = getWeekDateRange();
+                const startDate = new Date(weekRange.start + 'T00:00:00');
+                const endDate = new Date(weekRange.end + 'T00:00:00');
+                const startStr = `${months[startDate.getMonth()]} ${startDate.getDate()}`;
+                const endStr = `${months[endDate.getMonth()]} ${endDate.getDate()}`;
+                rangeText = `(${startStr} – ${endStr})`;
+            } else if (activeDateFilter.type === 'nextWeek') {
+                const nextWeekRange = getNextWeekDateRange();
+                const startDate = new Date(nextWeekRange.start + 'T00:00:00');
+                const endDate = new Date(nextWeekRange.end + 'T00:00:00');
+                const startStr = `${months[startDate.getMonth()]} ${startDate.getDate()}`;
+                const endStr = `${months[endDate.getMonth()]} ${endDate.getDate()}`;
+                rangeText = `(${startStr} – ${endStr})`;
+            } else if (activeDateFilter.type === 'today') {
+                const today = new Date().toISOString().split('T')[0];
+                const dateObj = new Date(today + 'T00:00:00');
+                const dateStr = `${months[dateObj.getMonth()]} ${dateObj.getDate()}`;
+                rangeText = `(${dateStr})`;
+            } else if (activeDateFilter.type === 'range' && activeDateFilter.data) {
+                const { start, end } = activeDateFilter.data;
+                const startDate = new Date(start + 'T00:00:00');
+                const endDate = new Date(end + 'T00:00:00');
+                const startStr = `${months[startDate.getMonth()]} ${startDate.getDate()}`;
+                const endStr = `${months[endDate.getMonth()]} ${endDate.getDate()}`;
+                rangeText = `(${startStr} – ${endStr})`;
+            } else if (activeDateFilter.type === 'date' && activeDateFilter.data) {
+                const dateObj = new Date(activeDateFilter.data + 'T00:00:00');
+                const dateStr = `${months[dateObj.getMonth()]} ${dateObj.getDate()}`;
+                rangeText = `(${dateStr})`;
+            }
+
+            document.getElementById('dateFilterRange').textContent = rangeText;
+        }
+
         function filterByCurrentWeek() {
             updateDateFilterButtons('dateCurrentWeek');
             const weekRange = getWeekDateRange();
@@ -687,6 +730,7 @@
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
             updateWeekDisplayMessage(weekRange);
+            updateDateFilterDisplay();
             showToast(`📅 Showing items for current week (${weekRange.start} to ${weekRange.end})`, 'success');
         }
 
@@ -717,6 +761,7 @@
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
             updateWeekDisplayMessage(nextWeekRange);
+            updateDateFilterDisplay();
             showToast(`📅 Showing items for next week (${nextWeekRange.start} to ${nextWeekRange.end})`, 'success');
         }
 
@@ -1052,6 +1097,7 @@
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const todayStr = `${months[todayDate.getMonth()]} ${todayDate.getDate()}, ${todayDate.getFullYear()}`;
             document.getElementById('weekDisplayRange').textContent = `Today: ${todayStr}`;
+            updateDateFilterDisplay();
 
             showToast(`📅 Showing items for today (${today})`, 'success');
         }
@@ -1097,6 +1143,7 @@
             const fromStr = `${months[fromDate.getMonth()]} ${fromDate.getDate()}`;
             const toStr = `${months[toDate.getMonth()]} ${toDate.getDate()}`;
             document.getElementById('weekDisplayRange').textContent = `${fromStr} – ${toStr}, ${toDate.getFullYear()}`;
+            updateDateFilterDisplay();
 
             showToast(`📅 Showing items from ${dateFrom} to ${dateTo}`, 'success');
         }
@@ -1139,6 +1186,7 @@
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const dateStr = `${months[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`;
             document.getElementById('weekDisplayRange').textContent = `${dateStr}`;
+            updateDateFilterDisplay();
 
             showToast(`📅 Showing items for ${specificDate}`, 'success');
         }
@@ -1163,6 +1211,7 @@
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
             updateWeekDisplayMessage(weekRange);
+            updateDateFilterDisplay();
             showToast('✅ Filters cleared - showing current week', 'success');
         }
 
