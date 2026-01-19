@@ -83,6 +83,7 @@ def verify_super_admin(token: str = Query(...)) -> dict:
         payload["new_token"] = new_token
         return payload
 
+
 @router.post("/workshops")
 def admin_create_workshop(
     city: str = Form(...),

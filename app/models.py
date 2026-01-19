@@ -23,3 +23,21 @@ class Workshop(BaseModel):
     time: str  # HH:MM
     style: str  # salsa, bachata, etc.
 
+class Event(BaseModel):
+    id: int
+    admin_id: int
+    title: str
+    photo_path: Optional[str]
+    event_organizer: str
+    location: str
+    city: str
+    start_date: str  # ISO format
+    start_time: str  # HH:MM
+    end_date: str  # ISO format
+    end_time: str  # HH:MM
+    description: Optional[str]
+    facebook_url: Optional[str]
+    lat: Optional[float]
+    lon: Optional[float]
+    created_at: Optional[str]
+

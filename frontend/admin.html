@@ -16,11 +16,15 @@
         nav button:first-of-type:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { padding: 12px 24px; background: #ecf0f1; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+        .tab-btn { padding: 12px 24px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
         .tab-btn:nth-child(1) { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); }
         .tab-btn:nth-child(1):hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5); }
-        .tab-btn:nth-child(2) { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); }
-        .tab-btn:nth-child(2):hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
+        .tab-btn:nth-child(2) { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); }
+        .tab-btn:nth-child(2):hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5); }
+        .tab-btn:nth-child(3) { background: linear-gradient(135deg, #f39c12 0%, #d68910 100%); color: white; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3); }
+        .tab-btn:nth-child(3):hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(243, 156, 18, 0.5); }
+        .tab-btn:nth-child(4) { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3); }
+        .tab-btn:nth-child(4):hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(155, 89, 182, 0.5); }
         .tab-btn.active { background: #667eea; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -44,6 +48,14 @@
 
         /* Mobile responsive table */
         @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column !important;
+            }
+
+            .tab-btn {
+                width: 100% !important;
+            }
+
             table, thead, tbody, th, td, tr {
                 display: block;
                 width: 100%;
@@ -136,6 +148,7 @@
         <!-- Tabs -->
         <div class="tabs" id="tabs" style="display: none;">
             <button class="tab-btn active" onclick="switchTab('workshops')">📝 Manage Workshops & Parties</button>
+            <button class="tab-btn" onclick="switchTab('events')">🎉 Manage Events</button>
             <button class="tab-btn" onclick="switchTab('locations')">📍 Manage Locations</button>
             <button class="tab-btn" id="usersTabBtn" onclick="switchTab('users')" style="display: none;">👥 Manage Users</button>
         </div>
@@ -320,6 +333,95 @@
             </div>
         </div>
 
+        <!-- Events Tab -->
+        <div id="events-tab" class="tab-content">
+            <div style="margin-bottom: 20px;">
+                <button type="button" id="createEventBtn" style="background: #e74c3c; color: white; font-size: 16px; padding: 12px 24px; cursor: pointer; border: none; border-radius: 5px; font-weight: 600; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(231, 76, 60, 0.5)'" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 15px rgba(231, 76, 60, 0.3)'">🎉 Create New Event</button>
+            </div>
+
+            <form id="createEventForm" class="hidden" enctype="multipart/form-data">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>🎉 Create New Event</h2>
+                    <button type="button" onclick="toggleCreateEventForm()" style="background: #e74c3c; padding: 8px 16px;">✕ Close</button>
+                </div>
+                <div id="eventFormMessage" style="display: none; padding: 12px; border-radius: 5px; margin-bottom: 15px;"></div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Event Title *</label>
+                        <input type="text" id="eventTitle" placeholder="e.g., Latin Festival 2026" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Event Organizer *</label>
+                        <input type="text" id="eventOrganizer" placeholder="e.g., Sofia Dance Academy" required>
+                    </div>
+                    <div class="form-group">
+                        <label>City *</label>
+                        <input type="text" id="eventCity" placeholder="e.g., Sofia" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Location *</label>
+                        <div class="autocomplete-container">
+                            <input type="text" id="eventLocation" class="autocomplete-input" placeholder="Start typing to see suggestions..." required autocomplete="off">
+                            <div id="eventLocationSuggestions" class="autocomplete-list"></div>
+                        </div>
+                        <small style="display: block; margin-top: 5px; color: #666;">💡 Type location name to see suggestions</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Date *</label>
+                        <input type="date" id="eventStartDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Time *</label>
+                        <input type="time" id="eventStartTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Date *</label>
+                        <input type="date" id="eventEndDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Time *</label>
+                        <input type="time" id="eventEndTime" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Event Photo</label>
+                    <input type="file" id="eventPhoto" accept="image/*">
+                    <small style="color: #666; display: block; margin-top: 3px;">Optional: Upload a photo for your event</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="eventDescription" placeholder="Describe the event..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Facebook URL</label>
+                    <input type="url" id="eventFacebookUrl" placeholder="e.g., https://www.facebook.com/event-page">
+                    <small style="color: #666; display: block; margin-top: 3px;">Optional: Link to event Facebook page</small>
+                </div>
+
+                <button type="submit" id="submitEventBtn" style="background: #e74c3c; width: 100%; font-size: 16px;">🎉 Create Event</button>
+            </form>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Organizer</th>
+                        <th>Location</th>
+                        <th>Start Date & Time</th>
+                        <th>End Date & Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsList">
+                    <tr><td colspan="6">Loading events...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
         <!-- Users Tab (Super Admin Only) -->
         <div id="users-tab" class="tab-content">
             <h2>👥 Manage Users</h2>
@@ -445,6 +547,18 @@
             }
         });
 
+        // Add event listener for workshop location autocomplete
+        document.getElementById('location')?.addEventListener('input', function(e) {
+            filterLocationSuggestions(e.target.value);
+        });
+
+        document.getElementById('location')?.addEventListener('blur', function() {
+            setTimeout(() => {
+                document.getElementById('locationSuggestions')?.classList.remove('show');
+            }, 200);
+        });
+
+
 
         function toggleCreateForm() {
             const form = document.getElementById('createForm');
@@ -481,6 +595,11 @@
             if (tabName === 'locations') {
                 setTimeout(initLocationMap, 300);
                 loadPredefinedLocations();
+            }
+
+            // Load events if events tab is clicked
+            if (tabName === 'events') {
+                loadEvents();
             }
 
             // Load users if users tab is clicked
@@ -646,7 +765,12 @@
             try {
                 const res = await fetch(`/admin/stats?token=${token}`);
                 const data = await res.json();
-                document.getElementById('totalWorkshops').textContent = data.total_workshops;
+                const totalElement = document.getElementById('totalWorkshops');
+                if (totalElement) {
+                    totalElement.textContent = data.total_workshops;
+                } else {
+                    console.log('📊 Stats:', data);
+                }
             } catch (err) {
                 console.error('Error loading stats:', err);
             }
@@ -1110,6 +1234,66 @@
             console.log('✅ Selected location:', name, 'in', city, 'with coordinates:', lat, lon);
         }
 
+        function filterEventLocationSuggestions(query) {
+            if (!query.trim()) {
+                document.getElementById('eventLocationSuggestions').classList.remove('show');
+                return;
+            }
+
+            const filtered = allLocations.filter(loc =>
+                loc.location_name.toLowerCase().includes(query.toLowerCase()) ||
+                loc.city.toLowerCase().includes(query.toLowerCase())
+            );
+
+            const suggestionsDiv = document.getElementById('eventLocationSuggestions');
+
+            if (filtered.length === 0) {
+                suggestionsDiv.innerHTML = '<div style="padding: 10px; color: #999;">No locations found</div>';
+                suggestionsDiv.classList.add('show');
+                return;
+            }
+
+            suggestionsDiv.innerHTML = filtered.map((loc, index) => `
+                <div class="autocomplete-item" onclick="selectEventLocationSuggestion('${loc.location_name}', '${loc.city}', ${loc.lat}, ${loc.lon})" data-index="${index}">
+                    <strong>${loc.location_name}</strong>
+                    <small style="color: #666; display: block;">📍 ${loc.city} (${loc.lat.toFixed(2)}, ${loc.lon.toFixed(2)})</small>
+                </div>
+            `).join('');
+
+            suggestionsDiv.classList.add('show');
+        }
+
+        function selectEventLocationSuggestion(name, city, lat, lon) {
+            document.getElementById('eventLocation').value = name;
+            document.getElementById('eventCity').value = city;
+
+            // Store coordinates in hidden fields for submission
+            let latField = document.getElementById('event_location_lat');
+            let lonField = document.getElementById('event_location_lon');
+
+            if (!latField) {
+                latField = document.createElement('input');
+                latField.type = 'hidden';
+                latField.id = 'event_location_lat';
+                latField.name = 'event_lat';
+                document.getElementById('createEventForm').appendChild(latField);
+            }
+
+            if (!lonField) {
+                lonField = document.createElement('input');
+                lonField.type = 'hidden';
+                lonField.id = 'event_location_lon';
+                lonField.name = 'event_lon';
+                document.getElementById('createEventForm').appendChild(lonField);
+            }
+
+            latField.value = lat;
+            lonField.value = lon;
+
+            document.getElementById('eventLocationSuggestions').classList.remove('show');
+            console.log('✅ Selected event location:', name, 'in', city, 'with coordinates:', lat, lon);
+        }
+
         // Add event listener to location input
         document.addEventListener('DOMContentLoaded', function() {
             const locationInput = document.getElementById('location');
@@ -1128,6 +1312,21 @@
                 document.addEventListener('click', function(e) {
                     if (!e.target.matches('.autocomplete-input')) {
                         document.getElementById('locationSuggestions').classList.remove('show');
+                        document.getElementById('eventLocationSuggestions').classList.remove('show');
+                    }
+                });
+            }
+
+            // Add listener for event location input
+            const eventLocationInput = document.getElementById('eventLocation');
+            if (eventLocationInput) {
+                eventLocationInput.addEventListener('input', function(e) {
+                    filterEventLocationSuggestions(e.target.value);
+                });
+
+                eventLocationInput.addEventListener('focus', function() {
+                    if (this.value) {
+                        filterEventLocationSuggestions(this.value);
                     }
                 });
             }
@@ -1179,6 +1378,216 @@
                     }
                 });
             }
+        }
+
+        // Event Management Functions
+
+        // Add event listener for create event button
+        document.getElementById('createEventBtn')?.addEventListener('click', function() {
+            const form = document.getElementById('createEventForm');
+            const btn = this;
+
+            form.classList.remove('hidden');
+            btn.style.display = 'none';
+
+            // Load predefined locations for autocomplete when form opens
+            loadLocationsForAutocomplete();
+
+            // Scroll form into view
+            setTimeout(() => {
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        });
+
+        // Add event listener for form submission
+        document.getElementById('createEventForm')?.addEventListener('submit', function(e) {
+            createEvent(e);
+        });
+
+        function toggleCreateEventForm() {
+            const form = document.getElementById('createEventForm');
+            const btn = document.getElementById('createEventBtn');
+
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                btn.style.display = 'none';
+            } else {
+                form.classList.add('hidden');
+                btn.style.display = 'block';
+                form.reset();
+                document.getElementById('eventFormMessage').style.display = 'none';
+            }
+        }
+
+        async function createEvent(e) {
+            e.preventDefault();
+            console.log('🎉 createEvent called');
+
+            const title = document.getElementById('eventTitle').value.trim();
+            const organizer = document.getElementById('eventOrganizer').value.trim();
+            const city = document.getElementById('eventCity').value.trim();
+            const location = document.getElementById('eventLocation').value.trim();
+            const startDate = document.getElementById('eventStartDate').value;
+            const startTime = document.getElementById('eventStartTime').value;
+            const endDate = document.getElementById('eventEndDate').value;
+            const endTime = document.getElementById('eventEndTime').value;
+            const description = document.getElementById('eventDescription').value.trim();
+            const facebookUrl = document.getElementById('eventFacebookUrl').value.trim();
+            const photoFile = document.getElementById('eventPhoto').files[0];
+
+            console.log('📋 Form data:', { title, organizer, city, location, startDate, startTime, endDate, endTime });
+
+            if (!title || !organizer || !city || !location || !startDate || !startTime || !endDate || !endTime) {
+                console.warn('⚠️ Missing required fields');
+                showEventMessage('❌ Please fill in all required fields', 'error');
+                return false;
+            }
+
+            // Validate dates
+            if (new Date(endDate + 'T' + endTime) <= new Date(startDate + 'T' + startTime)) {
+                console.warn('⚠️ Invalid date range');
+                showEventMessage('❌ End date/time must be after start date/time', 'error');
+                return false;
+            }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('event_organizer', organizer);
+            formData.append('city', city);
+            formData.append('location', location);
+            formData.append('start_date', startDate);
+            formData.append('start_time', startTime);
+            formData.append('end_date', endDate);
+            formData.append('end_time', endTime);
+            formData.append('description', description);
+            formData.append('facebook_url', facebookUrl);
+
+            // Add coordinates if available from predefined locations
+            const latField = document.getElementById('event_location_lat');
+            const lonField = document.getElementById('event_location_lon');
+            if (latField && latField.value) {
+                formData.append('lat', latField.value);
+            }
+            if (lonField && lonField.value) {
+                formData.append('lon', lonField.value);
+            }
+
+            if (photoFile) {
+                formData.append('photo', photoFile);
+            }
+
+            try {
+                showEventMessage('⏳ Creating event...', 'info');
+                console.log(`🌐 Sending POST to /events?admin_id=${userId}`, { userId, formDataEntries: Object.fromEntries(formData) });
+
+                const res = await fetch(`/events?admin_id=${userId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('📡 Response received:', { status: res.status, ok: res.ok });
+                const data = await res.json();
+                console.log('📦 Response data:', data);
+
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Failed to create event');
+                }
+
+                showEventMessage(`✅ ${data.msg}`, 'success');
+                document.getElementById('createEventForm').reset();
+                toggleCreateEventForm();
+                loadEvents();
+            } catch (err) {
+                console.error('❌ Error creating event:', err);
+                showEventMessage(`❌ Error: ${err.message}`, 'error');
+            }
+
+            return false;
+        }
+
+        async function loadEvents() {
+            try {
+                console.log('🎉 Loading events...');
+                const res = await fetch('/events');
+                const data = await res.json();
+
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        console.warn('⚠️ Events endpoint not found. Please restart the server.');
+                        const tbody = document.getElementById('eventsList');
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #f39c12;">⚠️ Events feature requires server restart. Please refresh the page.</td></tr>';
+                        return;
+                    }
+                    throw new Error(data.detail || 'Failed to load events');
+                }
+
+                const tbody = document.getElementById('eventsList');
+                tbody.innerHTML = '';
+
+                if (data.events.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #999;">No events yet</td></tr>';
+                    return;
+                }
+
+                data.events.forEach(event => {
+                    const startDateTime = `${event.start_date} ${event.start_time}`;
+                    const endDateTime = `${event.end_date} ${event.end_time}`;
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td data-label="Title">${event.title}</td>
+                        <td data-label="Organizer">${event.event_organizer}</td>
+                        <td data-label="Location">${event.location}, ${event.city}</td>
+                        <td data-label="Start">${startDateTime}</td>
+                        <td data-label="End">${endDateTime}</td>
+                        <td data-label="Actions">
+                            <button class="action-btn edit-btn" onclick="editEvent(${event.id})">✏️ Edit</button>
+                            <button class="action-btn delete-btn" onclick="deleteEvent(${event.id})">🗑️ Delete</button>
+                        </td>
+                    `;
+                });
+            } catch (err) {
+                console.error('❌ Error loading events:', err);
+                const tbody = document.getElementById('eventsList');
+                tbody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center; padding: 20px;">❌ Error loading events. Please try again.</td></tr>';
+            }
+        }
+
+        async function deleteEvent(eventId) {
+            if (!confirm('🗑️ Are you sure you want to delete this event?')) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/events/${eventId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Failed to delete event');
+                }
+
+                showEventMessage(`✅ Event deleted`, 'success');
+                loadEvents();
+            } catch (err) {
+                console.error('❌ Error deleting event:', err);
+                showEventMessage(`❌ Error: ${err.message}`, 'error');
+            }
+        }
+
+        function editEvent(eventId) {
+            alert('✏️ Event editing coming soon!');
+        }
+
+        function showEventMessage(msg, type) {
+            const msgDiv = document.getElementById('eventFormMessage');
+            msgDiv.textContent = msg;
+            msgDiv.style.display = 'block';
+            msgDiv.style.background = type === 'error' ? '#f8d7da' : type === 'success' ? '#d4edda' : '#d1ecf1';
+            msgDiv.style.color = type === 'error' ? '#721c24' : type === 'success' ? '#155724' : '#0c5460';
+            msgDiv.style.border = `1px solid ${type === 'error' ? '#f5c6cb' : type === 'success' ? '#c3e6cb' : '#bee5eb'}`;
         }
 
         // User Management Functions (Super Admin Only)

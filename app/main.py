@@ -6,6 +6,7 @@ import logging
 from .auth import router as auth_router
 from .recommend import router as recommend_router
 from .workshops import router as workshops_router
+from .events import router as events_router
 from .admin import router as admin_router
 from .database import init_db
 from .geocoding import get_workshop_coordinates, WORKSHOP_GEOCODING_CACHE
@@ -35,6 +36,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(recommend_router)
 app.include_router(workshops_router)
+app.include_router(events_router)
 app.include_router(admin_router)
 
 @app.get("/api/home/{user_id}")

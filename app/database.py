@@ -64,6 +64,25 @@ def init_db() -> None:
         created_at TEXT,
         FOREIGN KEY(created_by) REFERENCES users(id)
     )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        photo_path TEXT,
+        event_organizer TEXT NOT NULL,
+        location TEXT NOT NULL,
+        city TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        description TEXT,
+        facebook_url TEXT,
+        lat REAL,
+        lon REAL,
+        created_at TEXT,
+        FOREIGN KEY(admin_id) REFERENCES users(id)
+    )''')
 
     # Migration: Add facebook_url column if it doesn't exist
     try:
