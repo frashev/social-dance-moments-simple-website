@@ -1407,6 +1407,7 @@
         function toggleCreateEventForm() {
             const form = document.getElementById('createEventForm');
             const btn = document.getElementById('createEventBtn');
+            const submitBtn = document.getElementById('submitEventBtn');
 
             if (form.classList.contains('hidden')) {
                 form.classList.remove('hidden');
@@ -1416,12 +1417,26 @@
                 btn.style.display = 'block';
                 form.reset();
                 document.getElementById('eventFormMessage').style.display = 'none';
+                // Clear photo preview
+                const photoPreviewDiv = document.getElementById('eventPhotoPreview');
+                if (photoPreviewDiv) photoPreviewDiv.style.display = 'none';
+                // Reset photo input
+                document.getElementById('eventPhoto').dataset.existingPhoto = '';
+                // Reset to create mode
+                submitBtn.dataset.mode = 'create';
+                submitBtn.dataset.eventId = '';
+                submitBtn.textContent = '🎉 Create Event';
+                document.querySelector('#createEventForm h2').textContent = '🎉 Create New Event';
             }
         }
 
         async function createEvent(e) {
             e.preventDefault();
             console.log('🎉 createEvent called');
+
+            const submitBtn = document.getElementById('submitEventBtn');
+            const isEditMode = submitBtn.dataset.mode === 'edit';
+            const eventId = submitBtn.dataset.eventId;
 
             const title = document.getElementById('eventTitle').value.trim();
             const organizer = document.getElementById('eventOrganizer').value.trim();
@@ -1462,43 +1477,61 @@
             formData.append('description', description);
             formData.append('facebook_url', facebookUrl);
 
-            // Add coordinates if available from predefined locations
-            const latField = document.getElementById('event_location_lat');
-            const lonField = document.getElementById('event_location_lon');
-            if (latField && latField.value) {
-                formData.append('lat', latField.value);
-            }
-            if (lonField && lonField.value) {
-                formData.append('lon', lonField.value);
-            }
-
             if (photoFile) {
                 formData.append('photo', photoFile);
             }
 
             try {
-                showEventMessage('⏳ Creating event...', 'info');
-                console.log(`🌐 Sending POST to /events?admin_id=${userId}`, { userId, formDataEntries: Object.fromEntries(formData) });
+                if (isEditMode) {
+                    // UPDATE existing event
+                    showEventMessage('⏳ Updating event...', 'info');
+                    console.log(`🌐 Sending PUT to /events/${eventId}`, { eventId, formDataEntries: Object.fromEntries(formData) });
 
-                const res = await fetch(`/events?admin_id=${userId}`, {
-                    method: 'POST',
-                    body: formData
-                });
+                    const res = await fetch(`/events/${eventId}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
 
-                console.log('📡 Response received:', { status: res.status, ok: res.ok });
-                const data = await res.json();
-                console.log('📦 Response data:', data);
+                    console.log('📡 Response received:', { status: res.status, ok: res.ok });
+                    const data = await res.json();
+                    console.log('📦 Response data:', data);
 
-                if (!res.ok) {
-                    throw new Error(data.detail || 'Failed to create event');
+                    if (!res.ok) {
+                        throw new Error(data.detail || 'Failed to update event');
+                    }
+
+                    showEventMessage(`✅ ${data.msg}`, 'success');
+                } else {
+                    // CREATE new event
+                    showEventMessage('⏳ Creating event...', 'info');
+                    console.log(`🌐 Sending POST to /events?admin_id=${userId}`, { userId, formDataEntries: Object.fromEntries(formData) });
+
+                    const res = await fetch(`/events?admin_id=${userId}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    console.log('📡 Response received:', { status: res.status, ok: res.ok });
+                    const data = await res.json();
+                    console.log('📦 Response data:', data);
+
+                    if (!res.ok) {
+                        throw new Error(data.detail || 'Failed to create event');
+                    }
+
+                    showEventMessage(`✅ ${data.msg}`, 'success');
                 }
 
-                showEventMessage(`✅ ${data.msg}`, 'success');
                 document.getElementById('createEventForm').reset();
                 toggleCreateEventForm();
                 loadEvents();
+                // Reset form to create mode
+                submitBtn.dataset.mode = 'create';
+                submitBtn.dataset.eventId = '';
+                submitBtn.textContent = '🎉 Create Event';
+                document.querySelector('#createEventForm h2').textContent = '🎉 Create New Event';
             } catch (err) {
-                console.error('❌ Error creating event:', err);
+                console.error('❌ Error:', err);
                 showEventMessage(`❌ Error: ${err.message}`, 'error');
             }
 
@@ -1577,8 +1610,84 @@
             }
         }
 
-        function editEvent(eventId) {
-            alert('✏️ Event editing coming soon!');
+        async function editEvent(eventId) {
+            try {
+                // Fetch event details
+                const res = await fetch(`/events/${eventId}`);
+                if (!res.ok) {
+                    throw new Error('Failed to load event');
+                }
+                const data = await res.json();
+                const event = data.event;
+
+                // Populate form with event data
+                document.getElementById('eventTitle').value = event.title || '';
+                document.getElementById('eventOrganizer').value = event.event_organizer || '';
+                document.getElementById('eventCity').value = event.city || '';
+                document.getElementById('eventLocation').value = event.location || '';
+                document.getElementById('eventStartDate').value = event.start_date || '';
+                document.getElementById('eventStartTime').value = event.start_time || '';
+                document.getElementById('eventEndDate').value = event.end_date || '';
+                document.getElementById('eventEndTime').value = event.end_time || '';
+                document.getElementById('eventDescription').value = event.description || '';
+                document.getElementById('eventFacebookUrl').value = event.facebook_url || '';
+
+                // Store lat/lon if available
+                const latField = document.getElementById('event_location_lat');
+                const lonField = document.getElementById('event_location_lon');
+                if (latField) latField.value = event.lat || '';
+                if (lonField) lonField.value = event.lon || '';
+
+                // Handle photo preview
+                const photoInput = document.getElementById('eventPhoto');
+                const photoPreviewDiv = document.getElementById('eventPhotoPreview') || createPhotoPreviewDiv();
+
+                if (event.photo_path) {
+                    console.log('📷 Loading existing photo:', event.photo_path);
+                    photoPreviewDiv.innerHTML = `
+                        <div style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px; text-align: center;">
+                            <p style="margin: 0 0 10px 0; color: #666; font-size: 12px;">📸 Current Photo:</p>
+                            <img src="/${event.photo_path}" alt="Event Photo" style="max-width: 200px; max-height: 150px; border-radius: 3px; margin-bottom: 10px;">
+                            <p style="margin: 10px 0; font-size: 12px; color: #999;">Upload a new photo to replace it</p>
+                        </div>
+                    `;
+                    photoPreviewDiv.style.display = 'block';
+                    // Store existing photo path
+                    photoInput.dataset.existingPhoto = event.photo_path;
+                } else {
+                    photoPreviewDiv.style.display = 'none';
+                    photoInput.dataset.existingPhoto = '';
+                }
+
+                // Change form to edit mode
+                const form = document.getElementById('createEventForm');
+                const submitBtn = document.getElementById('submitEventBtn');
+                const formTitle = form.querySelector('h2');
+                formTitle.textContent = '✏️ Edit Event';
+                submitBtn.textContent = '💾 Update Event';
+                submitBtn.dataset.eventId = eventId;
+                submitBtn.dataset.mode = 'edit';
+
+                // Show form
+                form.classList.remove('hidden');
+                document.getElementById('createEventBtn').style.display = 'none';
+
+                // Scroll to form
+                setTimeout(() => {
+                    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            } catch (err) {
+                console.error('❌ Error loading event:', err);
+                alert(`❌ Error loading event: ${err.message}`);
+            }
+        }
+
+        function createPhotoPreviewDiv() {
+            const photoFormGroup = document.getElementById('eventPhoto').parentElement;
+            const previewDiv = document.createElement('div');
+            previewDiv.id = 'eventPhotoPreview';
+            photoFormGroup.appendChild(previewDiv);
+            return previewDiv;
         }
 
         function showEventMessage(msg, type) {
