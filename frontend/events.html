@@ -540,16 +540,21 @@
                     const eventStartDate = event.start_date;
                     const eventEndDate = event.end_date;
 
-                    if (dateFrom) {
-                        // From Date must be within event's start and end date (inclusive)
-                        if (dateFrom < eventStartDate || dateFrom > eventEndDate) {
+                    // Check for overlap between the selected date range and event date range
+                    // Events overlap if: eventStart <= filterEnd AND eventEnd >= filterStart
+                    if (dateFrom && dateTo) {
+                        // Both From and To dates specified: check if event overlaps with [dateFrom, dateTo]
+                        if (eventEndDate < dateFrom || eventStartDate > dateTo) {
                             return false;
                         }
-                    }
-
-                    if (dateTo) {
-                        // To Date must be within event's start and end date (inclusive)
-                        if (dateTo < eventStartDate || dateTo > eventEndDate) {
+                    } else if (dateFrom) {
+                        // Only From date specified: check if event ends on or after dateFrom
+                        if (eventEndDate < dateFrom) {
+                            return false;
+                        }
+                    } else if (dateTo) {
+                        // Only To date specified: check if event starts on or before dateTo
+                        if (eventStartDate > dateTo) {
                             return false;
                         }
                     }
