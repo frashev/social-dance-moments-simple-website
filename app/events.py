@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Form, HTTPException, Query, UploadFile, File, Request
 from .database import get_db
 from .geocoding import get_workshop_coordinates
 from datetime import datetime
@@ -29,56 +29,71 @@ def get_events():
     return {"events": [dict(e) for e in events]}
 
 @router.post("/events")
-def create_event(
-    title: str = Form(...),
-    event_organizer: str = Form(...),
-    location: str = Form(...),
-    city: str = Form(...),
-    start_date: str = Form(...),
-    start_time: str = Form(...),
-    end_date: str = Form(...),
-    end_time: str = Form(...),
-    description: str = Form(None),
-    facebook_url: str = Form(None),
-    photo: UploadFile = File(None),
-    admin_id: int = Query(...),
-    lat: float = Form(None),
-    lon: float = Form(None)
+async def create_event(
+    request: Request,
+    admin_id: int = Query(...)
 ):
     """Create a new event with optional photo and geocode coordinates."""
 
-    # Handle photo upload
-    photo_path = None
-    if photo and photo.filename:
-        try:
-            # Create unique filename
-            timestamp = datetime.now().timestamp()
-            file_ext = os.path.splitext(photo.filename)[1]
-            unique_filename = f"event_{timestamp}{file_ext}"
-            photo_path = f"uploads/{unique_filename}"
+    form_data = await request.form()
 
-            file_location = UPLOAD_DIR / unique_filename
-            with open(file_location, "wb+") as file_object:
-                file_object.write(photo.file.read())
+    # Extract all form fields
+    title = form_data.get('title', '').strip()
+    event_organizer = form_data.get('event_organizer', '').strip()
+    location = form_data.get('location', '').strip()
+    city = form_data.get('city', '').strip()
+    start_date = form_data.get('start_date', '')
+    start_time = form_data.get('start_time', '')
+    end_date = form_data.get('end_date', '')
+    end_time = form_data.get('end_time', '')
+    description = form_data.get('description', '').strip()
+    facebook_url = form_data.get('facebook_url', '').strip()
+    lat = form_data.get('lat')
+    lon = form_data.get('lon')
+    photo = form_data.get('photo')
+    photo_path_input = form_data.get('photo_path')
 
-            logger.info(f"✅ Uploaded event photo: {photo_path}")
-        except Exception as e:
-            logger.warning(f"⚠️ Failed to upload photo: {str(e)}")
+    # Convert lat/lon to float if they exist
+    try:
+        lat = float(lat) if lat else None
+        lon = float(lon) if lon else None
+    except (ValueError, TypeError):
+        lat = None
+        lon = None
+
+    # Handle photo upload or use existing photo path from duplicate
+    final_photo_path = None
+
+    if photo:
+        if hasattr(photo, 'filename') and photo.filename:
+            try:
+                timestamp = datetime.now().timestamp()
+                file_ext = os.path.splitext(photo.filename)[1]
+                unique_filename = f"event_{timestamp}{file_ext}"
+                final_photo_path = f"uploads/{unique_filename}"
+
+                file_location = UPLOAD_DIR / unique_filename
+                with open(file_location, "wb+") as file_object:
+                    file_object.write(photo.file.read())
+
+                logger.info(f"✅ Uploaded photo: {final_photo_path}")
+            except Exception as e:
+                logger.error(f"❌ Failed to upload photo: {str(e)}", exc_info=True)
+    elif photo_path_input:
+        # Use photo path from duplicate
+        final_photo_path = str(photo_path_input).strip()
+        logger.info(f"✅ Using duplicate photo: {final_photo_path}")
 
     # Use passed coordinates if available from predefined locations, otherwise geocode
     final_lat, final_lon = None, None
 
     if lat is not None and lon is not None:
         final_lat, final_lon = lat, lon
-        logger.info(f"✅ Using predefined location coordinates: ({final_lat}, {final_lon})")
     else:
         # Geocode the event location
         coords = get_workshop_coordinates(location, city)
         if coords:
             final_lat, final_lon = coords
-            logger.info(f"✅ Geocoded {location}, {city} -> ({final_lat}, {final_lon})")
-        else:
-            logger.warning(f"⚠️ Failed to geocode {location}, {city}")
 
     with get_db() as conn:
         c = conn.cursor()
@@ -88,7 +103,7 @@ def create_event(
              start_date, start_time, end_date, end_time, description, 
              facebook_url, lat, lon, created_at) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (admin_id, title, photo_path, event_organizer, location, city,
+            (admin_id, title, final_photo_path, event_organizer, location, city,
              start_date, start_time, end_date, end_time, description,
              facebook_url, final_lat, final_lon, datetime.now().isoformat())
         )
@@ -98,6 +113,7 @@ def create_event(
     return {
         "msg": "Event created successfully!",
         "event_id": event_id,
+        "photo_path": final_photo_path,
         "lat": final_lat,
         "lon": final_lon
     }
