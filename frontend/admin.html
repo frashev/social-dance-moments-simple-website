@@ -717,12 +717,15 @@
                     return;
                 }
 
+                const isSuperAdmin = sessionStorage.getItem('is_super_admin') === '1' || sessionStorage.getItem('is_super_admin') === 'true';
+
                 listDiv.innerHTML = data.locations.map(loc => `
                     <div class="location-item">
                         <div>
                             <strong>${loc.location_name}</strong><br>
                             <small>📍 ${loc.city} • ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}</small>
                         </div>
+                        ${isSuperAdmin ? `<button type="button" class="delete-btn" onclick="deleteLocation(${loc.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">🗑️ Delete</button>` : ''}
                     </div>
                 `).join('');
             } catch (err) {

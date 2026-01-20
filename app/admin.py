@@ -420,8 +420,8 @@ def admin_get_locations(token: str = Query(...), admin: dict = Depends(verify_ad
     return {"locations": locations}
 
 @router.delete("/locations/{location_id}")
-def admin_delete_location(location_id: int, token: str = Query(...), admin: dict = Depends(verify_admin)):
-    """Delete a predefined location."""
+def admin_delete_location(location_id: int, token: str = Query(...), super_admin: dict = Depends(verify_super_admin)):
+    """Delete a predefined location (Super Admin only)."""
     with get_db() as conn:
         c = conn.cursor()
         c.execute("DELETE FROM predefined_locations WHERE id = ?", (location_id,))
