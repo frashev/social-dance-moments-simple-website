@@ -41,6 +41,9 @@
         .btn-primary:hover { box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5); }
         .btn-secondary { background: #f0f0f0; color: #333; border: 1.5px solid #ddd; }
         .btn-secondary:hover { background: #e0e0e0; }
+        .month-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .month-label { font-size: 12px; color: #555; background: #f5f5f5; border: 1px solid #ddd; padding: 6px 10px; border-radius: 5px; height: 36px; display: flex; align-items: center; }
+        #monthPicker { height: 36px; border: 1.5px solid #ddd; border-radius: 5px; padding: 6px 8px; font-size: 12px; }
 
         .events-info { background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 10px; margin-top: 10px; border-left: 4px solid #2196F3; color: #1565c0; }
         .events-info strong { display: block; margin-bottom: 5px;}
@@ -238,6 +241,14 @@
                 <button class="btn btn-primary" onclick="applyFilters()">🔎 Search</button>
                 <button class="btn btn-primary" onclick="toggleMap()" id="toggleMapBtn">🗺️ Hide Map</button>
                 <button class="btn btn-secondary" onclick="resetFilters()">↺ Reset</button>
+                <div class="month-controls">
+                    <button class="btn btn-secondary" onclick="setMonthFilter(0)">📅 This Month</button>
+                    <button class="btn btn-secondary" onclick="setMonthFilter(-1)">⬅️ Previous</button>
+                    <button class="btn btn-secondary" onclick="setMonthFilter(1)">➡️ Next</button>
+                    <input type="month" id="monthPicker" onchange="selectMonthFromPicker()">
+                    <button class="btn btn-secondary" onclick="openMonthPicker()">🗓️ Select Month</button>
+                    <span class="month-label" id="selectedMonthLabel">Selected: All Dates</span>
+                </div>
             </div>
         </div>
 
@@ -269,6 +280,59 @@
         let filteredEvents = [];
         const DEFAULT_COUNTRY = 'Bulgaria';
         let mapVisible = true;
+        let selectedMonthDate = null;
+
+        function formatDateInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatMonthLabel(date) {
+            return date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        }
+
+        function applyMonthSelection(date) {
+            selectedMonthDate = new Date(date.getFullYear(), date.getMonth(), 1);
+            const year = selectedMonthDate.getFullYear();
+            const month = selectedMonthDate.getMonth();
+            const startDate = new Date(year, month, 1);
+            const endDate = new Date(year, month + 1, 0);
+
+            const filterType = document.getElementById('dateFilterType');
+            filterType.value = 'range';
+            updateDateFilterUI();
+            document.getElementById('dateFrom').value = formatDateInput(startDate);
+            document.getElementById('dateTo').value = formatDateInput(endDate);
+
+            const monthPicker = document.getElementById('monthPicker');
+            monthPicker.value = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+            document.getElementById('selectedMonthLabel').textContent = `Selected: ${formatMonthLabel(selectedMonthDate)}`;
+            applyFilters();
+        }
+
+        function setMonthFilter(offset) {
+            const baseDate = offset === 0
+                ? new Date()
+                : (selectedMonthDate ? new Date(selectedMonthDate) : new Date());
+            baseDate.setMonth(baseDate.getMonth() + offset);
+            applyMonthSelection(baseDate);
+        }
+
+        function selectMonthFromPicker() {
+            const value = document.getElementById('monthPicker').value;
+            if (!value) return;
+            const [year, month] = value.split('-').map(Number);
+            applyMonthSelection(new Date(year, month - 1, 1));
+        }
+
+        function openMonthPicker() {
+            const monthPicker = document.getElementById('monthPicker');
+            monthPicker.showPicker?.();
+            monthPicker.focus();
+        }
 
         // Country-to-cities mapping
         const countryToCities = {
@@ -680,6 +744,9 @@
             document.getElementById('dateFrom').value = '';
             document.getElementById('dateTo').value = '';
             document.getElementById('exactDate').value = '';
+            document.getElementById('monthPicker').value = '';
+            document.getElementById('selectedMonthLabel').textContent = 'Selected: All Dates';
+            selectedMonthDate = null;
             updateDateFilterUI();
             updateCityOptions();
             applyFilters();
