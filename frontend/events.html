@@ -186,6 +186,7 @@
             nav h1 { font-size: 22px; }
             .container { padding: 15px; }
             .event-btn { padding: 3px 6px; font-size: 12px; }
+            .event-photo { height: 280px; }
         }
 
         @media (max-width: 480px) {
@@ -193,6 +194,7 @@
             .events-grid { grid-template-columns: 1fr; }
             .event-card { margin: 0; }
             .event-btn { padding: 3px 6px; font-size: 12px; }
+            .event-photo { height: 220px; }
         }
     </style>
 </head>
@@ -254,7 +256,6 @@
             <div class="filter-buttons" style="margin-top: 12px;">
                 <button class="btn btn-primary search-btn" onclick="applyFilters()">🔎 Search</button>
                 <button class="btn btn-primary" onclick="toggleMap()" id="toggleMapBtn">🗺️ Hide Map</button>
-                <button class="btn btn-secondary" onclick="resetFilters()">↺ Reset</button>
                 <div class="month-controls">
                     <button class="btn btn-secondary" onclick="setMonthFilter(0)">📅 This Month</button>
                     <button class="btn btn-secondary" onclick="setMonthFilter(-1)">⬅️ Previous</button>
