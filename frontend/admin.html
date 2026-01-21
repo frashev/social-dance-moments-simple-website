@@ -614,6 +614,8 @@
         let selectedLat = null;
         let selectedLon = null;
         let locationMarker = null;
+        let allLocationMarkers = []; // Store all location markers
+        let allLocations = []; // Store all saved locations data
 
         function initLocationMap() {
             if (locationMap) return; // Already initialized
@@ -711,6 +713,9 @@
             try {
                 const res = await fetch(`/admin/locations?token=${token}`);
                 const data = await res.json();
+
+                // Store all locations globally for city search
+                allLocations = data.locations || [];
 
                 const listDiv = document.getElementById('locationsList');
                 if (!data.locations || data.locations.length === 0) {
@@ -1200,8 +1205,6 @@
             window.location.href = '/login.html';
         }
 
-        // Store all locations for autocomplete
-        let allLocations = [];
 
         async function loadLocationsForAutocomplete() {
             try {
@@ -1421,6 +1424,39 @@
                     locationMap.setView([result.lat, result.lon], 13);
                     console.log('🗺️ Map centered on:', result.city);
                     showLocationMessage(`✅ Map centered on ${result.city}`, 'success');
+
+                    // Clear existing location markers
+                    allLocationMarkers.forEach(marker => {
+                        if (locationMap && locationMap.hasLayer(marker)) {
+                            locationMap.removeLayer(marker);
+                        }
+                    });
+                    allLocationMarkers = [];
+
+                    // Display saved locations for this city
+                    const cityNameLower = cityName.toLowerCase();
+                    const locationsInCity = allLocations.filter(loc =>
+                        loc.city.toLowerCase() === cityNameLower
+                    );
+
+                    if (locationsInCity.length > 0) {
+                        locationsInCity.forEach(loc => {
+                            const marker = L.circleMarker([loc.lat, loc.lon], {
+                                radius: 8,
+                                fillColor: '#e74c3c',
+                                color: '#fff',
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            }).addTo(locationMap);
+
+                            marker.bindPopup(`<strong>${loc.location_name}</strong><br>📍 ${loc.city}`, { closeButton: true });
+                            allLocationMarkers.push(marker);
+                        });
+
+                        console.log(`📍 Displayed ${locationsInCity.length} saved location(s) for ${result.city}`);
+                        showLocationMessage(`📌 Showing ${locationsInCity.length} saved location(s)`, 'success');
+                    }
                 }
             });
         }
