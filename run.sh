@@ -1,2 +1,2 @@
-source .venv/Scripts/activate
+source .venv/bin/activate
 python -m uvicorn app.main:app
