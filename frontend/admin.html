@@ -15,16 +15,17 @@
         nav button:first-of-type { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); transition: all 0.3s ease; }
         nav button:first-of-type:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tabs-break { flex-basis: 100%; height: 0; }
         .tab-btn { padding: 12px 24px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
-        .tab-btn:nth-child(1) { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); }
-        .tab-btn:nth-child(1):hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5); }
-        .tab-btn:nth-child(2) { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); }
-        .tab-btn:nth-child(2):hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5); }
-        .tab-btn:nth-child(3) { background: linear-gradient(135deg, #f39c12 0%, #d68910 100%); color: white; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3); }
-        .tab-btn:nth-child(3):hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(243, 156, 18, 0.5); }
-        .tab-btn:nth-child(4) { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3); }
-        .tab-btn:nth-child(4):hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(155, 89, 182, 0.5); }
+        .tab-btn-workshops { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); }
+        .tab-btn-workshops:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5); }
+        .tab-btn-events { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); }
+        .tab-btn-events:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5); }
+        .tab-btn-locations { background: linear-gradient(135deg, #f39c12 0%, #d68910 100%); color: white; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3); }
+        .tab-btn-locations:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(243, 156, 18, 0.5); }
+        .tab-btn-users { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3); }
+        .tab-btn-users:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(155, 89, 182, 0.5); }
         .tab-btn.active { background: #667eea; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -138,23 +139,22 @@
             Please log in as admin to access this page.
         </div>
 
-        <!-- Statistics -->
-        <div class="stats" id="stats" style="display: none;">
-            <div class="stat-card">
-                <h3>📍 Welcome!</h3>
-            </div>
-        </div>
-
         <!-- Tabs -->
         <div class="tabs" id="tabs" style="display: none;">
-            <button class="tab-btn active" onclick="switchTab('workshops')">📝 Workshops & Parties</button>
-            <button class="tab-btn" onclick="switchTab('events')">🎉 Events</button>
-            <button class="tab-btn" onclick="switchTab('locations')">📍 Locations</button>
-            <button class="tab-btn" id="usersTabBtn" onclick="switchTab('users')" style="display: none;">👥 Manage Users</button>
+            <button class="tab-btn tab-btn-locations" onclick="switchTab('locations')">📍 Locations</button>
+            <div class="tabs-break"></div>
+            <button class="tab-btn tab-btn-workshops active" onclick="switchTab('workshops')">📝 Workshops & Parties</button>
+            <button class="tab-btn tab-btn-events" onclick="switchTab('events')">🎉 Events</button>
+            <button class="tab-btn tab-btn-users" id="usersTabBtn" onclick="switchTab('users')" style="display: none;">👥 Manage Users</button>
         </div>
 
         <!-- Workshops Tab -->
         <div id="workshops-tab" class="tab-content active">
+            <div style="margin-bottom: 10px; padding: 10px 12px; background: #f7f7ff; border-left: 4px solid #f39c12; border-radius: 6px; color: #555;">
+                <strong>Step 1:</strong> Ensure location is defined in the
+                <button type="button" onclick="switchTab('locations')" style="background: none; border: none; color: #2980b9; cursor: pointer; padding: 0; font-weight: 600;">Locations</button>
+                tab.
+            </div>
             <div style="margin-bottom: 20px;">
                 <button type="button" id="createBtn" style="background: #27ae60; color: white; font-size: 16px; padding: 12px 24px; cursor: pointer; border: none; border-radius: 5px;">+ Create New Workshop or Party</button>
             </div>
@@ -485,13 +485,15 @@
         setInterval(refreshTokenIfNeeded, 5 * 60 * 1000);
 
         // Check if user is admin on page load
+        const statsEl = document.getElementById('stats');
+
         if (!token || !userId || !isAdmin) {
             document.getElementById('authMessage').style.display = 'block';
-            document.getElementById('stats').style.display = 'none';
+            if (statsEl) statsEl.style.display = 'none';
             document.getElementById('tabs').style.display = 'none';
         } else {
             document.getElementById('authMessage').style.display = 'none';
-            document.getElementById('stats').style.display = 'grid';
+            if (statsEl) statsEl.style.display = 'grid';
             document.getElementById('tabs').style.display = 'flex';
 
             // Show users tab only for super_admins
