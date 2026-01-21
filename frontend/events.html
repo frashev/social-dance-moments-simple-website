@@ -87,6 +87,26 @@
 
         .event-location { background: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 13px; border-left: 3px solid #667eea; color: #555; }
 
+        .month-divider {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 10px 0 4px;
+        }
+
+        .month-divider::before,
+        .month-divider::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.2), rgba(102, 126, 234, 0.8));
+            border-radius: 2px;
+        }
+
         .event-link-btn {
             display: inline-flex;
             align-items: center;
@@ -869,7 +889,18 @@
                 return a.end_time.localeCompare(b.end_time);
             });
 
-            container.innerHTML = sortedEvents.map(event => createEventCard(event)).join('');
+            let currentMonthLabel = '';
+            const cards = sortedEvents.map(event => {
+                const monthLabel = formatMonthYear(event.start_date);
+                let monthHeader = '';
+                if (monthLabel !== currentMonthLabel) {
+                    currentMonthLabel = monthLabel;
+                    monthHeader = `<div class="month-divider">${escapeHtml(monthLabel)}</div>`;
+                }
+                return `${monthHeader}${createEventCard(event)}`;
+            });
+
+            container.innerHTML = cards.join('');
         }
 
         function createEventCard(event) {
@@ -916,6 +947,12 @@
             if (!dateStr) return 'N/A';
             const date = new Date(dateStr + 'T00:00:00');
             return date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function formatMonthYear(dateStr) {
+            if (!dateStr) return 'Unknown Month';
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
         }
 
         function formatTime(timeStr) {
