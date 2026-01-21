@@ -365,10 +365,6 @@
                         <input type="text" id="eventOrganizer" placeholder="e.g., Sofia Dance Academy" required>
                     </div>
                     <div class="form-group">
-                        <label>City *</label>
-                        <input type="text" id="eventCity" placeholder="e.g., Sofia" required>
-                    </div>
-                    <div class="form-group">
                         <label>Location *</label>
                         <div class="autocomplete-container">
                             <input type="text" id="eventLocation" class="autocomplete-input" placeholder="Start typing to see suggestions..." required autocomplete="off">
@@ -377,20 +373,16 @@
                         <small style="display: block; margin-top: 5px; color: #666;">💡 Type location name to see suggestions</small>
                     </div>
                     <div class="form-group">
+                        <label>City *</label>
+                        <input type="text" id="eventCity" placeholder="e.g., Sofia" required>
+                    </div>
+                    <div class="form-group">
                         <label>Start Date *</label>
                         <input type="date" id="eventStartDate" required>
                     </div>
                     <div class="form-group">
-                        <label>Start Time *</label>
-                        <input type="time" id="eventStartTime" required>
-                    </div>
-                    <div class="form-group">
                         <label>End Date *</label>
                         <input type="date" id="eventEndDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label>End Time *</label>
-                        <input type="time" id="eventEndTime" required>
                     </div>
                 </div>
 
@@ -420,8 +412,8 @@
                         <th>Title</th>
                         <th>Organizer</th>
                         <th>Location</th>
-                        <th>Start Date & Time</th>
-                        <th>End Date & Time</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -1619,6 +1611,8 @@
                 // Reset to create mode
                 submitBtn.dataset.mode = 'create';
                 submitBtn.dataset.eventId = '';
+                submitBtn.dataset.startTime = '';
+                submitBtn.dataset.endTime = '';
                 submitBtn.textContent = '🎉 Create Event';
                 document.querySelector('#createEventForm h2').textContent = '🎉 Create New Event';
             }
@@ -1637,25 +1631,26 @@
             const city = document.getElementById('eventCity').value.trim();
             const location = document.getElementById('eventLocation').value.trim();
             const startDate = document.getElementById('eventStartDate').value;
-            const startTime = document.getElementById('eventStartTime').value;
             const endDate = document.getElementById('eventEndDate').value;
-            const endTime = document.getElementById('eventEndTime').value;
             const description = document.getElementById('eventDescription').value.trim();
             const facebookUrl = document.getElementById('eventFacebookUrl').value.trim();
             const photoFile = document.getElementById('eventPhoto').files[0];
 
-            console.log('📋 Form data:', { title, organizer, city, location, startDate, startTime, endDate, endTime });
+            const startTime = submitBtn.dataset.startTime || '00:00';
+            const endTime = submitBtn.dataset.endTime || '23:59';
 
-            if (!title || !organizer || !city || !location || !startDate || !startTime || !endDate || !endTime) {
+            console.log('📋 Form data:', { title, organizer, city, location, startDate, endDate });
+
+            if (!title || !organizer || !city || !location || !startDate || !endDate) {
                 console.warn('⚠️ Missing required fields');
                 showEventMessage('❌ Please fill in all required fields', 'error');
                 return false;
             }
 
             // Validate dates
-            if (new Date(endDate + 'T' + endTime) <= new Date(startDate + 'T' + startTime)) {
+            if (new Date(endDate) < new Date(startDate)) {
                 console.warn('⚠️ Invalid date range');
-                showEventMessage('❌ End date/time must be after start date/time', 'error');
+                showEventMessage('❌ End date must be on or after start date', 'error');
                 return false;
             }
 
@@ -1766,15 +1761,15 @@
                 }
 
                 data.events.forEach(event => {
-                    const startDateTime = `${event.start_date} ${event.start_time}`;
-                    const endDateTime = `${event.end_date} ${event.end_time}`;
+                    const startDate = event.start_date || '';
+                    const endDate = event.end_date || '';
                     const row = tbody.insertRow();
                     row.innerHTML = `
                         <td data-label="Title">${event.title}</td>
                         <td data-label="Organizer">${event.event_organizer}</td>
                         <td data-label="Location">${event.location}, ${event.city}</td>
-                        <td data-label="Start">${startDateTime}</td>
-                        <td data-label="End">${endDateTime}</td>
+                        <td data-label="Start Date">${startDate}</td>
+                        <td data-label="End Date">${endDate}</td>
                         <td data-label="Actions">
                             <button class="action-btn edit-btn" onclick="editEvent(${event.id})">✏️ Edit</button>
                             <button class="action-btn" onclick="duplicateEvent(${event.id})" style="background: #f39c12;">📋 Duplicate</button>
@@ -1830,9 +1825,7 @@
                 document.getElementById('eventCity').value = event.city || '';
                 document.getElementById('eventLocation').value = event.location || '';
                 document.getElementById('eventStartDate').value = event.start_date || '';
-                document.getElementById('eventStartTime').value = event.start_time || '';
                 document.getElementById('eventEndDate').value = event.end_date || '';
-                document.getElementById('eventEndTime').value = event.end_time || '';
                 document.getElementById('eventDescription').value = event.description || '';
                 document.getElementById('eventFacebookUrl').value = event.facebook_url || '';
 
@@ -1871,6 +1864,8 @@
                 submitBtn.textContent = '💾 Update Event';
                 submitBtn.dataset.eventId = eventId;
                 submitBtn.dataset.mode = 'edit';
+                submitBtn.dataset.startTime = event.start_time || '00:00';
+                submitBtn.dataset.endTime = event.end_time || '23:59';
 
                 // Show form
                 form.classList.remove('hidden');
@@ -1902,9 +1897,7 @@
                 document.getElementById('eventCity').value = event.city || '';
                 document.getElementById('eventLocation').value = event.location || '';
                 document.getElementById('eventStartDate').value = event.start_date || '';
-                document.getElementById('eventStartTime').value = event.start_time || '';
                 document.getElementById('eventEndDate').value = event.end_date || '';
-                document.getElementById('eventEndTime').value = event.end_time || '';
                 document.getElementById('eventDescription').value = event.description || '';
                 document.getElementById('eventFacebookUrl').value = event.facebook_url || '';
 
@@ -1943,6 +1936,8 @@
                 submitBtn.textContent = '🎉 Create Duplicate';
                 delete submitBtn.dataset.eventId;
                 delete submitBtn.dataset.mode;
+                submitBtn.dataset.startTime = event.start_time || '00:00';
+                submitBtn.dataset.endTime = event.end_time || '23:59';
 
                 // Show form
                 form.classList.remove('hidden');
