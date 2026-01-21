@@ -281,7 +281,7 @@
             }
 
             .workshop-item small {
-                font-size: 11px;
+                font-size: 12px;
                 line-height: 1.4;
             }
 
@@ -297,7 +297,7 @@
 
             .legend-item {
                 margin-bottom: 5px;
-                font-size: 11px;
+                font-size: 12px;
             }
 
             .layer-selector {
@@ -306,13 +306,13 @@
             }
 
             .layer-selector label {
-                font-size: 11px;
+                font-size: 12px;
                 margin-bottom: 4px;
             }
 
             .layer-selector select {
                 padding: 6px;
-                font-size: 11px;
+                font-size: 12px;
             }
 
             .toast {
@@ -341,7 +341,7 @@
 
             <div class="filter-box">
                 <h4 style="margin-bottom: 10px;">🔍 Filter</h4>
-                <select id="styleFilter" onchange="filterWorkshops()">
+                <select id="styleFilter" onchange="filterWorkshops()" style="width: 100%; padding: 8px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 10px;">
                     <option value="">All Styles</option>
                     <option value="salsa">Salsa</option>
                     <option value="bachata">Bachata</option>
@@ -871,7 +871,7 @@
                                 let badgeColor = '#667eea';
                                 if (cardName === 'Multisport') badgeColor = '#e74c3c';
                                 if (cardName === 'Coolfit') badgeColor = '#3498db';
-                                return `<span style="background: ${badgeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${cardName}</span>`;
+                                return `<span style="background: ${badgeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">${cardName}</span>`;
                             }).join('')}
                         </div>` : ''}
                         <div style="margin-top: 10px; border-top: 2px solid ${markerColor}; padding-top: 10px; text-align: left; word-wrap: break-word; overflow-wrap: break-word;">

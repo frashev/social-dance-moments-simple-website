@@ -93,7 +93,7 @@
                 padding: 6px 12px;
                 margin-right: 3px;
                 margin-bottom: 5px;
-                font-size: 11px;
+                font-size: 12px;
                 display: inline-block;
             }
         }
@@ -147,9 +147,9 @@
 
         <!-- Tabs -->
         <div class="tabs" id="tabs" style="display: none;">
-            <button class="tab-btn active" onclick="switchTab('workshops')">📝 Manage Workshops & Parties</button>
-            <button class="tab-btn" onclick="switchTab('events')">🎉 Manage Events</button>
-            <button class="tab-btn" onclick="switchTab('locations')">📍 Manage Locations</button>
+            <button class="tab-btn active" onclick="switchTab('workshops')">📝 Workshops & Parties</button>
+            <button class="tab-btn" onclick="switchTab('events')">🎉 Events</button>
+            <button class="tab-btn" onclick="switchTab('locations')">📍 Locations</button>
             <button class="tab-btn" id="usersTabBtn" onclick="switchTab('users')" style="display: none;">👥 Manage Users</button>
         </div>
 
@@ -306,7 +306,7 @@
                             <input type="text" id="locCity" placeholder="e.g., sofia" required onkeypress="handleCityKeyPress(event)" style="flex: 1;">
                             <button type="button" onclick="searchCity()" style="background: #3498db; color: white; padding: 10px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; white-space: nowrap;">🔍 Search</button>
                         </div>
-                        <small style="color: #666; display: block; margin-top: 3px;">💡 Enter city name and press Enter or click Search button</small>
+                        <small style="color: #666; display: block; margin-top: 3px;">💡 Enter city name in lowercase and press Enter or click Search button</small>
                     </div>
                     <div class="form-group">
                         <label>Location Name *</label>
@@ -745,7 +745,7 @@
                             <span>📍 ${city} (${locationsByCity[city].length})</span>
                             <span style="font-size: 14px;">▼</span>
                         </div>
-                        <div class="city-group" style="display: block; padding: 10px;">
+                        <div class="city-group" style="display: none; padding: 10px;">
                             ${locationsByCity[city].map(loc => `
                                 <div class="location-item" style="margin-bottom: 8px;">
                                     <div>
@@ -1900,7 +1900,7 @@
                         <td data-label="Actions">
                             ${user.is_super_admin ?
                                 '<span style="color: #999; font-size: 12px;">Super Admin (protected)</span>' :
-                                `<button class="action-btn ${user.is_admin ? 'delete-btn' : 'edit-btn'}" onclick="toggleUserAdmin(${user.id}, ${!user.is_admin})" style="font-size: 11px; padding: 6px 12px;">
+                                `<button class="action-btn ${user.is_admin ? 'delete-btn' : 'edit-btn'}" onclick="toggleUserAdmin(${user.id}, ${!user.is_admin})" style="font-size: 12px; padding: 6px 12px;">
                                     ${user.is_admin ? '🔒 Remove Admin' : '🔓 Make Admin'}
                                 </button>`
                             }
