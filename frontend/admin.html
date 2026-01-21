@@ -720,18 +720,54 @@
 
                 const isSuperAdmin = sessionStorage.getItem('is_super_admin') === '1' || sessionStorage.getItem('is_super_admin') === 'true';
 
-                listDiv.innerHTML = data.locations.map(loc => `
-                    <div class="location-item">
-                        <div>
-                            <strong>${loc.location_name}</strong><br>
-                            <small>📍 ${loc.city} • ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}</small>
+                // Group locations by city
+                const locationsByCity = {};
+                data.locations.forEach(loc => {
+                    const city = loc.city.charAt(0).toUpperCase() + loc.city.slice(1);
+                    if (!locationsByCity[city]) {
+                        locationsByCity[city] = [];
+                    }
+                    locationsByCity[city].push(loc);
+                });
+
+                // Sort cities alphabetically
+                const sortedCities = Object.keys(locationsByCity).sort();
+
+                // Generate HTML for grouped locations
+                listDiv.innerHTML = sortedCities.map(city => `
+                    <div style="border: 2px solid #667eea; border-radius: 8px; overflow: hidden; margin-bottom: 15px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleCityGroup(this)">
+                            <span>📍 ${city} (${locationsByCity[city].length})</span>
+                            <span style="font-size: 14px;">▼</span>
                         </div>
-                        ${isSuperAdmin ? `<button type="button" class="delete-btn" onclick="deleteLocation(${loc.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">🗑️ Delete</button>` : ''}
+                        <div class="city-group" style="display: block; padding: 10px;">
+                            ${locationsByCity[city].map(loc => `
+                                <div class="location-item" style="margin-bottom: 8px;">
+                                    <div>
+                                        <strong>${city} - ${loc.location_name}</strong><br>
+                                        <small>🎯 ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}</small>
+                                    </div>
+                                    ${isSuperAdmin ? `<button type="button" class="delete-btn" onclick="deleteLocation(${loc.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">🗑️ Delete</button>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `).join('');
             } catch (err) {
                 console.error('❌ Error loading locations:', err);
                 document.getElementById('locationsList').innerHTML = '<p>Error loading locations</p>';
+            }
+        }
+
+        // Toggle city group visibility
+        function toggleCityGroup(header) {
+            const cityGroup = header.nextElementSibling;
+            if (cityGroup.style.display === 'none') {
+                cityGroup.style.display = 'block';
+                header.querySelector('span:last-child').style.transform = 'rotate(0deg)';
+            } else {
+                cityGroup.style.display = 'none';
+                header.querySelector('span:last-child').style.transform = 'rotate(-90deg)';
             }
         }
 
