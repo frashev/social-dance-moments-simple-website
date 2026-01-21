@@ -13,20 +13,20 @@ UPLOAD_DIR = Path(__file__).parent.parent / "frontend" / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 
-def fetch_predefined_coordinates(location: str, city: str):
+def fetch_predefined_location(location: str, city: str):
     if not location or not city:
         return None
 
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "SELECT lat, lon FROM predefined_locations WHERE location_name = ? AND city = ?",
+            "SELECT country, lat, lon FROM predefined_locations WHERE location_name = ? AND city = ?",
             (location, city)
         )
         result = c.fetchone()
 
     if result:
-        return result["lat"], result["lon"]
+        return result["country"], result["lat"], result["lon"]
 
     return None
 
@@ -36,7 +36,7 @@ def get_events():
     with get_db() as conn:
         c = conn.cursor()
         c.execute("""
-            SELECT id, title, photo_path, event_organizer, location, city, 
+            SELECT id, title, photo_path, event_organizer, location, country, city, 
                    start_date, start_time, end_date, end_time, description, 
                    facebook_url, lat, lon, created_at 
             FROM events 
@@ -123,29 +123,34 @@ async def create_event(
         logger.info(f"✅ Using duplicate photo: {final_photo_path}")
 
     # Use passed coordinates if available, otherwise fall back to predefined locations, then geocode
+    final_country = None
     final_lat, final_lon = None, None
 
     if lat is not None and lon is not None:
         final_lat, final_lon = lat, lon
     else:
-        coords = fetch_predefined_coordinates(location, city)
-        if coords:
-            final_lat, final_lon = coords
+        result = fetch_predefined_location(location, city)
+        if result:
+            final_country, final_lat, final_lon = result
         else:
             # Geocode the event location
             coords = get_workshop_coordinates(location, city)
             if coords:
                 final_lat, final_lon = coords
+    if final_country is None:
+        result = fetch_predefined_location(location, city)
+        if result:
+            final_country, _, _ = result
 
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
             """INSERT INTO events 
-            (admin_id, title, photo_path, event_organizer, location, city, 
+            (admin_id, title, photo_path, event_organizer, location, country, city, 
              start_date, start_time, end_date, end_time, description, 
              facebook_url, lat, lon, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (admin_id, title, final_photo_path, event_organizer, location, city,
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (admin_id, title, final_photo_path, event_organizer, location, final_country, city,
              start_date, start_time, end_date, end_time, description,
              facebook_url, final_lat, final_lon, datetime.now().isoformat())
         )
@@ -166,7 +171,7 @@ def get_event(event_id: int):
     with get_db() as conn:
         c = conn.cursor()
         c.execute("""
-            SELECT id, title, photo_path, event_organizer, location, city, 
+            SELECT id, title, photo_path, event_organizer, location, country, city, 
                    start_date, start_time, end_date, end_time, description, 
                    facebook_url, lat, lon, created_at 
             FROM events 
@@ -226,25 +231,30 @@ def update_event(
                 logger.warning(f"⚠️ Failed to upload photo: {str(e)}")
 
         # Use passed coordinates if available, otherwise fall back to predefined locations, then geocode
+        final_country = None
         final_lat, final_lon = None, None
         if lat is not None and lon is not None:
             final_lat, final_lon = lat, lon
         else:
-            coords = fetch_predefined_coordinates(location, city)
-            if coords:
-                final_lat, final_lon = coords
+            result = fetch_predefined_location(location, city)
+            if result:
+                final_country, final_lat, final_lon = result
             else:
                 coords = get_workshop_coordinates(location, city)
                 if coords:
                     final_lat, final_lon = coords
+        if final_country is None:
+            result = fetch_predefined_location(location, city)
+            if result:
+                final_country, _, _ = result
 
         c.execute(
             """UPDATE events 
             SET title = ?, event_organizer = ?, location = ?, city = ?, 
-                start_date = ?, start_time = ?, end_date = ?, end_time = ?, 
+                country = ?, start_date = ?, start_time = ?, end_date = ?, end_time = ?, 
                 description = ?, facebook_url = ?, photo_path = ?, lat = ?, lon = ? 
             WHERE id = ?""",
-            (title, event_organizer, location, city, start_date, start_time,
+            (title, event_organizer, location, city, final_country, start_date, start_time,
              end_date, end_time, description, facebook_url, photo_path, final_lat, final_lon, event_id)
         )
         conn.commit()

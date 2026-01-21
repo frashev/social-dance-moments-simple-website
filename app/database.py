@@ -72,6 +72,7 @@ def init_db() -> None:
         photo_path TEXT,
         event_organizer TEXT NOT NULL,
         location TEXT NOT NULL,
+        country TEXT,
         city TEXT NOT NULL,
         start_date TEXT NOT NULL,
         start_time TEXT NOT NULL,
@@ -112,6 +113,16 @@ def init_db() -> None:
     except sqlite3.OperationalError as e:
         if "duplicate column name" in str(e):
             print("ℹ️ country column already exists in predefined_locations")
+        else:
+            raise
+
+    # Migration: Add country column to events if it doesn't exist
+    try:
+        c.execute("ALTER TABLE events ADD COLUMN country TEXT")
+        print("✅ Added country column to events table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️ country column already exists in events")
         else:
             raise
 

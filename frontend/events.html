@@ -41,6 +41,20 @@
         .btn-primary:hover { box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5); }
         .btn-secondary { background: #f0f0f0; color: #333; border: 1.5px solid #ddd; }
         .btn-secondary:hover { background: #e0e0e0; }
+        .search-btn {
+            background: linear-gradient(135deg, #ff7a18 0%, #af002d 74%);
+            box-shadow: 0 6px 18px rgba(255, 122, 24, 0.45);
+            animation: searchPulse 1.8s ease-in-out infinite;
+        }
+        .search-btn:hover {
+            box-shadow: 0 8px 22px rgba(255, 122, 24, 0.6);
+            transform: translateY(-1px);
+        }
+        @keyframes searchPulse {
+            0% { box-shadow: 0 6px 18px rgba(255, 122, 24, 0.45); }
+            50% { box-shadow: 0 10px 26px rgba(255, 122, 24, 0.7); }
+            100% { box-shadow: 0 6px 18px rgba(255, 122, 24, 0.45); }
+        }
         .month-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .month-label { font-size: 12px; color: #555; background: #f5f5f5; border: 1px solid #ddd; padding: 6px 10px; border-radius: 5px; height: 36px; display: flex; align-items: center; }
         #monthPicker { height: 36px; border: 1.5px solid #ddd; border-radius: 5px; padding: 6px 8px; font-size: 12px; }
@@ -238,7 +252,7 @@
             </div>
 
             <div class="filter-buttons" style="margin-top: 12px;">
-                <button class="btn btn-primary" onclick="applyFilters()">🔎 Search</button>
+                <button class="btn btn-primary search-btn" onclick="applyFilters()">🔎 Search</button>
                 <button class="btn btn-primary" onclick="toggleMap()" id="toggleMapBtn">🗺️ Hide Map</button>
                 <button class="btn btn-secondary" onclick="resetFilters()">↺ Reset</button>
                 <div class="month-controls">
@@ -284,6 +298,7 @@
         let defaultCountry = 'Bulgaria';
         let availableCountries = [];
         let countryToCities = {};
+        let locationCountryMap = {};
 
         function formatDateInput(date) {
             const year = date.getFullYear();
@@ -360,11 +375,16 @@
 
         function buildCountryCityMapping(locations) {
             const mapping = {};
+            const countryLookup = {};
             (locations || []).forEach(loc => {
                 const country = (loc.country || 'Unknown').trim();
                 const city = (loc.city || '').trim().toLowerCase();
+                const locationName = (loc.location_name || '').trim().toLowerCase();
                 if (!country || !city) {
                     return;
+                }
+                if (locationName) {
+                    countryLookup[`${locationName}::${city}`] = country;
                 }
                 if (!mapping[country]) {
                     mapping[country] = [];
@@ -377,6 +397,7 @@
             Object.keys(mapping).forEach(country => mapping[country].sort());
             countryToCities = mapping;
             availableCountries = Object.keys(mapping).sort();
+            locationCountryMap = countryLookup;
         }
 
         // Country center coordinates and zoom levels
@@ -645,6 +666,19 @@
             }
         }
 
+        function getEventCountry(event) {
+            if (event.country) {
+                return `${escapeHtml(event.country)}, `;
+            }
+            const city = (event.city || '').trim().toLowerCase();
+            const locationName = (event.location || '').trim().toLowerCase();
+            if (!city || !locationName) {
+                return '';
+            }
+            const fallbackCountry = locationCountryMap[`${locationName}::${city}`];
+            return fallbackCountry ? `${escapeHtml(fallbackCountry)}, ` : '';
+        }
+
         function updateCityOptions() {
             const selectedCountry = document.getElementById('countryFilter').value;
             const citySelect = document.getElementById('cityFilter');
@@ -842,6 +876,7 @@
             const endDate = formatDate(event.end_date);
             const startTime = formatTime(event.start_time);
             const endTime = formatTime(event.end_time);
+            const countryLabel = getEventCountry(event);
             const photoHtml = event.photo_path
                 ? `<img src="/${event.photo_path}" alt="${event.title}" class="event-photo">`
                 : `<div class="event-photo placeholder">🎉</div>`;
@@ -855,7 +890,7 @@
                         <div class="event-meta">
                             <div class="event-meta-item">
                                 <span class="event-meta-icon">📍</span>
-                                <span>${escapeHtml(event.location)}, ${escapeHtml(event.city)}</span>
+                                <span>${escapeHtml(event.location)}, ${countryLabel}${escapeHtml(event.city)}</span>
                             </div>
                         </div>
 
