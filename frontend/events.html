@@ -170,8 +170,8 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 50px;
-            height: 50px;
+            width: 42px;
+            height: 42px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -180,7 +180,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
             transition: all 0.3s ease;
             z-index: 1000;
@@ -275,7 +275,7 @@
 
             <div class="filter-buttons" style="margin-top: 12px;">
                 <button class="btn btn-primary search-btn" onclick="applyFilters()">🔎 Search</button>
-                <button class="btn btn-primary" onclick="toggleMap()" id="toggleMapBtn">🗺️ Hide Map</button>
+                <button class="btn btn-primary" onclick="toggleMap()" id="toggleMapBtn">🗺️ Show Map</button>
                 <div class="month-controls">
                     <button class="btn btn-secondary" onclick="setMonthFilter(0)">📅 This Month</button>
                     <button class="btn btn-secondary" onclick="setMonthFilter(-1)">⬅️ Previous</button>
@@ -314,7 +314,7 @@
     <script>
         let allEvents = [];
         let filteredEvents = [];
-        let mapVisible = true;
+        let mapVisible = false;
         let selectedMonthDate = null;
         let defaultCountry = 'Bulgaria';
         let availableCountries = [];
@@ -462,8 +462,9 @@
                 // Update city options (now that allEvents and locations are loaded)
                 updateCityOptions();
 
-                // Initialize map for selected country
+                // Initialize map for selected country (hidden by default)
                 initializeMap(countryInput.value || defaultCountry);
+                document.getElementById('mapContainer').style.display = 'none';
 
                 // Apply default range: today -> next year
                 applyYearRangeSelection(new Date());
