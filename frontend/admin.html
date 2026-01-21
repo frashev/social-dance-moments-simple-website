@@ -1255,6 +1255,7 @@
                 const data = await res.json();
                 allLocations = data.locations || [];
                 console.log('✅ Locations loaded for autocomplete:', allLocations.length);
+                return allLocations;
             } catch (err) {
                 console.error('Error loading locations:', err);
             }
@@ -1320,18 +1321,28 @@
             console.log('✅ Selected location:', name, 'in', city, 'with coordinates:', lat, lon);
         }
 
-        function filterEventLocationSuggestions(query) {
-            if (!query.trim()) {
-                document.getElementById('eventLocationSuggestions').classList.remove('show');
+        function filterEventLocationSuggestions(query, forceShowAll = false) {
+            const trimmedQuery = query.trim();
+            const suggestionsDiv = document.getElementById('eventLocationSuggestions');
+
+            if (!allLocations || allLocations.length === 0) {
+                loadLocationsForAutocomplete().then(() => {
+                    filterEventLocationSuggestions(query, forceShowAll);
+                });
                 return;
             }
 
-            const filtered = allLocations.filter(loc =>
-                loc.location_name.toLowerCase().includes(query.toLowerCase()) ||
-                loc.city.toLowerCase().includes(query.toLowerCase())
-            );
+            if (!trimmedQuery && !forceShowAll) {
+                suggestionsDiv.classList.remove('show');
+                return;
+            }
 
-            const suggestionsDiv = document.getElementById('eventLocationSuggestions');
+            const filtered = !trimmedQuery
+                ? allLocations
+                : allLocations.filter(loc =>
+                    loc.location_name.toLowerCase().includes(trimmedQuery.toLowerCase()) ||
+                    loc.city.toLowerCase().includes(trimmedQuery.toLowerCase())
+                );
 
             if (filtered.length === 0) {
                 suggestionsDiv.innerHTML = '<div style="padding: 10px; color: #999;">No locations found</div>';
@@ -1411,9 +1422,11 @@
                 });
 
                 eventLocationInput.addEventListener('focus', function() {
-                    if (this.value) {
-                        filterEventLocationSuggestions(this.value);
-                    }
+                    filterEventLocationSuggestions(this.value, true);
+                });
+
+                eventLocationInput.addEventListener('click', function() {
+                    filterEventLocationSuggestions(this.value, true);
                 });
             }
         });
