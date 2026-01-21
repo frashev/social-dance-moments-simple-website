@@ -387,6 +387,7 @@ def admin_get_stats(admin: dict = Depends(verify_admin)):
 # Predefined Locations Management
 @router.post("/locations")
 def admin_create_location(
+    country: str = Form(...),
     city: str = Form(...),
     location_name: str = Form(...),
     lat: float = Form(...),
@@ -401,8 +402,8 @@ def admin_create_location(
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO predefined_locations (city, location_name, lat, lon, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-            (city, location_name, lat, lon, admin_id, datetime.now().isoformat())
+            "INSERT INTO predefined_locations (country, city, location_name, lat, lon, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (country, city, location_name, lat, lon, admin_id, datetime.now().isoformat())
         )
         conn.commit()
         location_id = c.lastrowid
@@ -414,7 +415,7 @@ def admin_get_locations(token: str = Query(...), admin: dict = Depends(verify_ad
     """Get all predefined locations."""
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("SELECT id, city, location_name, lat, lon FROM predefined_locations ORDER BY city, location_name")
+        c.execute("SELECT id, country, city, location_name, lat, lon FROM predefined_locations ORDER BY country, city, location_name")
         locations = [dict(row) for row in c.fetchall()]
 
     return {"locations": locations}
@@ -430,18 +431,35 @@ def admin_delete_location(location_id: int, token: str = Query(...), super_admin
     return {"msg": "Location deleted!"}
 
 @router.api_route("/locations/{location_id}", methods=["PUT", "POST"])
-def admin_update_location_name(
+def admin_update_location(
     location_id: int,
-    location_name: str = Form(...),
+    location_name: str = Form(None),
+    country: str = Form(None),
     token: str = Query(...),
     super_admin: dict = Depends(verify_super_admin)
 ):
-    """Update a predefined location name (Super Admin only)."""
+    """Update a predefined location (Super Admin only)."""
+    updates = []
+    params = []
+
+    if location_name is not None:
+        updates.append("location_name = ?")
+        params.append(location_name)
+
+    if country is not None:
+        updates.append("country = ?")
+        params.append(country)
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No updates provided")
+
+    params.append(location_id)
+
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "UPDATE predefined_locations SET location_name = ? WHERE id = ?",
-            (location_name, location_id)
+            f"UPDATE predefined_locations SET {', '.join(updates)} WHERE id = ?",
+            params
         )
         conn.commit()
 

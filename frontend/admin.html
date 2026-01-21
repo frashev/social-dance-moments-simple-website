@@ -301,6 +301,10 @@
                 <h3>➕ Add New Location</h3>
                 <form id="locationForm" onsubmit="saveLocation(event)" style="padding: 15px; background: #f9f9f9; border-radius: 5px; max-width: 500px;">
                     <div class="form-group">
+                        <label>Country *</label>
+                        <input type="text" id="locCountry" placeholder="e.g., Bulgaria" required>
+                    </div>
+                    <div class="form-group">
                         <label>City *</label>
                         <div style="display: flex; gap: 8px;">
                             <input type="text" id="locCity" placeholder="e.g., sofia" required onkeypress="handleCityKeyPress(event)" style="flex: 1;">
@@ -674,15 +678,17 @@
                 return;
             }
 
+            const country = document.getElementById('locCountry').value.trim();
             const city = document.getElementById('locCity').value.trim();
             const locName = document.getElementById('locName').value.trim();
 
-            if (!city || !locName) {
+            if (!country || !city || !locName) {
                 showLocationMessage('❌ Please fill in all required fields', 'error');
                 return;
             }
 
             const formData = new FormData();
+            formData.append('country', country);
             formData.append('city', city);
             formData.append('location_name', locName);
             formData.append('lat', selectedLat);
@@ -731,44 +737,63 @@
 
                 const isSuperAdmin = sessionStorage.getItem('is_super_admin') === '1' || sessionStorage.getItem('is_super_admin') === 'true';
 
-                // Group locations by city
-                const locationsByCity = {};
+                // Group locations by country and city
+                const locationsByCountry = {};
                 data.locations.forEach(loc => {
+                    const country = (loc.country || 'Unknown').trim();
                     const city = loc.city.charAt(0).toUpperCase() + loc.city.slice(1);
-                    if (!locationsByCity[city]) {
-                        locationsByCity[city] = [];
+                    if (!locationsByCountry[country]) {
+                        locationsByCountry[country] = {};
                     }
-                    locationsByCity[city].push(loc);
+                    if (!locationsByCountry[country][city]) {
+                        locationsByCountry[country][city] = [];
+                    }
+                    locationsByCountry[country][city].push(loc);
                 });
 
-                // Sort cities alphabetically
-                const sortedCities = Object.keys(locationsByCity).sort();
+                // Sort countries and cities alphabetically
+                const sortedCountries = Object.keys(locationsByCountry).sort();
 
                 // Generate HTML for grouped locations
-                listDiv.innerHTML = sortedCities.map(city => `
-                    <div style="border: 2px solid #667eea; border-radius: 8px; overflow: hidden; margin-bottom: 15px;">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleCityGroup(this)">
-                            <span>📍 ${city} (${locationsByCity[city].length})</span>
-                            <span style="font-size: 14px;">▼</span>
-                        </div>
-                        <div class="city-group" style="display: none; padding: 10px;">
-                            ${locationsByCity[city].map(loc => `
-                                <div class="location-item" style="margin-bottom: 8px;">
-                                    <div>
-                                        <strong>${city} - ${loc.location_name}</strong><br>
-                                        <small>🎯 ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}</small>
-                                    </div>
-                                    ${isSuperAdmin ? `
-                                        <div style="display: flex; gap: 6px;">
-                                            <button type="button" onclick="editLocationName(${loc.id}, '${loc.location_name.replace(/'/g, "\\'")}')" style="background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">✏️ Edit</button>
-                                            <button type="button" class="delete-btn" onclick="deleteLocation(${loc.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">🗑️ Delete</button>
+                listDiv.innerHTML = sortedCountries.map(country => {
+                    const cities = locationsByCountry[country];
+                    const sortedCities = Object.keys(cities).sort();
+                    const totalCount = sortedCities.reduce((sum, city) => sum + cities[city].length, 0);
+                    return `
+                        <div style="border: 2px solid #667eea; border-radius: 8px; overflow: hidden; margin-bottom: 15px;">
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px; font-weight: bold;">
+                                🌍 ${country} (${totalCount})
+                            </div>
+                            <div style="padding: 10px;">
+                                ${sortedCities.map(city => `
+                                    <div style="border: 1px solid #e6e6f5; border-radius: 6px; overflow: hidden; margin-bottom: 10px;">
+                                        <div style="background: #f7f7ff; color: #555; padding: 10px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleCityGroup(this)">
+                                            <span>📍 ${city} (${cities[city].length})</span>
+                                            <span style="font-size: 14px;">▼</span>
                                         </div>
-                                    ` : ''}
-                                </div>
-                            `).join('')}
+                                        <div class="city-group" style="display: none; padding: 10px;">
+                                            ${cities[city].map(loc => `
+                                                <div class="location-item" style="margin-bottom: 8px;">
+                                                    <div>
+                                                        <strong>${city} - ${loc.location_name}</strong><br>
+                                                        <small>🎯 ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}</small>
+                                                    </div>
+                                                    ${isSuperAdmin ? `
+                                                        <div style="display: flex; gap: 6px;">
+                                                            <button type="button" onclick="editLocationName(${loc.id}, '${loc.location_name.replace(/'/g, "\\'")}')" style="background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">✏️ Edit</button>
+                                                            <button type="button" onclick="editLocationCountry(${loc.id}, '${(loc.country || '').replace(/'/g, "\\'")}')" style="background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">🌍 Country</button>
+                                                            <button type="button" class="delete-btn" onclick="deleteLocation(${loc.id})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">🗑️ Delete</button>
+                                                        </div>
+                                                    ` : ''}
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             } catch (err) {
                 console.error('❌ Error loading locations:', err);
                 document.getElementById('locationsList').innerHTML = '<p>Error loading locations</p>';
@@ -828,6 +853,38 @@
 
                 if (res.ok) {
                     showLocationMessage('✅ Location name updated!', 'success');
+                    loadPredefinedLocations();
+                } else {
+                    showLocationMessage('❌ Error: ' + (data.detail || data.msg), 'error');
+                }
+            } catch (err) {
+                showLocationMessage('❌ Error: ' + err.message, 'error');
+            }
+        }
+
+        async function editLocationCountry(locId, currentCountry) {
+            const newCountry = prompt('Edit country:', currentCountry || '');
+            if (newCountry === null) return; // Cancelled
+
+            const trimmed = newCountry.trim();
+            if (!trimmed) {
+                showLocationMessage('❌ Country cannot be empty', 'error');
+                return;
+            }
+
+            if (trimmed === currentCountry) {
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('country', trimmed);
+
+                const res = await fetch(`/admin/locations/${locId}?token=${token}`, { method: 'PUT', body: formData });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showLocationMessage('✅ Country updated!', 'success');
                     loadPredefinedLocations();
                 } else {
                     showLocationMessage('❌ Error: ' + (data.detail || data.msg), 'error');

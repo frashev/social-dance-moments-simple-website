@@ -46,6 +46,26 @@ def get_events():
 
     return {"events": [dict(e) for e in events]}
 
+
+@router.get("/locations")
+def get_locations():
+    """Get predefined locations for public filters."""
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("""
+            SELECT id,
+                   COALESCE(country, 'Unknown') AS country,
+                   city,
+                   location_name,
+                   lat,
+                   lon
+            FROM predefined_locations
+            ORDER BY country, city, location_name
+        """)
+        locations = [dict(row) for row in c.fetchall()]
+
+    return {"locations": locations}
+
 @router.post("/events")
 async def create_event(
     request: Request,

@@ -103,7 +103,7 @@
 
         #mapContainer { background: white; padding: 10px; margin-top: 6px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); display: block; border-left: 5px solid #667eea; }
         #mapContainer h2 { color: #667eea; margin-bottom: 15px; font-size: 22px; }
-        #map { height: 400px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        #map { height: 450px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
 
         /* Leaflet popup customization - make it smaller */
         .leaflet-popup-content-wrapper {
@@ -245,6 +245,7 @@
                     <button class="btn btn-secondary" onclick="setMonthFilter(0)">📅 This Month</button>
                     <button class="btn btn-secondary" onclick="setMonthFilter(-1)">⬅️ Previous</button>
                     <button class="btn btn-secondary" onclick="setMonthFilter(1)">➡️ Next</button>
+                    <button class="btn btn-secondary" onclick="setYearRangeFilter()">🗓️ 1 Year Range</button>
                     <input type="month" id="monthPicker" onchange="selectMonthFromPicker()">
                     <button class="btn btn-secondary" onclick="openMonthPicker()">🗓️ Select Month</button>
                     <span class="month-label" id="selectedMonthLabel">Selected: All Dates</span>
@@ -278,9 +279,11 @@
     <script>
         let allEvents = [];
         let filteredEvents = [];
-        const DEFAULT_COUNTRY = 'Bulgaria';
         let mapVisible = true;
         let selectedMonthDate = null;
+        let defaultCountry = 'Bulgaria';
+        let availableCountries = [];
+        let countryToCities = {};
 
         function formatDateInput(date) {
             const year = date.getFullYear();
@@ -313,6 +316,23 @@
             applyFilters();
         }
 
+        function applyYearRangeSelection(startDate) {
+            const start = new Date(startDate);
+            const end = new Date(startDate);
+            end.setFullYear(end.getFullYear() + 1);
+
+            const filterType = document.getElementById('dateFilterType');
+            filterType.value = 'range';
+            updateDateFilterUI();
+            document.getElementById('dateFrom').value = formatDateInput(start);
+            document.getElementById('dateTo').value = formatDateInput(end);
+
+            document.getElementById('monthPicker').value = '';
+            document.getElementById('selectedMonthLabel').textContent = 'Selected: 1 Year Range';
+            selectedMonthDate = null;
+            applyFilters();
+        }
+
         function setMonthFilter(offset) {
             const baseDate = offset === 0
                 ? new Date()
@@ -334,14 +354,30 @@
             monthPicker.focus();
         }
 
-        // Country-to-cities mapping
-        const countryToCities = {
-            'Bulgaria': ['sofia', 'plovdiv', 'varna', 'burgas', 'ruse', 'stara zagora', 'pleven'],
-            'Romania': ['bucharest', 'cluj-napoca', 'timisoara', 'iasi', 'constanta', 'brasov', 'galati'],
-            'Serbia': ['belgrade', 'novi sad', 'nis', 'zemun', 'subotica', 'smederevo'],
-            'Greece': ['athens', 'thessaloniki', 'patras', 'heraklion', 'larissa', 'volos'],
-            'Turkey': ['istanbul', 'ankara', 'izmir', 'antalya', 'bursa', 'gaziantep']
-        };
+        function setYearRangeFilter() {
+            applyYearRangeSelection(new Date());
+        }
+
+        function buildCountryCityMapping(locations) {
+            const mapping = {};
+            (locations || []).forEach(loc => {
+                const country = (loc.country || 'Unknown').trim();
+                const city = (loc.city || '').trim().toLowerCase();
+                if (!country || !city) {
+                    return;
+                }
+                if (!mapping[country]) {
+                    mapping[country] = [];
+                }
+                if (!mapping[country].includes(city)) {
+                    mapping[country].push(city);
+                }
+            });
+
+            Object.keys(mapping).forEach(country => mapping[country].sort());
+            countryToCities = mapping;
+            availableCountries = Object.keys(mapping).sort();
+        }
 
         // Country center coordinates and zoom levels
         const countryCenters = {
@@ -364,25 +400,31 @@
                 // Load events first (this is async)
                 await loadEvents();
 
-                // Load cities (optional - not blocking)
+                // Load locations for country/city mapping
                 try {
-                    await loadCities();
+                    await loadLocations();
                 } catch (err) {
-                    console.warn('⚠️ Could not load cities data (optional):', err);
+                    console.warn('⚠️ Could not load locations data (optional):', err);
                 }
 
-                // Prepopulate with Bulgaria
                 const countryInput = document.getElementById('countryFilter');
-                countryInput.value = DEFAULT_COUNTRY;
+                if (availableCountries.length > 0) {
+                    defaultCountry = availableCountries.includes(defaultCountry)
+                        ? defaultCountry
+                        : availableCountries[0];
+                    countryInput.value = defaultCountry;
+                } else {
+                    countryInput.value = defaultCountry;
+                }
 
-                // Update city options for Bulgaria (now that allEvents is loaded)
+                // Update city options (now that allEvents and locations are loaded)
                 updateCityOptions();
 
-                // Initialize map for Bulgaria
-                initializeMap(DEFAULT_COUNTRY);
+                // Initialize map for selected country
+                initializeMap(countryInput.value || defaultCountry);
 
-                // Apply initial filters
-                applyFilters();
+                // Apply default range: today -> next year
+                applyYearRangeSelection(new Date());
             } catch (err) {
                 console.error('❌ Initialization error:', err);
                 // Ensure loading message is hidden even on error
@@ -401,7 +443,6 @@
         function setupCountryAutocomplete() {
             const input = document.getElementById('countryFilter');
             const suggestionsList = document.getElementById('countrySuggestions');
-            const countries = Object.keys(countryToCities);
 
             input.addEventListener('input', function(e) {
                 const value = e.target.value.trim().toLowerCase();
@@ -411,6 +452,7 @@
                     return;
                 }
 
+                const countries = availableCountries.length ? availableCountries : Object.keys(countryToCities);
                 const matches = countries.filter(country =>
                     country.toLowerCase().includes(value)
                 );
@@ -468,7 +510,7 @@
                 map = null;
             }
 
-            const center = countryCenters[country] || countryCenters[DEFAULT_COUNTRY];
+            const center = countryCenters[country] || countryCenters[defaultCountry];
             map = L.map('map').setView([center.lat, center.lon], center.zoom);
 
             // Add OpenStreetMap tiles
@@ -585,27 +627,20 @@
             }
         }
 
-        async function loadCities() {
+        async function loadLocations() {
             try {
-                console.log('📡 Fetching cities...');
-                const token = sessionStorage.getItem('access_token');
-
-                // Skip if no token (user not authenticated)
-                if (!token) {
-                    console.warn('⚠️ No authentication token, skipping cities load');
-                    return;
-                }
-
-                const res = await fetch(`/admin/locations?token=${encodeURIComponent(token)}`);
+                console.log('📡 Fetching locations...');
+                const res = await fetch('/locations');
                 if (!res.ok) {
                     console.warn('⚠️ Failed to load locations:', res.status);
                     return;
                 }
 
                 const data = await res.json();
+                buildCountryCityMapping(data.locations || []);
                 console.log(`✅ Loaded locations:`, data.locations);
             } catch (err) {
-                console.warn('⚠️ Error loading cities (non-critical):', err.message);
+                console.warn('⚠️ Error loading locations (non-critical):', err.message);
                 // Don't throw - this is optional data
             }
         }
@@ -617,11 +652,18 @@
 
             // Get cities for selected country from mapping
             let availableCities = [];
-            if (selectedCountry && countryToCities[selectedCountry]) {
+            if (selectedCountry && countryToCities[selectedCountry] && countryToCities[selectedCountry].length > 0) {
                 // Get only cities that actually have events
                 availableCities = [...new Set(
                     allEvents
                         .filter(event => countryToCities[selectedCountry].includes(event.city.toLowerCase()))
+                        .map(event => event.city.toLowerCase())
+                        .filter(city => city)
+                        .sort()
+                )];
+            } else if (!selectedCountry) {
+                availableCities = [...new Set(
+                    allEvents
                         .map(event => event.city.toLowerCase())
                         .filter(city => city)
                         .sort()
@@ -673,12 +715,12 @@
 
             filteredEvents = allEvents.filter(event => {
                 // Country filter - check if event city is in selected country
-                if (selectedCountry) {
-                    const citiesInCountry = countryToCities[selectedCountry] || [];
-                    if (!citiesInCountry.includes(event.city.toLowerCase())) {
-                        return false;
-                    }
+            if (selectedCountry && countryToCities[selectedCountry] && countryToCities[selectedCountry].length > 0) {
+                const citiesInCountry = countryToCities[selectedCountry];
+                if (!citiesInCountry.includes(event.city.toLowerCase())) {
+                    return false;
                 }
+            }
 
                 // City filter
                 if (selectedCity && event.city.toLowerCase() !== selectedCity.toLowerCase()) {
@@ -738,18 +780,13 @@
         }
 
         function resetFilters() {
-            document.getElementById('countryFilter').value = DEFAULT_COUNTRY;
+            document.getElementById('countryFilter').value = defaultCountry;
             document.getElementById('cityFilter').value = '';
-            document.getElementById('dateFilterType').value = 'all';
-            document.getElementById('dateFrom').value = '';
-            document.getElementById('dateTo').value = '';
+            document.getElementById('dateFilterType').value = 'range';
             document.getElementById('exactDate').value = '';
-            document.getElementById('monthPicker').value = '';
-            document.getElementById('selectedMonthLabel').textContent = 'Selected: All Dates';
-            selectedMonthDate = null;
             updateDateFilterUI();
             updateCityOptions();
-            applyFilters();
+            applyYearRangeSelection(new Date());
         }
 
         function toggleMap() {

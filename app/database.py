@@ -56,6 +56,7 @@ def init_db() -> None:
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS predefined_locations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        country TEXT NOT NULL,
         city TEXT NOT NULL,
         location_name TEXT NOT NULL,
         lat REAL NOT NULL,
@@ -101,6 +102,16 @@ def init_db() -> None:
     except sqlite3.OperationalError as e:
         if "duplicate column name" in str(e):
             print("ℹ️ recurrence column already exists")
+        else:
+            raise
+
+    # Migration: Add country column to predefined_locations if it doesn't exist
+    try:
+        c.execute("ALTER TABLE predefined_locations ADD COLUMN country TEXT DEFAULT 'Unknown'")
+        print("✅ Added country column to predefined_locations table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️ country column already exists in predefined_locations")
         else:
             raise
 
