@@ -429,6 +429,24 @@ def admin_delete_location(location_id: int, token: str = Query(...), super_admin
 
     return {"msg": "Location deleted!"}
 
+@router.api_route("/locations/{location_id}", methods=["PUT", "POST"])
+def admin_update_location_name(
+    location_id: int,
+    location_name: str = Form(...),
+    token: str = Query(...),
+    super_admin: dict = Depends(verify_super_admin)
+):
+    """Update a predefined location name (Super Admin only)."""
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute(
+            "UPDATE predefined_locations SET location_name = ? WHERE id = ?",
+            (location_name, location_id)
+        )
+        conn.commit()
+
+    return {"msg": "Location updated!"}
+
 # User Management (Super Admin Only)
 @router.get("/users")
 def super_admin_get_users(super_admin: dict = Depends(verify_super_admin)):
