@@ -289,10 +289,15 @@
             <h2>📍 Manage Predefined Locations</h2>
 
             <div class="location-info">
-                <strong>💡 How to use:</strong> Fill in the location details, click on the map to place a pin, then save.
+                <strong>💡 How to use:</strong> View saved locations below, or add a new location by filling in the form and clicking on the map.
             </div>
 
-            <div style="margin-bottom: 20px;">
+            <h3>📌 Saved Locations</h3>
+            <div class="location-list" id="locationsList">
+                <p>Loading locations...</p>
+            </div>
+
+            <div style="margin-bottom: 20px; margin-top: 30px;">
                 <h3>➕ Add New Location</h3>
                 <form id="locationForm" onsubmit="saveLocation(event)" style="padding: 15px; background: #f9f9f9; border-radius: 5px; max-width: 500px;">
                     <div class="form-group">
@@ -326,11 +331,6 @@
                     Selected: <span id="selectedCoords" style="font-weight: bold;">Click on map to select location</span>
                 </p>
                 <div id="locationMap" style="height: 400px; border-radius: 5px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);"></div>
-            </div>
-
-            <h3>📌 Saved Locations</h3>
-            <div class="location-list" id="locationsList">
-                <p>Loading locations...</p>
             </div>
         </div>
 
