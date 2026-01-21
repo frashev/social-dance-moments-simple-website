@@ -207,6 +207,12 @@
             .container { padding: 15px; }
             .event-btn { padding: 3px 6px; font-size: 12px; }
             .event-photo { height: 280px; }
+            .filter-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .filter-buttons .btn { width: 100%; justify-content: center; }
+            .month-controls { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .month-controls .btn { width: 100%; justify-content: center; }
+            #monthPicker { width: 100%; }
+            .month-label { width: 100%; justify-content: center; grid-column: 1 / -1; }
         }
 
         @media (max-width: 480px) {
@@ -215,6 +221,9 @@
             .event-card { margin: 0; }
             .event-btn { padding: 3px 6px; font-size: 12px; }
             .event-photo { height: 220px; }
+            .filter-buttons { grid-template-columns: repeat(2, 1fr); }
+            .month-controls { grid-template-columns: repeat(2, 1fr); }
+            .month-label { grid-column: 1 / -1; }
         }
     </style>
 </head>
