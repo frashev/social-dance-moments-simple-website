@@ -1360,11 +1360,7 @@
             suggestionsDiv.classList.add('show');
         }
 
-        function selectEventLocationSuggestion(name, city, lat, lon) {
-            document.getElementById('eventLocation').value = name;
-            document.getElementById('eventCity').value = city;
-
-            // Store coordinates in hidden fields for submission
+        function ensureEventLatLonFields() {
             let latField = document.getElementById('event_location_lat');
             let lonField = document.getElementById('event_location_lon');
 
@@ -1372,7 +1368,7 @@
                 latField = document.createElement('input');
                 latField.type = 'hidden';
                 latField.id = 'event_location_lat';
-                latField.name = 'event_lat';
+                latField.name = 'lat';
                 document.getElementById('createEventForm').appendChild(latField);
             }
 
@@ -1380,10 +1376,19 @@
                 lonField = document.createElement('input');
                 lonField.type = 'hidden';
                 lonField.id = 'event_location_lon';
-                lonField.name = 'event_lon';
+                lonField.name = 'lon';
                 document.getElementById('createEventForm').appendChild(lonField);
             }
 
+            return { latField, lonField };
+        }
+
+        function selectEventLocationSuggestion(name, city, lat, lon) {
+            document.getElementById('eventLocation').value = name;
+            document.getElementById('eventCity').value = city;
+
+            // Store coordinates in hidden fields for submission
+            const { latField, lonField } = ensureEventLatLonFields();
             latField.value = lat;
             lonField.value = lon;
 
@@ -1679,6 +1684,15 @@
             formData.append('description', description);
             formData.append('facebook_url', facebookUrl);
 
+            // Include selected predefined coordinates if present
+            const { latField, lonField } = ensureEventLatLonFields();
+            if (latField && latField.value) {
+                formData.append('lat', latField.value);
+            }
+            if (lonField && lonField.value) {
+                formData.append('lon', lonField.value);
+            }
+
             // Read photo file fresh right here
             const photoFileForSubmission = document.getElementById('eventPhoto').files[0];
 
@@ -1843,8 +1857,7 @@
                 document.getElementById('eventFacebookUrl').value = event.facebook_url || '';
 
                 // Store lat/lon if available
-                const latField = document.getElementById('event_location_lat');
-                const lonField = document.getElementById('event_location_lon');
+                const { latField, lonField } = ensureEventLatLonFields();
                 if (latField) latField.value = event.lat || '';
                 if (lonField) lonField.value = event.lon || '';
 
@@ -1915,8 +1928,7 @@
                 document.getElementById('eventFacebookUrl').value = event.facebook_url || '';
 
                 // Store lat/lon if available
-                const latField = document.getElementById('event_location_lat');
-                const lonField = document.getElementById('event_location_lon');
+                const { latField, lonField } = ensureEventLatLonFields();
                 if (latField) latField.value = event.lat || '';
                 if (lonField) lonField.value = event.lon || '';
 

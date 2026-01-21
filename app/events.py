@@ -12,6 +12,24 @@ router = APIRouter()
 UPLOAD_DIR = Path(__file__).parent.parent / "frontend" / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+
+def fetch_predefined_coordinates(location: str, city: str):
+    if not location or not city:
+        return None
+
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute(
+            "SELECT lat, lon FROM predefined_locations WHERE location_name = ? AND city = ?",
+            (location, city)
+        )
+        result = c.fetchone()
+
+    if result:
+        return result["lat"], result["lon"]
+
+    return None
+
 @router.get("/events")
 def get_events():
     """Get all events."""
@@ -84,16 +102,20 @@ async def create_event(
         final_photo_path = str(photo_path_input).strip()
         logger.info(f"✅ Using duplicate photo: {final_photo_path}")
 
-    # Use passed coordinates if available from predefined locations, otherwise geocode
+    # Use passed coordinates if available, otherwise fall back to predefined locations, then geocode
     final_lat, final_lon = None, None
 
     if lat is not None and lon is not None:
         final_lat, final_lon = lat, lon
     else:
-        # Geocode the event location
-        coords = get_workshop_coordinates(location, city)
+        coords = fetch_predefined_coordinates(location, city)
         if coords:
             final_lat, final_lon = coords
+        else:
+            # Geocode the event location
+            coords = get_workshop_coordinates(location, city)
+            if coords:
+                final_lat, final_lon = coords
 
     with get_db() as conn:
         c = conn.cursor()
@@ -150,6 +172,8 @@ def update_event(
     end_time: str = Form(...),
     description: str = Form(None),
     facebook_url: str = Form(None),
+    lat: float = Form(None),
+    lon: float = Form(None),
     photo: UploadFile = File(None)
 ):
     """Update event details."""
@@ -181,12 +205,18 @@ def update_event(
             except Exception as e:
                 logger.warning(f"⚠️ Failed to upload photo: {str(e)}")
 
-        # Geocode the event location
-        coords = get_workshop_coordinates(location, city)
-        lat, lon = None, None
-
-        if coords:
-            lat, lon = coords
+        # Use passed coordinates if available, otherwise fall back to predefined locations, then geocode
+        final_lat, final_lon = None, None
+        if lat is not None and lon is not None:
+            final_lat, final_lon = lat, lon
+        else:
+            coords = fetch_predefined_coordinates(location, city)
+            if coords:
+                final_lat, final_lon = coords
+            else:
+                coords = get_workshop_coordinates(location, city)
+                if coords:
+                    final_lat, final_lon = coords
 
         c.execute(
             """UPDATE events 
@@ -195,7 +225,7 @@ def update_event(
                 description = ?, facebook_url = ?, photo_path = ?, lat = ?, lon = ? 
             WHERE id = ?""",
             (title, event_organizer, location, city, start_date, start_time,
-             end_date, end_time, description, facebook_url, photo_path, lat, lon, event_id)
+             end_date, end_time, description, facebook_url, photo_path, final_lat, final_lon, event_id)
         )
         conn.commit()
 
