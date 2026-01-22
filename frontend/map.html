@@ -28,8 +28,8 @@
         .workshop-description {
             color: #555;
             display: -webkit-box;
-            -webkit-line-clamp: 6;
-            line-clamp: 6;
+            -webkit-line-clamp: 5;
+            line-clamp: 5;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -879,6 +879,7 @@
 
                     html += groupedByDate[date].map(w => `
                         <div class="workshop-item" onclick="centerOnWorkshop(${w.id})">
+                            ${w.title ? `<strong style="display: block; margin-bottom: 2px;">${w.title}</strong>` : ''}
                             <strong style="color: ${styleColors[w.style]}">${w.style.toUpperCase()}</strong>
                             ${w.isRecurringInstance ? '<span style="background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; margin-left: 5px;">🔄 Recurring</span>' : ''}
                             ${w.cards ? `<div style="margin-top: 5px; display: flex; gap: 3px; flex-wrap: wrap;">
@@ -891,6 +892,7 @@
                                 }).join('')}
                             </div>` : ''}
                             <small>
+                                
                                 <strong class="workshop-location">📍 ${w.location}</strong><br>
                                 🏙️ ${w.city}<br>
                                 <span class="workshop-datetime">${formatDateWithWeekday(w.date)} at ${w.style === 'lets_party' ? (w.start_time || 'TBA') : (w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : w.time || 'TBA')}</span><br>
@@ -954,6 +956,7 @@
                             }).join('')}
                         </div>` : ''}
                         <div style="margin-top: 10px; border-top: 2px solid ${markerColor}; padding-top: 10px; text-align: left; word-wrap: break-word; overflow-wrap: break-word;">
+                            ${w.title ? `<strong style="display: block; margin-bottom: 4px;">${w.title}</strong>` : ''}
                             <strong class="workshop-location" style="word-wrap: break-word;">📍 ${w.location}</strong><br>
                             <span style="color: #666; word-wrap: break-word;">🏙️ ${w.city}</span><br>
                             <span style="color: #666; word-wrap: break-word;"><span class="workshop-datetime">${formatDateWithWeekday(w.date)} at ${w.style === 'lets_party' ? (w.start_time || 'TBA') : (w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : w.time || 'TBA')}</span></span><br>

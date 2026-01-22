@@ -208,6 +208,10 @@
                 <div id="formMessage" style="display: none; padding: 12px; border-radius: 5px; margin-bottom: 15px;"></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="title" placeholder="e.g., Beginner Salsa Bootcamp">
+                    </div>
+                    <div class="form-group">
                         <label>Location *</label>
                         <div class="autocomplete-container">
                             <input type="text" id="location" class="autocomplete-input" placeholder="Start typing to see suggestions..." required autocomplete="off">
@@ -275,7 +279,7 @@
                     <small style="color: #666; display: block; margin-top: 3px;">Select if this is a one-time or weekly recurring event</small>
                 </div>
                 <div class="form-group">
-                    <label>Title & Description</label>
+                    <label>Description</label>
                     <textarea id="description" placeholder="Describe the workshop..."></textarea>
                 </div>
                 <button type="submit" id="submitBtn" style="background: #27ae60; width: 100%; font-size: 16px;">Create Workshop</button>
@@ -285,7 +289,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Title & Description</th>
+                        <th>Title</th>
                         <th>City</th>
                         <th>Location</th>
                         <th>Date & Time</th>
@@ -1008,6 +1012,13 @@
             return days[date.getDay()];
         }
 
+        function formatDateShort(dateString) {
+            const date = new Date(dateString + 'T00:00:00');
+            if (Number.isNaN(date.getTime())) return dateString;
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${months[date.getMonth()]} ${date.getDate()} ${date.getFullYear()}`;
+        }
+
         function getDayIndex(dateString) {
             const date = new Date(dateString + 'T00:00:00');
             let dayIndex = date.getDay();
@@ -1060,12 +1071,12 @@
 
                         html += `
                             <tr>
-                                <td data-label="Title & Description">${w.description || '-'}</td>
+                                <td data-label="Title">${w.title || '-'}</td>
                                 <td data-label="City">${w.city}</td>
                                 <td data-label="Location"><span class="event-location">${w.location}</span></td>
                                 <td data-label="Date & Time">
                                     <span class="event-datetime event-datetime-block">${getDayOfWeek(w.date)}</span>
-                                    <span class="event-datetime event-datetime-block">${w.date}</span>
+                                    <span class="event-datetime event-datetime-block">${formatDateShort(w.date)}</span>
                                     <span class="event-datetime event-datetime-block">${timeRange}</span>
                                 </td>
                                 <td data-label="Recurrence">${w.recurrence === 'weekly' ? '🔄 Weekly' : '📅 Single'}</td>
@@ -1094,7 +1105,10 @@
                 const data = await res.json();
                 const select = document.getElementById('workshopSelect');
                 select.innerHTML = '<option value="">Select a workshop...</option>' +
-                    data.workshops.map(w => `<option value="${w.id}">${w.city} - ${w.location}</option>`).join('');
+                    data.workshops.map(w => {
+                        const titlePrefix = w.title ? `${w.title} - ` : '';
+                        return `<option value="${w.id}">${titlePrefix}${w.city} - ${w.location}</option>`;
+                    }).join('');
             } catch (err) {
                 console.error('Error loading workshop select:', err);
             }
@@ -1121,6 +1135,7 @@
 
             // Collect form data
             const formData = new FormData();
+            const title = document.getElementById('title').value.trim();
             const city = document.getElementById('city').value.trim();
             const location = document.getElementById('location').value.trim();
             const date = document.getElementById('date').value;
@@ -1134,6 +1149,7 @@
 
             console.log('📝 Form data:', { city, location, date, start_time, end_time, style, isEditing });
 
+            formData.append('title', title);
             formData.append('city', city);
             formData.append('location', location);
             formData.append('date', date);
@@ -1241,6 +1257,7 @@
 
                 // NOW populate the form with existing data (elements are in DOM)
                 console.log('📝 Populating form fields...');
+                document.getElementById('title').value = workshop.title || '';
                 document.getElementById('city').value = workshop.city || '';
                 document.getElementById('location').value = workshop.location || '';
                 document.getElementById('date').value = workshop.date || '';
@@ -1308,6 +1325,7 @@
 
                 // NOW populate the form with existing data (elements are in DOM)
                 console.log('📝 Populating form fields...');
+                document.getElementById('title').value = workshop.title || '';
                 document.getElementById('city').value = workshop.city || '';
                 document.getElementById('location').value = workshop.location || '';
                 document.getElementById('date').value = workshop.date || '';

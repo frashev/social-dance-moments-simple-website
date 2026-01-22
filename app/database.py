@@ -27,6 +27,7 @@ def init_db() -> None:
     c.execute('''CREATE TABLE IF NOT EXISTS workshops (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         admin_id INTEGER NOT NULL,
+        title TEXT,
         city TEXT NOT NULL,
         location TEXT NOT NULL,
         date TEXT NOT NULL,
@@ -85,6 +86,16 @@ def init_db() -> None:
         created_at TEXT,
         FOREIGN KEY(admin_id) REFERENCES users(id)
     )''')
+
+    # Migration: Add title column if it doesn't exist
+    try:
+        c.execute("ALTER TABLE workshops ADD COLUMN title TEXT")
+        print("✅ Added title column to workshops table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️ title column already exists")
+        else:
+            raise
 
     # Migration: Add facebook_url column if it doesn't exist
     try:

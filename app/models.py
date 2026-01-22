@@ -17,6 +17,7 @@ class Song(BaseModel):
 class Workshop(BaseModel):
     id: int
     admin_id: Optional[int]
+    title: Optional[str] = None
     city: str
     location: str
     date: str  # ISO format

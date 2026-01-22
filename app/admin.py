@@ -86,6 +86,7 @@ def verify_super_admin(token: str = Query(...)) -> dict:
 
 @router.post("/workshops")
 def admin_create_workshop(
+    title: str = Form(None),
     city: str = Form(...),
     location: str = Form(...),
     date: str = Form(...),
@@ -127,8 +128,8 @@ def admin_create_workshop(
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO workshops (admin_id, city, location, date, time, start_time, end_time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon, recurrence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (admin_id, city, location, date, start_time, start_time, end_time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon, recurrence)
+            "INSERT INTO workshops (admin_id, title, city, location, date, time, start_time, end_time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon, recurrence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (admin_id, title, city, location, date, start_time, start_time, end_time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon, recurrence)
         )
         conn.commit()
         workshop_id = c.lastrowid
@@ -138,6 +139,7 @@ def admin_create_workshop(
 @router.put("/workshops/{workshop_id}")
 def admin_update_workshop(
     workshop_id: int,
+    title: str = Form(None),
     city: str = Form(None),
     location: str = Form(None),
     date: str = Form(None),
@@ -172,6 +174,9 @@ def admin_update_workshop(
     updates = []
     params = []
 
+    if title is not None:
+        updates.append("title = ?")
+        params.append(title)
     if city:
         updates.append("city = ?")
         params.append(city)

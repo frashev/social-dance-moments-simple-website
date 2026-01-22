@@ -19,6 +19,7 @@ def init_db(db_path: Path):
     c.execute('''CREATE TABLE IF NOT EXISTS workshops (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
+        title TEXT,
         city TEXT,
         location TEXT,
         date TEXT,
