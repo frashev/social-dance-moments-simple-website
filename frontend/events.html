@@ -665,7 +665,7 @@
                             <strong>👤Hosted by ${escapeHtml(event.event_organizer)}</strong><br>
                             <span style="color: #666;">📍 <span class="event-location">${escapeHtml(event.location)}, ${escapeHtml(event.city)}</span></span><br>
                             <span>📅 Start: <span class="event-datetime">${formatDate(event.start_date)} at ${formatTime(event.start_time)}</span></span><br>
-                            <span>📅 End: <span class="event-datetime">${formatDate(event.end_date)} at ${formatTime(event.end_time)}</span></span><br>
+                            <span>📅 End: <span class="event-datetime">${formatDate(event.end_date)}</span></span><br>
                             ${event.facebook_url ? `<br><a href="${escapeHtml(event.facebook_url)}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">📘 Facebook or Event URL</a>` : ''}
                         </div>
                     </div>
@@ -977,8 +977,8 @@
                         <div class="event-organizer">👤 Hosted by ${escapeHtml(event.event_organizer)}</div>
 
                         <div class="event-dates">
-                            <div><strong>📅 Start:</strong> <span class="event-datetime">${startDate} at ${startTime}</span></div>
-                            <div><strong>📅 End:</strong> <span class="event-datetime">${endDate} at ${endTime}</span></div>
+                            <div><strong>📅 Start:</strong> <span class="event-datetime">${startDate}</span></div>
+                            <div><strong>📅 End:</strong> <span class="event-datetime">${endDate}</span></div>
                         </div>
 
                         ${event.facebook_url ? `<div style="margin-bottom: 10px;"><a class="event-link-btn" href="${escapeHtml(event.facebook_url)}" target="_blank" rel="noopener">📘 Facebook or Event URL</a></div>` : ''}
