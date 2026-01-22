@@ -31,17 +31,27 @@ def fetch_predefined_location(location: str, city: str):
     return None
 
 @router.get("/events")
-def get_events():
-    """Get all events."""
+def get_events(admin_id: int | None = Query(default=None)):
+    """Get events, optionally filtered by admin_id."""
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("""
-            SELECT id, title, photo_path, event_organizer, location, country, city, 
-                   start_date, start_time, end_date, end_time, description, 
-                   facebook_url, lat, lon, created_at 
-            FROM events 
-            ORDER BY start_date ASC, start_time ASC
-        """)
+        if admin_id is None:
+            c.execute("""
+                SELECT id, title, photo_path, event_organizer, location, country, city, 
+                       start_date, start_time, end_date, end_time, description, 
+                       facebook_url, lat, lon, created_at 
+                FROM events 
+                ORDER BY start_date ASC, start_time ASC
+            """)
+        else:
+            c.execute("""
+                SELECT id, title, photo_path, event_organizer, location, country, city, 
+                       start_date, start_time, end_date, end_time, description, 
+                       facebook_url, lat, lon, created_at 
+                FROM events 
+                WHERE admin_id = ?
+                ORDER BY start_date ASC, start_time ASC
+            """, (admin_id,))
         events = c.fetchall()
 
     return {"events": [dict(e) for e in events]}

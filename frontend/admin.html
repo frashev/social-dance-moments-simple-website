@@ -1938,7 +1938,8 @@
         async function loadEvents() {
             try {
                 console.log('🎉 Loading events...');
-                const res = await fetch('/events');
+                const eventsUrl = userId ? `/events?admin_id=${encodeURIComponent(userId)}` : '/events';
+                const res = await fetch(eventsUrl);
                 const data = await res.json();
 
                 if (!res.ok) {
