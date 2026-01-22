@@ -275,7 +275,7 @@
                     <small style="color: #666; display: block; margin-top: 3px;">Select if this is a one-time or weekly recurring event</small>
                 </div>
                 <div class="form-group">
-                    <label>Description</label>
+                    <label>Title & Description</label>
                     <textarea id="description" placeholder="Describe the workshop..."></textarea>
                 </div>
                 <button type="submit" id="submitBtn" style="background: #27ae60; width: 100%; font-size: 16px;">Create Workshop</button>
@@ -285,7 +285,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Description</th>
+                        <th>Title & Description</th>
                         <th>City</th>
                         <th>Location</th>
                         <th>Date & Time</th>
@@ -1060,7 +1060,7 @@
 
                         html += `
                             <tr>
-                                <td data-label="Description">${w.description || '-'}</td>
+                                <td data-label="Title & Description">${w.description || '-'}</td>
                                 <td data-label="City">${w.city}</td>
                                 <td data-label="Location"><span class="event-location">${w.location}</span></td>
                                 <td data-label="Date & Time">

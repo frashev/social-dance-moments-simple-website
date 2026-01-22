@@ -83,7 +83,7 @@
 
         .event-organizer { background: #f0f0f0; padding: 8px 12px; border-radius: 5px; font-size: 13px; color: #555; margin-bottom: 10px; }
 
-        .event-dates { padding: 10px; border-radius: 5px; font-size: 13px; color: #e65100; margin-bottom: 15px; }
+        .event-dates { padding: 10px; border-radius: 5px; font-size: 13px; margin-bottom: 15px; }
 
         .event-description { font-size: 14px; color: #666; line-height: 1.5; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
 
@@ -664,8 +664,8 @@
                         <div style="margin-top: 8px; border-top: 2px solid #e74c3c; padding-top: 8px;">
                             <strong>👤Hosted by ${escapeHtml(event.event_organizer)}</strong><br>
                             <span style="color: #666;">📍 <span class="event-location">${escapeHtml(event.location)}, ${escapeHtml(event.city)}</span></span><br>
-                            <span style="color: #666;">📅 Start: <span class="event-datetime">${formatDate(event.start_date)} at ${formatTime(event.start_time)}</span></span><br>
-                            <span style="color: #666;">📅 End: <span class="event-datetime">${formatDate(event.end_date)} at ${formatTime(event.end_time)}</span></span><br>
+                            <span>📅 Start: <span class="event-datetime">${formatDate(event.start_date)} at ${formatTime(event.start_time)}</span></span><br>
+                            <span>📅 End: <span class="event-datetime">${formatDate(event.end_date)} at ${formatTime(event.end_time)}</span></span><br>
                             ${event.facebook_url ? `<br><a href="${escapeHtml(event.facebook_url)}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">📘 Facebook or Event URL</a>` : ''}
                         </div>
                     </div>
