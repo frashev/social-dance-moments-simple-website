@@ -10,11 +10,13 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
 
-        nav { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px; text-align: center; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
-        nav h1 { margin-bottom: 10px; font-size: 20px; }
-        nav .nav-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-        .nav-btn { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; padding: 4px 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); font-size: 13px; }
-        .nav-btn:hover { box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
+        nav { background: #667eea; color: white; padding: 15px; text-align: center; }
+        nav h1 { margin-bottom: 10px; font-size: 18px; }
+        nav .nav-buttons { display: inline-block; }
+        .nav-btn { background: #e74c3c; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; transition: 0.3s; font-size: 14px; text-decoration: none; display: inline-block; }
+        .nav-btn:hover { background: #c0392b; transform: scale(1.05); }
+        .nav-btn-green { background: #27ae60; }
+        .nav-btn-green:hover { background: #27ae60; }
 
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
 
@@ -203,7 +205,7 @@
         @media (max-width: 768px) {
             .filter-grid { grid-template-columns: 1fr; }
             .events-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-            nav h1 { font-size: 22px; }
+            .nav-btn { padding: 8px 12px; margin-left: 5px; font-size: 12px; }
             .container { padding: 15px; }
             .event-btn { padding: 3px 6px; font-size: 12px; }
             .event-photo { height: 280px; }
@@ -222,6 +224,7 @@
             .event-card { margin: 0; }
             .event-btn { padding: 3px 6px; font-size: 12px; }
             .event-photo { height: 220px; }
+            .nav-btn { padding: 6px 10px; margin-left: 3px; font-size: 12px; }
             .month-controls { grid-template-columns: repeat(2, 1fr); }
             .month-label { grid-column: 1 / -1; }
         }
@@ -231,8 +234,8 @@
     <nav>
         <h1>Festivals & Events Map</h1>
         <div class="nav-buttons">
-            <a href="/home.html" class="nav-btn">Home</a>
-            <a href="/map.html" class="nav-btn">Workshops & Parties Map</a>
+            <a href="/home.html" class="nav-btn nav-btn-green">Home</a>
+            <a href="/map.html" class="nav-btn nav-btn-green">Workshops & Parties Map</a>
         </div>
     </nav>
 
