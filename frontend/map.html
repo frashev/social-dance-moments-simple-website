@@ -25,6 +25,14 @@
         .workshop-item:hover { background: #e8e8ff; transform: translateX(5px); }
         .workshop-item strong { color: #667eea; }
         .workshop-item small { color: #666; display: block; margin-top: 5px; }
+        .workshop-description {
+            color: #555;
+            display: -webkit-box;
+            -webkit-line-clamp: 6;
+            line-clamp: 6;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
         .workshop-location {
             display: inline-block;
             padding: 2px 8px;
@@ -885,12 +893,12 @@
                             <small>
                                 <strong class="workshop-location">📍 ${w.location}</strong><br>
                                 🏙️ ${w.city}<br>
-                                📅 <span class="workshop-datetime">${formatDateWithWeekday(w.date)} at ${w.style === 'lets_party' ? (w.start_time || 'TBA') : (w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : w.time || 'TBA')}</span><br>
+                                <span class="workshop-datetime">${formatDateWithWeekday(w.date)} at ${w.style === 'lets_party' ? (w.start_time || 'TBA') : (w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : w.time || 'TBA')}</span><br>
                                 ${w.recurrence === 'weekly' ? '🔄 <strong>Weekly Event</strong>' : '📅 <strong>Single Event</strong>'}<br>
                                 ${w.style !== 'lets_party' ? `👨‍🏫 <strong>Instructors:</strong> ${w.instructor_name || 'TBA'}<br>` : ''}
                                 ${w.style !== 'lets_party' ? `🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}<br>` : ''}
                                 ${w.facebook_url ? `📘 <a href="${w.facebook_url}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">Facebook Event</a><br>` : ''}
-                                ${w.description ? `<em style="color: #555; display: block; margin-top: 5px;">"${w.description}"</em>` : ''}
+                                ${w.description ? `<em class="workshop-description" style="margin-top: 5px;">"${w.description}"</em>` : ''}
                             </small>
                         </div>
                     `).join('');
@@ -948,12 +956,12 @@
                         <div style="margin-top: 10px; border-top: 2px solid ${markerColor}; padding-top: 10px; text-align: left; word-wrap: break-word; overflow-wrap: break-word;">
                             <strong class="workshop-location" style="word-wrap: break-word;">📍 ${w.location}</strong><br>
                             <span style="color: #666; word-wrap: break-word;">🏙️ ${w.city}</span><br>
-                            <span style="color: #666; word-wrap: break-word;">📅 <span class="workshop-datetime">${formatDateWithWeekday(w.date)} at ${w.style === 'lets_party' ? (w.start_time || 'TBA') : (w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : w.time || 'TBA')}</span></span><br>
+                            <span style="color: #666; word-wrap: break-word;"><span class="workshop-datetime">${formatDateWithWeekday(w.date)} at ${w.style === 'lets_party' ? (w.start_time || 'TBA') : (w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : w.time || 'TBA')}</span></span><br>
                             <span style="color: #666; word-wrap: break-word;">${w.recurrence === 'weekly' ? '🔄 <strong>Weekly Event</strong>' : '📅 <strong>Single Event</strong>'}</span><br>
                             ${w.style !== 'lets_party' ? `<span style="color: #666; word-wrap: break-word;">👨‍🏫 <strong>Instructors:</strong> ${w.instructor_name || 'TBA'}</span><br>` : ''}
                             ${w.style !== 'lets_party' ? `<span style="color: #666; word-wrap: break-word;">🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}</span>` : ''}
                             ${w.facebook_url ? `<br><span style="color: #666; word-wrap: break-word;">📘 <a href="${w.facebook_url}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">Facebook Event</a></span>` : ''}
-                            ${w.description ? `<br><em style="color: #555; display: block; margin-top: 8px; font-style: italic; word-wrap: break-word;">"${w.description}"</em>` : ''}
+                            ${w.description ? `<br><em class="workshop-description" style="margin-top: 8px; font-style: italic; word-wrap: break-word;">"${w.description}"</em>` : ''}
                         </div>
                     </div>
                 `, { closeButton: true, autoClose: false, maxWidth: 300 });

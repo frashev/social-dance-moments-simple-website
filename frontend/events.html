@@ -75,7 +75,18 @@
 
         .event-content { padding: 20px; }
 
-        .event-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px; line-height: 1.4; }
+        .event-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 6;
+            line-clamp: 6;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
 
         .event-meta { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
         .event-meta-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #666; }
@@ -85,7 +96,7 @@
 
         .event-dates { padding: 10px; border-radius: 5px; font-size: 13px; margin-bottom: 15px; }
 
-        .event-description { font-size: 14px; color: #666; line-height: 1.5; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+        .event-description { font-size: 14px; color: #666; line-height: 1.5; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 6; line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
 
         .event-location-box { background: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 13px; border-left: 3px solid #667eea; color: #555; }
         .event-location {
