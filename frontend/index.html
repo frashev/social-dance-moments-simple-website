@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SDM</title>
+    <title>Social Dance Moments</title>
+    <!-- Add a favicon for the browser tab -->
+    <link rel="icon" type="image/png" href="/favicon.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
         .container { max-width: 600px; width: 90%; background: white; padding: 60px 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); text-align: center; }
-        h1 { font-size: 3em; color: #667eea; margin-bottom: 20px; }
+        h1 { font-size: 2em; color: #667eea; margin-bottom: 20px; }
         p { font-size: 18px; color: #666; margin-bottom: 30px; line-height: 1.6; }
         .buttons { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; flex-direction: column; align-items: center; }
         a { padding: 15px 40px; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 5px; cursor: pointer; transition: all 0.3s; }
@@ -19,22 +21,23 @@
         .btn-login:hover { background: #764ba2; }
         .btn-register { background: #764ba2; color: white; flex: 1; }
         .btn-register:hover { background: #667eea; }
+        .footer { font-size: 12px; color: #999; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>💃 SDM 🕺</h1>
+        <h1>Social Dance Moments</h1>
         <p>Discover your favorite Latin Dance Workshops & Events!<br> Salsa, Bachata, Kizomba & Zouk near you!</p>
         <div class="buttons">
             <a href="/map.html" class="btn-map">Workshops & Parties Map</a>
-            <a href="/events.html" class="btn-map" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);">Festivals & Events Map</a>
+            <a href="/events.html" class="btn-map">Festivals & Events Map</a>
             <div class="auth-buttons">
                 <a href="/login.html" class="btn-login">Login</a>
                 <a href="/register.html" class="btn-register">Register</a>
             </div>
         </div>
-        <p style="font-size: 12px; color: #999; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-            * SDM = Social Dance Moments®
+        <p class="footer">
+            Social Dance Moments®
         </p>
     </div>
 </body>
