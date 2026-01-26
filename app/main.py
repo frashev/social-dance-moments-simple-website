@@ -39,11 +39,6 @@ app.include_router(workshops_router)
 app.include_router(events_router)
 app.include_router(admin_router)
 
-@app.get("/api/home/{user_id}")
-def home(user_id: int):
-    """User home page (placeholder)."""
-    return {"msg": f"Welcome user {user_id}! Visit /songs/{user_id} or /workshops."}
-
 # Serve uploads directory
 uploads_path = Path(__file__).parent.parent / "frontend" / "uploads"
 uploads_path.mkdir(exist_ok=True)
