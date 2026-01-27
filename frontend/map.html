@@ -258,7 +258,8 @@
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
 
-            #cityFilter {
+            #cityFilter,
+            #countryFilter {
                 font-size: 16px !important;
                 padding: 12px !important;
                 margin: 10px 0 !important;
@@ -313,7 +314,8 @@
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
 
-            #cityFilter {
+            #cityFilter,
+            #countryFilter {
                 font-size: 12px !important;
                 padding: 10px !important;
                 margin: 8px 0 !important;
@@ -410,6 +412,7 @@
                     <option value="zouk">Zouk</option>
                     <option value="lets_party">Let's Party</option>
                 </select>
+                <input type="text" id="countryFilter" placeholder="Country (optional, e.g., Bulgaria)" value="Bulgaria" style="margin-bottom: 10px;">
                 <input type="text" id="cityFilter" placeholder="Search by city..." value="sofia" style="margin-bottom: 10px;">
                 <button onclick="searchCity()" style="width: 100%; padding: 8px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; margin-bottom: 10px;">Search City</button>
 
@@ -1373,16 +1376,26 @@
             return container;
         }
 
-        // Geocode city and relocate map
-        async function relocateMapToCity(cityName) {
+        // Geocode city (optionally with country) and relocate map
+        async function relocateMapToCity(cityName, countryName = '') {
             if (!cityName.trim()) {
                 showToast('🏙️ Please enter a city name', 'warning');
                 return;
             }
 
             try {
-                // Try with User-Agent header for better compatibility
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&format=json&limit=1`, {
+                // Build Nominatim query; include country when provided for better accuracy
+                const baseUrl = 'https://nominatim.openstreetmap.org/search';
+                const params = new URLSearchParams({
+                    format: 'json',
+                    limit: '1'
+                });
+                params.append('city', cityName);
+                if (countryName && countryName.trim()) {
+                    params.append('country', countryName.trim());
+                }
+
+                const res = await fetch(`${baseUrl}?${params.toString()}`, {
                     headers: {
                         'User-Agent': 'DanceWorkshopsApp/1.0'
                     }
@@ -1448,8 +1461,9 @@
         // Function to search city from button or Enter key
         function searchCity() {
             const city = document.getElementById('cityFilter').value;
+            const country = document.getElementById('countryFilter') ? document.getElementById('countryFilter').value : '';
             if (city.trim()) {
-                relocateMapToCity(city);
+                relocateMapToCity(city, country);
                 filterWorkshops();
             } else {
                 showToast('🏙️ Please enter a city name', 'warning');
