@@ -348,6 +348,21 @@
                 line-height: 1.4;
             }
 
+        /* Autocomplete hover behavior for location filter (aligned with admin) */
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background: #e8f4f8;
+        }
+
             .legend {
                 padding: 10px;
                 margin-bottom: 15px;
@@ -414,7 +429,19 @@
                 </select>
                 <input type="text" id="countryFilter" placeholder="Country (optional, e.g., Bulgaria)" value="Bulgaria" style="margin-bottom: 10px;">
                 <input type="text" id="cityFilter" placeholder="Search by city..." value="sofia" style="margin-bottom: 10px;">
-                <button onclick="searchCity()" style="width: 100%; padding: 8px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; margin-bottom: 10px;">Search City</button>
+                <button onclick="searchCity()" style="width: 100%; padding: 8px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; margin-bottom: 8px;">Search City</button>
+
+                <!-- Location filter within the selected city (autocomplete like admin) -->
+                <div class="autocomplete-container" style="margin-bottom: 10px;">
+                    <input
+                        type="text"
+                        id="locationFilter"
+                        class="autocomplete-input"
+                        placeholder="Filter by location in this city... (e.g., Palante Dance Studio)"
+                        autocomplete="off"
+                    >
+                    <div id="locationFilterSuggestions" class="autocomplete-list"></div>
+                </div>
 
                 <!-- Workshop/Party Filter -->
                 <h5 style="margin-top: 10px; margin-bottom: 8px; color: #667eea;">🎪 Filter by Type</h5>
@@ -1109,14 +1136,79 @@
             filterWorkshops();
         }
 
+        // Location autocomplete suggestions (similar to admin location autocomplete)
+        function filterLocationFilterSuggestions(query) {
+            const suggestionsDiv = document.getElementById('locationFilterSuggestions');
+            const cityValue = document.getElementById('cityFilter')?.value.toLowerCase().trim() || '';
+
+            if (!suggestionsDiv) return;
+
+            const trimmed = (query || '').trim().toLowerCase();
+            if (!trimmed) {
+                suggestionsDiv.classList.remove('show');
+                suggestionsDiv.innerHTML = '';
+                return;
+            }
+
+            const locations = [];
+            const seen = new Set();
+
+            allWorkshops.forEach(w => {
+                if (!w.location) return;
+                const wCity = (w.city || '').toLowerCase();
+                const matchCity = !cityValue || wCity === cityValue || wCity.includes(cityValue);
+                const locLower = w.location.toLowerCase();
+
+                if (matchCity && locLower.includes(trimmed) && !seen.has(w.location)) {
+                    seen.add(w.location);
+                    locations.push(w.location);
+                }
+            });
+
+            if (locations.length === 0) {
+                suggestionsDiv.innerHTML = '<div class="autocomplete-item" style="padding: 15px; color: #999;">No locations found</div>';
+                suggestionsDiv.classList.add('show');
+                return;
+            }
+
+            locations.sort((a, b) => a.localeCompare(b));
+
+            suggestionsDiv.innerHTML = locations.map((loc, index) => `
+                <div class="autocomplete-item" onclick="selectLocationFilterSuggestion('${loc.replace(/'/g, "\\'")}')" data-index="${index}">
+                    <strong>📍${loc}</strong>
+                </div>
+            `).join('');
+
+            suggestionsDiv.classList.add('show');
+        }
+
+        function selectLocationFilterSuggestion(name) {
+            const input = document.getElementById('locationFilter');
+            const suggestionsDiv = document.getElementById('locationFilterSuggestions');
+            if (input) {
+                input.value = name;
+            }
+            if (suggestionsDiv) {
+                suggestionsDiv.classList.remove('show');
+                suggestionsDiv.innerHTML = '';
+            }
+            filterWorkshops();
+        }
+
         function filterWorkshops() {
             const style = document.getElementById('styleFilter').value;
             const city = document.getElementById('cityFilter').value.toLowerCase().trim();
+            const locationValue = document.getElementById('locationFilter')?.value.toLowerCase().trim() || '';
 
             let filtered = allWorkshops.filter(w => {
                 const matchStyle = !style || w.style === style;
                 // Match city by exact match (case-insensitive) or partial match
-                const matchCity = !city || w.city.toLowerCase() === city || w.city.toLowerCase().includes(city);
+                const wCity = (w.city || '').toLowerCase();
+                const matchCity = !city || wCity === city || wCity.includes(city);
+
+                // Match location only when user has entered something
+                const wLocation = (w.location || '').toLowerCase();
+                const matchLocation = !locationValue || wLocation.includes(locationValue);
 
                 // Apply workshop/party type filter
                 let matchType = true;
@@ -1127,7 +1219,7 @@
                 }
                 // 'all' matches everything
 
-                return matchStyle && matchCity && matchType;
+                return matchStyle && matchCity && matchLocation && matchType;
             });
 
             // Apply active date filter
@@ -1136,6 +1228,21 @@
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
         }
+
+        // Hook up location autocomplete events
+        document.getElementById('locationFilter')?.addEventListener('input', function (e) {
+            filterLocationFilterSuggestions(e.target.value);
+            filterWorkshops();
+        });
+
+        document.getElementById('locationFilter')?.addEventListener('blur', function () {
+            setTimeout(() => {
+                const suggestionsDiv = document.getElementById('locationFilterSuggestions');
+                if (suggestionsDiv) {
+                    suggestionsDiv.classList.remove('show');
+                }
+            }, 200);
+        });
 
         function applyActiveDateFilter(workshops) {
             if (activeDateFilter.type === 'week') {
