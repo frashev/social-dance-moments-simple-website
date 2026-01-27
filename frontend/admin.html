@@ -629,6 +629,7 @@
             const endTimeGroup = document.getElementById('end_time_group');
             const endTimeInput = document.getElementById('end_time');
             const startTime = document.getElementById('start_time').value;
+            const difficultyInput = document.getElementById('difficulty');
             
             if (style === 'lets_party') {
                 // Hide end_time field for Let's Party
@@ -636,6 +637,10 @@
                 // Auto-populate end_time with start_time
                 if (startTime) {
                     endTimeInput.value = startTime;
+                }
+                // Clear difficulty for Let's Party
+                if (difficultyInput) {
+                    difficultyInput.value = '';
                 }
             } else {
                 // Show end_time field for other styles
@@ -1390,7 +1395,7 @@
         }
 
         async function deleteWorkshop(workshopId) {
-            if (!confirm('Delete this workshop? This will also delete all registrations.')) return;
+            if (!confirm('Delete this workshop?')) return;
 
             try {
                 const res = await fetch(`/admin/workshops/${workshopId}?token=${token}`, { method: 'DELETE' });
