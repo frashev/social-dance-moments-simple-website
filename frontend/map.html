@@ -22,6 +22,21 @@
         .sidebar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         .sidebar::-webkit-scrollbar-thumb { background: #667eea; border-radius: 10px; }
         .sidebar::-webkit-scrollbar-thumb:hover { background: #764ba2; }
+
+        /* Autocomplete items (shared hover behavior on desktop & mobile) */
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background: #e8f4f8;
+        }
         .sidebar h3 { color: #667eea; margin-bottom: 15px; }
         .workshop-item { padding: 15px; margin-bottom: 10px; background: #f9f9f9; border-left: 4px solid #667eea; border-radius: 5px; cursor: pointer; transition: all 0.3s; }
         .workshop-item:hover { background: #e8e8ff; transform: translateX(5px); }
@@ -1590,6 +1605,17 @@
             const city = document.getElementById('cityFilter').value;
             const country = document.getElementById('countryFilter') ? document.getElementById('countryFilter').value : '';
             if (city.trim()) {
+                // Clear any previously selected location when city changes
+                const locationInput = document.getElementById('locationFilter');
+                const locationSuggestions = document.getElementById('locationFilterSuggestions');
+                if (locationInput) {
+                    locationInput.value = '';
+                }
+                if (locationSuggestions) {
+                    locationSuggestions.classList.remove('show');
+                    locationSuggestions.innerHTML = '';
+                }
+
                 relocateMapToCity(city, country);
                 filterWorkshops();
             } else {
