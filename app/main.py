@@ -9,13 +9,12 @@ from .workshops import router as workshops_router
 from .events import router as events_router
 from .admin import router as admin_router
 from .database import init_db
-from .geocoding import get_workshop_coordinates, WORKSHOP_GEOCODING_CACHE
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="SDM",
-    description="A platform for discovering dance songs and workshops",
+    title="Social Dance Moments",
+    description="A platform for discovering latin dance events & workshops",
     version="3.0.0"
 )
 
