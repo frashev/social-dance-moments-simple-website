@@ -872,7 +872,7 @@
                 });
 
                 // Build HTML with date separators
-                let html = `<p style="color: #667eea; font-weight: bold; margin-bottom: 10px;">📊 ${workshops.length} items <span style="color: #999; font-weight: normal; font-size: 12px;">(ordered by date)</span></p>`;
+                let html = `<p style="color: #667eea; font-weight: bold; margin-bottom: 10px;">📊 ${workshops.length} items <span style="color: #999; font-weight: normal; font-size: 12px;">(ordered by date & time)</span></p>`;
 
                 Object.keys(groupedByDate).forEach(date => {
                     const dateObj = new Date(date + 'T00:00:00');
@@ -886,7 +886,14 @@
                         <span style="position:absolute; right: 18px; top: 50%; transform: translateY(-50%); background: #fff8db; color: #b28600; font-size: 10px; font-weight: 500; padding: 2.5px 10px; border-radius: 10px; border: 1px solid #ffe066;">DATE</span>
                     </div>`;
 
-                    html += groupedByDate[date].map(w => `
+                    // Sort workshops within this date by start_time (or legacy time) ascending
+                    const dayWorkshops = [...groupedByDate[date]].sort((a, b) => {
+                        const timeA = a.start_time || a.time || '23:59';
+                        const timeB = b.start_time || b.time || '23:59';
+                        return timeA.localeCompare(timeB);
+                    });
+
+                    html += dayWorkshops.map(w => `
                         <div class="workshop-item" onclick="centerOnWorkshop(${w.id})">
                             ${w.title ? `<strong style="display: block; margin-bottom: 2px;">${w.title}</strong>` : ''}
                             <strong style="color: ${styleColors[w.style]}">${w.style.toUpperCase()}</strong>
