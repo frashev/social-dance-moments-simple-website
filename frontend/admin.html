@@ -1621,11 +1621,26 @@
             }
         });
 
-        // Geocoding function to find city coordinates
-        async function geocodeCity(cityName) {
+        // Geocoding function to find city coordinates (optionally scoped by country)
+        async function geocodeCity(cityName, countryName = '') {
             try {
-                console.log('🔍 Geocoding city:', cityName);
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&format=json&limit=1`);
+                console.log('🔍 Geocoding city:', cityName, countryName ? `in ${countryName}` : '');
+
+                const baseUrl = 'https://nominatim.openstreetmap.org/search';
+                const params = new URLSearchParams({
+                    format: 'json',
+                    limit: '1'
+                });
+                params.append('city', cityName);
+                if (countryName && countryName.trim()) {
+                    params.append('country', countryName.trim());
+                }
+
+                const response = await fetch(`${baseUrl}?${params.toString()}`, {
+                    headers: {
+                        'User-Agent': 'DanceAdminApp/1.0'
+                    }
+                });
                 const results = await response.json();
 
                 if (results.length === 0) {
@@ -1692,6 +1707,7 @@
         // Search for city and center map on it
         function searchCity() {
             const cityName = document.getElementById('locCity').value.trim();
+            const countryName = document.getElementById('locCountry') ? document.getElementById('locCountry').value.trim() : '';
 
             if (!cityName) {
                 showLocationMessage('❌ Please enter a city name', 'error');
@@ -1699,7 +1715,7 @@
             }
 
             // Geocode and center map
-            geocodeCity(cityName).then(result => {
+            geocodeCity(cityName, countryName).then(result => {
                 if (result && locationMap) {
                     locationMap.setView([result.lat, result.lon], 13);
                     console.log('🗺️ Map centered on:', result.city);
