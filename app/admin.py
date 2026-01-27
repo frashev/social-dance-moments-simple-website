@@ -6,36 +6,101 @@ from fastapi import APIRouter, Form, Query, HTTPException
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-# Style-based coordinate deviations to prevent marker overlap on map
-STYLE_DEVIATIONS = {
-    "salsa": (0.00005, 0.00005),      # Northeast
-    "bachata": (-0.00005, 0.00005),   # Northwest
-    "kizomba": (-0.00005, -0.00005),  # Southwest
-    "zouk": (0.00005, -0.00005),      # Southeast
+import math
+
+# Style angles for circular distribution (0°=N, 45°=NE, 90°=E, 135°=SE, 180°=S, 225°=SW, 270°=W, 315°=NW)
+STYLE_ANGLES = {
+    "salsa": 45,        # Northeast
+    "bachata": 135,     # Southeast
+    "kizomba": 225,     # Southwest
+    "zouk": 315,        # Northwest
+    "lets_party": 0,    # North
 }
+
+def get_style_angle(style: str) -> float:
+    """Get the compass angle for a style."""
+    return STYLE_ANGLES.get(style, 0)
 
 def apply_style_deviation(lat: float, lon: float, style: str) -> tuple:
     """
-    Apply small coordinate deviation based on dance style.
+    Apply small coordinate deviation based on dance style using circular distribution.
     This spreads markers on the map so they don't overlap.
 
     Args:
         lat: Base latitude
         lon: Base longitude
-        style: Dance style (salsa, bachata, kizomba, zouk)
+        style: Dance style (salsa, bachata, kizomba, zouk, lets_party)
 
     Returns:
         Tuple of (adjusted_lat, adjusted_lon)
     """
-    if style not in STYLE_DEVIATIONS:
-        return (lat, lon)
+    angle_degrees = get_style_angle(style)
+    angle_radians = math.radians(angle_degrees)
 
-    lat_dev, lon_dev = STYLE_DEVIATIONS[style]
-    adjusted_lat = lat + lat_dev
-    adjusted_lon = lon + lon_dev
+    # Use circular pattern: radius * cos(angle) for lat, radius * sin(angle) for lon
+    # This correctly maps compass bearings (0°=N, 90°=E, 180°=S, 270°=W) to lat/lon space
+    radius = 0.000063  # ~7 meters at equator
 
-    print(f"✅ Applied {style} deviation: ({lat}, {lon}) → ({adjusted_lat}, {adjusted_lon})")
+    lat_offset = radius * math.cos(angle_radians)
+    lon_offset = radius * math.sin(angle_radians)
+
+    adjusted_lat = lat + lat_offset
+    adjusted_lon = lon + lon_offset
+
+    print(f"Applied {style} circular distribution ({angle_degrees}°): ({lat}, {lon}) → ({adjusted_lat}, {adjusted_lon})")
     return (adjusted_lat, adjusted_lon)
+
+def apply_collision_avoidance_deviation(lat: float, lon: float, city: str, location: str, style: str, style_index: int = 0, exclude_workshop_id: int = None) -> tuple:
+    """
+    Check if other workshops of the same style exist at the same location.
+    If yes, apply additional small deviation within the style sector to avoid overlap.
+    Uses deterministic circular positioning.
+
+    Args:
+        lat: Current latitude (after style deviation)
+        lon: Current longitude (after style deviation)
+        city: Workshop city
+        location: Workshop location name
+        style: Dance style
+        style_index: Index of this workshop within its style group at this location
+        exclude_workshop_id: Workshop ID to exclude from count (for updates)
+
+    Returns:
+        Tuple of (adjusted_lat, adjusted_lon)
+    """
+    with get_db() as conn:
+        c = conn.cursor()
+
+        # Count other workshops of same style at same location
+        if exclude_workshop_id:
+            c.execute(
+                "SELECT COUNT(*) FROM workshops WHERE city = ? AND location = ? AND style = ? AND id != ?",
+                (city, location, style, exclude_workshop_id)
+            )
+        else:
+            c.execute(
+                "SELECT COUNT(*) FROM workshops WHERE city = ? AND location = ? AND style = ?",
+                (city, location, style)
+            )
+
+        style_count = c.fetchone()[0] + 1  # +1 to include current workshop
+
+    if style_count > 1:
+        # Apply collision avoidance within the style sector
+        collision_radius = 0.000025  # ~2-3 meters for same-style spread
+        collision_angle_deg = (style_index * 360 / style_count)
+        collision_angle_rad = math.radians(collision_angle_deg)
+
+        collision_lat_offset = collision_radius * math.cos(collision_angle_rad)
+        collision_lon_offset = collision_radius * math.sin(collision_angle_rad)
+
+        adjusted_lat = lat + collision_lat_offset
+        adjusted_lon = lon + collision_lon_offset
+
+        print(f"Collision avoidance (same {style}, #{style_index + 1}/{style_count}): ({lat}, {lon}) → ({adjusted_lat}, {adjusted_lon})")
+        return (adjusted_lat, adjusted_lon)
+
+    return (lat, lon)
 
 def verify_admin(token: str = Query(...)) -> dict:
     """Verify that user is admin. Attempts to refresh if token is expired."""
@@ -122,9 +187,20 @@ def admin_create_workshop(
                 lon = result['lon']
                 print(f"✅ Inherited coordinates from predefined_locations: {lat}, {lon}")
 
-    # Apply style-based coordinate deviation to prevent marker overlap
+    # Apply style-based circular distribution to prevent marker overlap
     if lat is not None and lon is not None:
         lat, lon = apply_style_deviation(lat, lon, style)
+        # Apply additional deviation if other workshops of same style exist at this location
+        # Get style index for this workshop
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute(
+                "SELECT COUNT(*) FROM workshops WHERE city = ? AND location = ? AND style = ?",
+                (city, location, style)
+            )
+            style_index = c.fetchone()[0]  # Index of this new workshop within its style group
+
+        lat, lon = apply_collision_avoidance_deviation(lat, lon, city, location, style, style_index=style_index)
 
     with get_db() as conn:
         c = conn.cursor()
@@ -204,7 +280,7 @@ def admin_update_workshop(
     # Get current workshop data to use if not being updated
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("SELECT style, city, location FROM workshops WHERE id = ?", (workshop_id,))
+        c.execute("SELECT style, city, location, date FROM workshops WHERE id = ?", (workshop_id,))
         current_workshop = c.fetchone()
         if not current_workshop:
             raise HTTPException(status_code=404, detail="Workshop not found")
@@ -212,6 +288,7 @@ def admin_update_workshop(
         current_style = current_workshop['style']
         current_city = current_workshop['city']
         current_location = current_workshop['location']
+        current_date = current_workshop['date']
 
     # Use new values if provided, otherwise use current
     updated_style = style if style else current_style
@@ -237,11 +314,23 @@ def admin_update_workshop(
                 if result:
                     lat = result['lat']
                     lon = result['lon']
-                    print(f"✅ Fetched coordinates for {location}: ({lat}, {lon})")
+                    print(f"Fetched coordinates for {location}: ({lat}, {lon})")
 
-        # Apply style-based deviation to coordinates
+        # Apply circular distribution if coordinates are provided (user explicitly setting them or location change)
         if lat is not None and lon is not None:
             lat, lon = apply_style_deviation(lat, lon, updated_style)
+            # Apply collision avoidance for same-style workshops at this location
+            # Count other workshops of same style at this location (excluding current)
+            with get_db() as conn:
+                c = conn.cursor()
+                c.execute(
+                    "SELECT COUNT(*) FROM workshops WHERE city = ? AND location = ? AND style = ? AND id != ?",
+                    (updated_city, updated_location, updated_style, workshop_id)
+                )
+                style_index = c.fetchone()[0]  # Index among other same-style workshops
+
+            lat, lon = apply_collision_avoidance_deviation(lat, lon, updated_city, updated_location, updated_style, style_index=style_index, exclude_workshop_id=workshop_id)
+
             updates.append("lat = ?")
             params.append(lat)
             updates.append("lon = ?")
