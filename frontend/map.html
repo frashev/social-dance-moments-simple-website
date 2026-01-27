@@ -30,8 +30,8 @@
         .workshop-description {
             color: #555;
             display: -webkit-box;
-            -webkit-line-clamp: 5;
-            line-clamp: 5;
+            -webkit-line-clamp: 4;
+            line-clamp: 4;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -901,10 +901,11 @@
                             <small>
                                 
                                 <strong class="workshop-location">📍 ${w.location} - ${w.city}</strong><br>
+                                ${w.organizer ? `👥 <strong>Organizer:</strong> ${w.organizer}<br>` : ''}
                                 <span class="workshop-datetime">${formatDateWithWeekday(w.date)} at ${w.style === 'lets_party' ? (w.start_time || 'TBA') : (w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : w.time || 'TBA')}</span><br>
                                 ${w.recurrence === 'weekly' ? '🔄 <strong>Weekly Event</strong>' : '📅 <strong>Single Event</strong>'}<br>
                                 ${w.style !== 'lets_party' ? `👨‍🏫 <strong>Instructors:</strong> <span class="workshop-instructor">${w.instructor_name || 'TBA'}</span><br>` : ''}
-                                ${w.style !== 'lets_party' ? `🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}<br>` : ''}
+                                ${w.style !== 'lets_party' ? `🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}` : ''}
                                 ${w.facebook_url ? `📘 <a href="${w.facebook_url}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">Facebook Event</a><br>` : ''}
                                 ${w.description ? `<em class="workshop-description" style="margin-top: 5px;">"${w.description}"</em>` : ''}
                             </small>
@@ -964,11 +965,12 @@
                         <div style="margin-top: 10px; border-top: 2px solid ${markerColor}; padding-top: 10px; text-align: left; word-wrap: break-word; overflow-wrap: break-word;">
                             ${w.title ? `<strong style="display: block; margin-bottom: 4px;">${w.title}</strong>` : ''}
                             <strong class="workshop-location" style="word-wrap: break-word;">📍 ${w.location} - ${w.city}</strong><br>
+                            ${w.organizer ? `<span style="color: #666; word-wrap: break-word;">👥 <strong>Organizer:</strong> ${w.organizer}</span><br>` : ''}
                             <span style="color: #666; word-wrap: break-word;"><span class="workshop-datetime">${formatDateWithWeekday(w.date)} at ${w.style === 'lets_party' ? (w.start_time || 'TBA') : (w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : w.time || 'TBA')}</span></span><br>
                             <span style="color: #666; word-wrap: break-word;">${w.recurrence === 'weekly' ? '🔄 <strong>Weekly Event</strong>' : '📅 <strong>Single Event</strong>'}</span><br>
                             ${w.style !== 'lets_party' ? `<span style="color: #666; word-wrap: break-word;">👨‍🏫 <strong>Instructors:</strong> <span class="workshop-instructor">${w.instructor_name || 'TBA'}</span></span><br>` : ''}
                             ${w.style !== 'lets_party' ? `<span style="color: #666; word-wrap: break-word;">🎓 <strong>Level:</strong> ${w.difficulty || 'intermediate'}</span>` : ''}
-                            ${w.facebook_url ? `<br><span style="color: #666; word-wrap: break-word;">📘 <a href="${w.facebook_url}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">Facebook Event</a></span>` : ''}
+                            ${w.facebook_url ? `<span style="color: #666; word-wrap: break-word;">📘 <a href="${w.facebook_url}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">Facebook Event</a></span>` : ''}
                             ${w.description ? `<br><em class="workshop-description" style="margin-top: 8px; font-style: italic; word-wrap: break-word;">"${w.description}"</em>` : ''}
                         </div>
                     </div>

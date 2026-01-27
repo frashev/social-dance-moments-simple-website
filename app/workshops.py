@@ -19,8 +19,29 @@ def get_workshops(
     with get_db() as conn:
         c = conn.cursor()
 
-        # Build query with filters
-        query = "SELECT id, title, city, location, date, start_time, end_time, style, difficulty, instructor_name, description, cards, lat, lon, facebook_url, recurrence FROM workshops WHERE 1=1"
+        # Build query with filters (include organizer so frontend can display it)
+        query = """
+            SELECT
+                id,
+                title,
+                city,
+                location,
+                date,
+                start_time,
+                end_time,
+                style,
+                difficulty,
+                instructor_name,
+                organizer,
+                description,
+                cards,
+                lat,
+                lon,
+                facebook_url,
+                recurrence
+            FROM workshops
+            WHERE 1=1
+        """
         params = []
 
         if style:
@@ -66,7 +87,7 @@ def get_nearby_workshops(
     """Get workshops within a radius of user location."""
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("SELECT id, title, city, location, date, start_time, end_time, style, difficulty FROM workshops")
+        c.execute("SELECT id, title, city, location, date, start_time, end_time, style, difficulty, organizer FROM workshops")
         workshops = c.fetchall()
 
     nearby = []
