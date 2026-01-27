@@ -430,10 +430,10 @@
                     <span id="dateFilterRange" style="font-size: 13px; font-weight: 500; color: #3498db; padding: 2px 8px; border-radius: 12px; white-space: nowrap;"></span>
                 </h5>
                 <div class="date-filter-group">
-                    <button class="active" id="dateCurrentWeek" onclick="filterByCurrentWeek()">This Week</button>
+                    <button id="dateCurrentWeek" onclick="filterByCurrentWeek()">This Week</button>
                     <button id="datePrevWeek" onclick="filterByPreviousWeek()">Previous Week</button>
                     <button id="dateNextWeek" onclick="filterByNextWeek()">Next Week</button>
-                    <button id="dateToday" onclick="filterByToday()">Today</button>
+                    <button class="active" id="dateToday" onclick="filterByToday()">4 Weeks</button>
                     <button id="dateSpecific" onclick="toggleSpecificDateMode()">Date</button>
                 </div>
 
@@ -647,19 +647,8 @@
                 // Expand weekly events to show all future occurrences
                 allWorkshops = expandWeeklyEvents(allWorkshops);
 
-                // Filter to show only current week by default
-                const weekRange = getWeekDateRange();
-                activeDateFilter = { type: 'week', data: null };
-                const currentWeekWorkshops = allWorkshops.filter(w =>
-                    w.date >= weekRange.start && w.date <= weekRange.end
-                );
-
-                // Update the week display message
-                updateWeekDisplayMessage(weekRange);
-                updateDateFilterDisplay();
-
-                displayWorkshops(currentWeekWorkshops);
-                addMarkersToMap(currentWeekWorkshops);
+                // By default, show the next 4 weeks
+                filterByToday();
             } catch (err) {
                 document.getElementById('workshopList').innerHTML = '<p>Error loading workshops</p>';
             }
@@ -1167,8 +1156,25 @@
 
         function filterByToday() {
             updateDateFilterButtons('dateToday');
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-            activeDateFilter = { type: 'today', data: null };
+
+            // Compute the next 4 weeks (28 days) starting from today
+            const today = new Date();
+            const start = new Date(today);
+            const end = new Date(today);
+            end.setDate(end.getDate() + 27); // inclusive 4-week window
+
+            const formatDate = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            const startStr = formatDate(start);
+            const endStr = formatDate(end);
+
+            // Store as a generic range filter for display helpers
+            activeDateFilter = { type: 'range', data: { start: startStr, end: endStr } };
 
             const style = document.getElementById('styleFilter').value;
             const city = document.getElementById('cityFilter').value.toLowerCase();
@@ -1176,7 +1182,7 @@
             const filtered = allWorkshops.filter(w => {
                 const matchStyle = !style || w.style === style;
                 const matchCity = !city || w.city.toLowerCase().includes(city);
-                const matchDate = w.date === today;
+                const matchDate = w.date >= startStr && w.date <= endStr;
 
                 // Apply workshop/party type filter
                 let matchType = true;
@@ -1192,14 +1198,17 @@
             displayWorkshops(filtered);
             addMarkersToMap(filtered);
 
-            // Update header to show "Today"
-            const todayDate = new Date(today + 'T00:00:00');
+            // Update header to show "Next 4 Weeks" range
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const todayStr = `${months[todayDate.getMonth()]} ${todayDate.getDate()}, ${todayDate.getFullYear()}`;
-            document.getElementById('weekDisplayRange').textContent = `Today: ${todayStr}`;
+            const startDateObj = new Date(startStr + 'T00:00:00');
+            const endDateObj = new Date(endStr + 'T00:00:00');
+            const headerStartStr = `${months[startDateObj.getMonth()]} ${startDateObj.getDate()}`;
+            const headerEndStr = `${months[endDateObj.getMonth()]} ${endDateObj.getDate()}, ${endDateObj.getFullYear()}`;
+            document.getElementById('weekDisplayRange').textContent = `Next 4 Weeks: ${headerStartStr} – ${headerEndStr}`;
+
             updateDateFilterDisplay();
 
-            showToast(`📅 Showing items for today (${today})`, 'success');
+            showToast(`📅 Showing items for the next 4 weeks (${startStr} to ${endStr})`, 'success');
         }
 
         function filterByDateRange() {
