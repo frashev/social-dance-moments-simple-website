@@ -496,15 +496,15 @@
                 </div>
             </div>
 
-            <div class="layer-selector">
+            <!-- <div class="layer-selector">
                 <label for="layerSelect">🗺️ Map Layer</label>
                 <select id="layerSelect" onchange="changeLayer(this.value)">
-                    <option value="osm">Standard (OSM)</option>
+                    <option value="osm" selected>Standard (OSM)</option>
                     <option value="satellite">Satellite (Esri)</option>
                     <option value="cartodb-light">CartoDB Light</option>
-                    <option value="cartodb-voyager" selected>CartoDB Voyager</option>
+                    <option value="cartodb-voyager">CartoDB Voyager</option>
                 </select>
-            </div>
+            </div> -->
 
             <h3>📍 Workshops & Parties</h3>
             <div id="workshopList">
@@ -565,9 +565,9 @@
         // Initialize map centered on Europe (dance capital!)
         const map = L.map('map').setView([42.6977, 23.3219], 12); // Sofia
 
-        // Store current layer reference
-        let currentLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '© CartoDB, © OpenStreetMap contributors',
+        // Store current layer reference - default to Standard OSM
+        let currentLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
             maxZoom: 19
         }).addTo(map);
 

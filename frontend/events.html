@@ -677,7 +677,7 @@
                         <div style="margin-top: 8px; border-top: 2px solid #e74c3c; padding-top: 8px;">
                             <strong>👤Hosted by ${escapeHtml(event.event_organizer)}</strong><br>
                             <span style="color: #666;">📍 <span class="event-location">${escapeHtml(event.location)}, ${escapeHtml(event.city)}</span></span><br>
-                            <span>📅 Start: <span class="event-datetime">${formatDate(event.start_date)} at ${formatTime(event.start_time)}</span></span><br>
+                            <span>📅 Start: <span class="event-datetime">${formatDate(event.start_date)}</span></span><br>
                             <span>📅 End: <span class="event-datetime">${formatDate(event.end_date)}</span></span><br>
                             ${event.facebook_url ? `<br><a href="${escapeHtml(event.facebook_url)}" target="_blank" style="color: #3b5998; text-decoration: none; font-weight: bold;">📘 Facebook or Event URL</a>` : ''}
                         </div>
