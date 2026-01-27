@@ -95,6 +95,7 @@ def admin_create_workshop(
     style: str = Form(...),
     difficulty: str = Form("intermediate"),
     instructor_name: str = Form(None),
+    organizer: str = Form(None),
     description: str = Form(None),
     max_participants: int = Form(0),
     cards: str = Form(None),
@@ -128,8 +129,8 @@ def admin_create_workshop(
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO workshops (admin_id, title, city, location, date, time, start_time, end_time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon, recurrence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (admin_id, title, city, location, date, start_time, start_time, end_time, style, difficulty, instructor_name, description, max_participants, cards, facebook_url, lat, lon, recurrence)
+            "INSERT INTO workshops (admin_id, title, city, location, date, time, start_time, end_time, style, difficulty, instructor_name, organizer, description, max_participants, cards, facebook_url, lat, lon, recurrence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (admin_id, title, city, location, date, start_time, start_time, end_time, style, difficulty, instructor_name, organizer, description, max_participants, cards, facebook_url, lat, lon, recurrence)
         )
         conn.commit()
         workshop_id = c.lastrowid
@@ -148,6 +149,7 @@ def admin_update_workshop(
     style: str = Form(None),
     difficulty: str = Form(None),
     instructor_name: str = Form(None),
+    organizer: str = Form(None),
     description: str = Form(None),
     cards: str = Form(None),
     facebook_url: str = Form(None),
@@ -251,6 +253,9 @@ def admin_update_workshop(
     if instructor_name:
         updates.append("instructor_name = ?")
         params.append(instructor_name)
+    if organizer is not None:
+        updates.append("organizer = ?")
+        params.append(organizer)
     if description:
         updates.append("description = ?")
         params.append(description)

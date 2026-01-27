@@ -224,6 +224,10 @@
                         <input type="text" id="title" placeholder="e.g., Beginner Salsa Bootcamp">
                     </div>
                     <div class="form-group">
+                        <label>Organizer</label>
+                        <input type="text" id="organizer" placeholder="e.g., Social Dance Moments">
+                    </div>
+                    <div class="form-group">
                         <label>Location *</label>
                         <div class="autocomplete-container">
                             <input type="text" id="location" class="autocomplete-input" placeholder="Start typing to see suggestions..." required autocomplete="off">
@@ -302,6 +306,7 @@
                 <thead>
                     <tr>
                         <th>Title</th>
+                        <th>Organizer</th>
                         <th>City</th>
                         <th>Location</th>
                         <th>Date & Time</th>
@@ -1085,6 +1090,7 @@
                         html += `
                             <tr>
                                 <td data-label="Title">${w.title || '-'}</td>
+                                <td data-label="Organizer">${w.organizer || '-'}</td>
                                 <td data-label="City">${w.city}</td>
                                 <td data-label="Location"><span class="event-location">${w.location}</span></td>
                                 <td data-label="Date & Time">
@@ -1149,6 +1155,7 @@
             // Collect form data
             const formData = new FormData();
             const title = document.getElementById('title').value.trim();
+            const organizer = document.getElementById('organizer').value.trim();
             const city = document.getElementById('city').value.trim();
             const location = document.getElementById('location').value.trim();
             const date = document.getElementById('date').value;
@@ -1160,9 +1167,10 @@
                 end_time = start_time;
             }
 
-            console.log('📝 Form data:', { city, location, date, start_time, end_time, style, isEditing });
+            console.log('📝 Form data:', { title, organizer, city, location, date, start_time, end_time, style, isEditing });
 
             formData.append('title', title);
+            formData.append('organizer', organizer);
             formData.append('city', city);
             formData.append('location', location);
             formData.append('date', date);
@@ -1271,6 +1279,7 @@
                 // NOW populate the form with existing data (elements are in DOM)
                 console.log('📝 Populating form fields...');
                 document.getElementById('title').value = workshop.title || '';
+                document.getElementById('organizer').value = workshop.organizer || '';
                 document.getElementById('city').value = workshop.city || '';
                 document.getElementById('location').value = workshop.location || '';
                 document.getElementById('date').value = workshop.date || '';
@@ -1339,6 +1348,7 @@
                 // NOW populate the form with existing data (elements are in DOM)
                 console.log('📝 Populating form fields...');
                 document.getElementById('title').value = workshop.title || '';
+                document.getElementById('organizer').value = workshop.organizer || '';
                 document.getElementById('city').value = workshop.city || '';
                 document.getElementById('location').value = workshop.location || '';
                 document.getElementById('date').value = workshop.date || '';

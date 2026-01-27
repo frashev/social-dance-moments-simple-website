@@ -35,6 +35,7 @@ def init_db() -> None:
         style TEXT NOT NULL,
         difficulty TEXT DEFAULT 'intermediate',
         instructor_name TEXT,
+        organizer TEXT,
         description TEXT,
         max_participants INTEGER DEFAULT 0,
         lat REAL,
@@ -163,6 +164,16 @@ def init_db() -> None:
     except sqlite3.OperationalError as e:
         if "duplicate column name" in str(e):
             print("ℹ️ end_time column already exists")
+        else:
+            raise
+
+    # Migration: Add organizer column if it doesn't exist
+    try:
+        c.execute("ALTER TABLE workshops ADD COLUMN organizer TEXT")
+        print("✅ Added organizer column to workshops table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️ organizer column already exists in workshops")
         else:
             raise
 

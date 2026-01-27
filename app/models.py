@@ -23,6 +23,7 @@ class Workshop(BaseModel):
     date: str  # ISO format
     time: str  # HH:MM
     style: str  # salsa, bachata, etc.
+    organizer: Optional[str] = None
 
 class Event(BaseModel):
     id: int

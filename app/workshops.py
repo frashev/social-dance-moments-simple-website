@@ -97,7 +97,8 @@ def create_workshop(
     difficulty: str = Form("intermediate"),
     instructor_name: str = Form(None),
     description: str = Form(None),
-    cards: str = Form(None)
+    cards: str = Form(None),
+    organizer: str = Form(None)
 ):
     """Create a new workshop and geocode coordinates."""
     # Geocode the workshop location
@@ -113,8 +114,8 @@ def create_workshop(
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO workshops (title, city, location, date, time, start_time, end_time, style, difficulty, instructor_name, description, cards, lat, lon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (title, city, location, date, start_time, start_time, end_time, style, difficulty, instructor_name, description, cards, lat, lon)
+            "INSERT INTO workshops (title, city, location, date, time, start_time, end_time, style, difficulty, instructor_name, organizer, description, cards, lat, lon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (title, city, location, date, start_time, start_time, end_time, style, difficulty, instructor_name, organizer, description, cards, lat, lon)
         )
         conn.commit()
     return {"msg": "Workshop created!", "lat": lat, "lon": lon}
