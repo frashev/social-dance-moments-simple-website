@@ -14,14 +14,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 10px;
         }
         .app {
             width: 100%;
             max-width: 520px;
             background: rgba(0, 0, 0, 0.25);
             border-radius: 16px;
-            padding: 20px;
+            padding: 15px;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
         }
         header h1 {
@@ -132,6 +132,20 @@
             color: #bcd4ff;
             opacity: 0.9;
         }
+        .complexity {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+        .complexity-1 { background: rgba(80, 200, 120, 0.3); color: #50c878; }
+        .complexity-2 { background: rgba(255, 209, 102, 0.3); color: #ffd166; }
+        .complexity-3 { background: rgba(255, 165, 0, 0.3); color: #ffa500; }
+        .complexity-4 { background: rgba(255, 107, 107, 0.3); color: #ff6b6b; }
+        .complexity-5 { background: rgba(200, 50, 50, 0.3); color: #c83232; }
         @media (min-width: 900px) {
             body { padding: 40px; }
             .app { max-width: 680px; }
@@ -153,15 +167,15 @@
 <body>
     <div class="app">
         <header>
-            <h1>Dance Wizard</h1>
-            <p>Welcome to the Dance Wizard! Let's have fun with some dance moves!</p>
+            <h1>Welcome to Dance Wizard</h1>
+            <p>Let's have fun with some dance moves!</p>
         </header>
 
         <div class="controls">
             <button id="style-salsa" class="active" type="button">Salsa Mode</button>
             <button id="style-bachata" type="button">Bachata Mode</button>
             <button id="start-mission" type="button">Start Mission</button>
-            <button id="reset-mission" type="button">Reset</button>
+            <button id="reset-mission" type="button">Reset Mission</button>
         </div>
 
         <div class="stage-wrap">
@@ -184,7 +198,7 @@
         </div>
 
         <div class="status" id="status">
-            Tap "Start Mission" to begin a sequence.
+            <div id="status-message">Tap "Start Mission" to begin a sequence.</div>
             <div class="sequence" id="sequence"></div>
             <div class="debug" id="debug"></div>
         </div>
@@ -193,14 +207,28 @@
     <script>
         const missions = {
             salsa: [
-                { name: "Basic Shine", sequence: ["head", "chest", "left-hip", "right-hip", "left-upper-leg", "right-upper-leg"] },
-                { name: "SuziQ Shine", sequence: ["left-shoulder", "neck", "right-shoulder", "chest", "left-upper-leg", "right-upper-leg"] },
-                { name: "Cross Body Flow", sequence: ["head", "left-shoulder", "right-shoulder", "left-hip", "right-hip", "left-lower-leg", "right-lower-leg"] }
+                { name: "Basic Shine", complexity: 2, sequence: ["head", "chest", "left-hip", "right-hip", "left-upper-leg", "right-upper-leg"] },
+                { name: "SuziQ Shine", complexity: 3, sequence: ["left-shoulder", "neck", "right-shoulder", "chest", "left-upper-leg", "right-upper-leg"] },
+                { name: "Cross Body Flow", complexity: 4, sequence: ["head", "left-shoulder", "right-shoulder", "left-hip", "right-hip", "left-lower-leg", "right-lower-leg"] },
+                { name: "Shoulder Roll", complexity: 2, sequence: ["left-shoulder", "neck", "right-shoulder", "chest", "left-shoulder", "right-shoulder"] },
+                { name: "Hip Isolation", complexity: 2, sequence: ["left-hip", "right-hip", "left-hip", "right-hip", "chest", "head"] },
+                { name: "Hand Flow", complexity: 3, sequence: ["left-hand", "right-hand", "left-shoulder", "right-shoulder", "chest", "head"] },
+                { name: "Full Body Wave", complexity: 4, sequence: ["head", "neck", "chest", "belly", "left-hip", "right-hip", "left-upper-leg", "right-upper-leg"] },
+                { name: "Leg Work", complexity: 3, sequence: ["left-upper-leg", "right-upper-leg", "left-lower-leg", "right-lower-leg", "left-hip", "right-hip"] },
+                { name: "Chest Pop", complexity: 2, sequence: ["chest", "head", "chest", "left-shoulder", "right-shoulder", "chest"] },
+                { name: "Spiral Turn", complexity: 4, sequence: ["head", "left-shoulder", "chest", "right-shoulder", "left-hip", "right-hip", "head"] }
             ],
             bachata: [
-                { name: "Body Wave", sequence: ["head", "neck", "chest", "belly", "left-hip", "right-hip"] },
-                { name: "Hip Tap", sequence: ["left-hip", "right-hip", "left-upper-leg", "right-upper-leg", "left-hip"] },
-                { name: "Soft Step", sequence: ["left-lower-leg", "right-lower-leg", "left-lower-leg", "right-lower-leg"] }
+                { name: "Body Wave", complexity: 2, sequence: ["head", "neck", "chest", "belly", "left-hip", "right-hip"] },
+                { name: "Hip Tap", complexity: 2, sequence: ["left-hip", "right-hip", "left-upper-leg", "right-upper-leg", "left-hip"] },
+                { name: "Soft Step", complexity: 1, sequence: ["left-lower-leg", "right-lower-leg", "left-lower-leg", "right-lower-leg"] },
+                { name: "Hip Circle", complexity: 2, sequence: ["left-hip", "belly", "right-hip", "belly", "left-hip", "right-hip"] },
+                { name: "Sensual Wave", complexity: 4, sequence: ["head", "neck", "chest", "belly", "left-hip", "right-hip", "left-upper-leg", "right-upper-leg"] },
+                { name: "Shoulder Shake", complexity: 2, sequence: ["left-shoulder", "right-shoulder", "left-shoulder", "right-shoulder", "neck", "head"] },
+                { name: "Hip Sway", complexity: 2, sequence: ["left-hip", "right-hip", "left-hip", "right-hip", "belly", "chest"] },
+                { name: "Footwork Pattern", complexity: 3, sequence: ["left-lower-leg", "right-lower-leg", "left-upper-leg", "right-upper-leg", "left-hip", "right-hip"] },
+                { name: "Body Roll", complexity: 3, sequence: ["head", "neck", "chest", "belly", "left-hip", "right-hip", "belly", "chest"] },
+                { name: "Hand to Hip", complexity: 3, sequence: ["left-hand", "left-hip", "right-hand", "right-hip", "left-hip", "right-hip"] }
             ]
         };
 
@@ -209,6 +237,7 @@
         let progressIndex = 0;
 
         const statusEl = document.getElementById("status");
+        const statusMessageEl = document.getElementById("status-message");
         const sequenceEl = document.getElementById("sequence");
         const debugEl = document.getElementById("debug");
         const parts = Array.from(document.querySelectorAll(".part"));
@@ -218,7 +247,7 @@
             document.getElementById("style-salsa").classList.toggle("active", style === "salsa");
             document.getElementById("style-bachata").classList.toggle("active", style === "bachata");
             resetMission();
-            statusEl.firstChild.textContent = "Tap \"Start Mission\" to begin a " + style + " sequence.";
+            statusMessageEl.textContent = "Tap \"Start Mission\" to begin a " + style + " sequence.";
         }
 
         function renderSequence() {
@@ -243,11 +272,19 @@
             });
         }
 
+        function getComplexityLabel(level) {
+            const labels = ["", "Easy", "Easy-Medium", "Medium", "Medium-Hard", "Hard"];
+            return labels[level] || "Unknown";
+        }
+
         function startMission() {
             const pool = missions[activeStyle];
             activeMission = pool[Math.floor(Math.random() * pool.length)];
             progressIndex = 0;
-            statusEl.firstChild.textContent = "Mission: " + activeMission.name + ". Follow the sequence.";
+            const complexity = activeMission.complexity || 1;
+            const complexityLabel = getComplexityLabel(complexity);
+            const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
+            statusMessageEl.innerHTML = "Mission: " + activeMission.name + complexityBadge + ". Follow the sequence.";
             renderSequence();
             updateTargetHighlight();
             debugEl.textContent = "";
@@ -274,15 +311,18 @@
                 element.classList.add("correct");
                 progressIndex += 1;
                 if (progressIndex >= activeMission.sequence.length) {
-                    statusEl.firstChild.textContent = "Nice! Mission complete: " + activeMission.name + ".";
+                    const complexity = activeMission.complexity || 1;
+                    const complexityLabel = getComplexityLabel(complexity);
+                    const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
+                    statusMessageEl.innerHTML = "Nice! Mission complete: " + activeMission.name + complexityBadge + ".";
                     activeMission = null;
                     sequenceEl.innerHTML = "";
                 } else {
-                    statusEl.firstChild.textContent = "Good! Next target...";
+                    statusMessageEl.textContent = "Good! Next target...";
                 }
             } else {
                 element.classList.add("wrong");
-                statusEl.firstChild.textContent = "Wrong spot. Restart this mission.";
+                statusMessageEl.textContent = "Wrong spot. Restart this mission.";
                 progressIndex = 0;
             }
 
@@ -303,7 +343,7 @@
         document.getElementById("start-mission").addEventListener("click", startMission);
         document.getElementById("reset-mission").addEventListener("click", () => {
             resetMission();
-            statusEl.firstChild.textContent = "Mission reset. Tap Start Mission to begin.";
+            statusMessageEl.textContent = "Mission reset. Tap Start Mission to begin.";
         });
     </script>
 </body>
