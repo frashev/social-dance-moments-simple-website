@@ -59,6 +59,42 @@
         .controls button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25); }
         .controls button.active { background: #ffd166; color: #362300; }
         .controls button.filter-active { background: #667eea; color: white; }
+        #style-salsa { background: #ff6b6b; color: white; }
+        #style-salsa.active { 
+            background: #d32f2f; 
+            color: white; 
+            box-shadow: 0 0 20px rgba(211, 47, 47, 0.9), 0 0 10px rgba(211, 47, 47, 0.5);
+            border: 3px solid #ff1744;
+            font-weight: 700;
+        }
+        #style-bachata { background: #4ecdc4; color: white; }
+        #style-bachata.active { 
+            background: #00838f; 
+            color: white; 
+            box-shadow: 0 0 20px rgba(0, 131, 143, 0.9), 0 0 10px rgba(0, 131, 143, 0.5);
+            border: 3px solid #00bcd4;
+            font-weight: 700;
+        }
+        #complexity-filter { background: #95a5a6; color: white; }
+        #complexity-filter.filter-active { background: #7f8c8d; color: white; }
+        #previous-mission { background: #a29bfe; color: white; }
+        #try-again { background: #fd79a8; color: white; }
+        #next-mission { 
+            background: #00b894; 
+            color: white; 
+            animation: buttonPulse 2s ease-in-out infinite;
+        }
+        @keyframes buttonPulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(0, 184, 148, 0.7);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 0 0 8px rgba(0, 184, 148, 0);
+            }
+        }
+        #select-mission { background: #fdcb6e; color: #2d3436; }
         .controls-break { flex-basis: 100%; }
         .modal-overlay {
             display: none;
