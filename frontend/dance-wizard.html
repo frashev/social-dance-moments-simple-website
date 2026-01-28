@@ -59,6 +59,7 @@
         .controls button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25); }
         .controls button.active { background: #ffd166; color: #362300; }
         .controls button.filter-active { background: #667eea; color: white; }
+        .controls-break { flex-basis: 100%; }
         .modal-overlay {
             display: none;
             position: fixed;
@@ -235,8 +236,8 @@
         <div class="controls">
             <button id="style-salsa" class="active" type="button">Salsa</button>
             <button id="style-bachata" type="button">Bachata</button>
-            <br>
             <button id="complexity-filter" type="button">Complexity</button>
+            <span class="controls-break"></span>
             <button id="start-mission" type="button">Start Mission</button>
             <button id="reset-mission" type="button">Reset Mission</button>
         </div>
