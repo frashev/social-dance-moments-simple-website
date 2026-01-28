@@ -176,10 +176,11 @@
             margin-top: 8px;
             font-size: 0.85rem;
             color: #cde1ff;
+            text-align: center;
         }
         .sequence span {
             display: inline-block;
-            margin: 2px 4px 0 0;
+            margin: 2px 0 0 0;
             padding: 4px 8px;
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.12);
@@ -188,6 +189,11 @@
             background: #ffd166;
             color: #362300;
             font-weight: 600;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.7); }
+            50% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 209, 102, 0); }
         }
         .debug {
             margin-top: 8px;
@@ -346,14 +352,15 @@
         function renderSequence() {
             sequenceEl.innerHTML = "";
             if (!activeMission) return;
-            activeMission.sequence.forEach((part, index) => {
+            
+            // Show only the next move that needs to be pressed
+            if (progressIndex < activeMission.sequence.length) {
+                const nextPart = activeMission.sequence[progressIndex];
                 const pill = document.createElement("span");
-                pill.textContent = part.replace("-", " ");
-                if (index === progressIndex) {
-                    pill.classList.add("active");
-                }
+                pill.textContent = nextPart.replace("-", " ");
+                pill.classList.add("active");
                 sequenceEl.appendChild(pill);
-            });
+            }
         }
 
         function updateTargetHighlight() {
