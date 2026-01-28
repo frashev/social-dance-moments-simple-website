@@ -587,6 +587,8 @@
 
         async function saveSequenceRecord(sequenceName, style, completionTime) {
             try {
+                // Optimistic UI update for faster feedback
+                displaySequenceRecord(sequenceName, style, { completion_time: completionTime });
                 const response = await fetch('/api/dance-sequences/save', {
                     method: 'POST',
                     headers: {
@@ -611,11 +613,18 @@
         }
 
         async function loadSequenceRecord(sequenceName, style) {
+            const cacheKey = `${sequenceName}_${style}`;
+            if (sequenceRecords[cacheKey]) {
+                // Fast render from cache while fetching fresh data
+                displaySequenceRecord(sequenceName, style, sequenceRecords[cacheKey]);
+            } else {
+                displaySequenceRecord(sequenceName, style, null, true);
+            }
             try {
                 const response = await fetch(`/api/dance-sequences/record/${encodeURIComponent(sequenceName)}/${style}`);
                 if (response.ok) {
                     const record = await response.json();
-                    sequenceRecords[`${sequenceName}_${style}`] = record;
+                    sequenceRecords[cacheKey] = record;
                     displaySequenceRecord(sequenceName, style, record);
                 } else if (response.status === 404) {
                     // No record yet
@@ -626,7 +635,7 @@
             }
         }
 
-        function displaySequenceRecord(sequenceName, style, record) {
+        function displaySequenceRecord(sequenceName, style, record, isLoading = false) {
             // Find or create record display element
             let recordEl = document.getElementById('sequence-record');
             if (!recordEl) {
@@ -641,7 +650,9 @@
                 }
             }
             
-            if (record) {
+            if (isLoading) {
+                recordEl.textContent = '🏆 Checking record...';
+            } else if (record) {
                 recordEl.textContent = `🏆 Best time: ${formatTime(record.completion_time)}`;
             } else {
                 recordEl.textContent = '🏆 No record yet - be the first!';
