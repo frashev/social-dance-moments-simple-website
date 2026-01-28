@@ -366,9 +366,7 @@
         function updateTargetHighlight() {
             parts.forEach((part) => {
                 part.classList.remove("target", "correct", "wrong");
-                if (activeMission && part.dataset.part === activeMission.sequence[progressIndex]) {
-                    part.classList.add("target");
-                }
+                // Target highlighting removed - user must find the next move themselves
             });
         }
 
