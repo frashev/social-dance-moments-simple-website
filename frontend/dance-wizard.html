@@ -81,11 +81,16 @@
             width: 90%;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            max-height: 90vh;
         }
         .modal h3 {
             margin-bottom: 16px;
             font-size: 1.2rem;
             color: #fff;
+            flex-shrink: 0;
         }
         .complexity-options {
             display: flex;
@@ -118,11 +123,32 @@
         .complexity-option.clear:hover {
             background: rgba(255, 107, 107, 0.3);
         }
+        .mission-search {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+        .mission-search::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .mission-search:focus {
+            outline: none;
+            border-color: #ffd166;
+            background: rgba(255, 255, 255, 0.15);
+        }
         .mission-options {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            max-height: 400px;
+            flex: 1;
+            min-height: 0;
             overflow-y: auto;
             overflow-x: hidden;
         }
@@ -348,6 +374,7 @@
         <div class="modal-overlay" id="select-mission-modal">
             <div class="modal">
                 <h3>Select Mission</h3>
+                <input type="text" id="mission-search" class="mission-search" placeholder="Search missions by name..." autocomplete="off">
                 <div class="mission-options" id="mission-options">
                     <!-- Missions will be populated here -->
                 </div>
@@ -812,14 +839,29 @@
             debugEl.textContent = "";
         }
 
-        function populateMissionOptions() {
+        function populateMissionOptions(searchTerm = "") {
             const missionOptionsEl = document.getElementById("mission-options");
             if (!missionOptionsEl) return;
             
             missionOptionsEl.innerHTML = "";
             const availableMissions = missions[activeStyle];
+            const searchLower = searchTerm.toLowerCase().trim();
             
-            availableMissions.forEach(mission => {
+            const filteredMissions = availableMissions.filter(mission => {
+                return mission.name.toLowerCase().includes(searchLower);
+            });
+            
+            if (filteredMissions.length === 0) {
+                const noResults = document.createElement("div");
+                noResults.className = "mission-option";
+                noResults.style.textAlign = "center";
+                noResults.style.opacity = "0.7";
+                noResults.textContent = "No missions found";
+                missionOptionsEl.appendChild(noResults);
+                return;
+            }
+            
+            filteredMissions.forEach(mission => {
                 const option = document.createElement("div");
                 option.className = "mission-option";
                 option.dataset.missionName = mission.name;
@@ -870,9 +912,25 @@
         document.getElementById("previous-mission").addEventListener("click", previousMission);
         document.getElementById("try-again").addEventListener("click", tryAgain);
         document.getElementById("select-mission").addEventListener("click", () => {
+            const searchInput = document.getElementById("mission-search");
+            if (searchInput) {
+                searchInput.value = "";
+            }
             populateMissionOptions();
             document.getElementById("select-mission-modal").classList.add("show");
+            // Focus on search input when modal opens
+            setTimeout(() => {
+                if (searchInput) searchInput.focus();
+            }, 100);
         });
+
+        // Add search functionality
+        const missionSearchInput = document.getElementById("mission-search");
+        if (missionSearchInput) {
+            missionSearchInput.addEventListener("input", (e) => {
+                populateMissionOptions(e.target.value);
+            });
+        }
 
         // Close select mission modal when clicking overlay
         document.getElementById("select-mission-modal").addEventListener("click", (e) => {
