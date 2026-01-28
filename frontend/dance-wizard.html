@@ -331,7 +331,7 @@
         .live-timer {
             margin-top: 10px;
             text-align: center;
-            font-size: 1.05rem;
+            font-size: 0.7rem;
             font-weight: 800;
             letter-spacing: 0.02em;
             color: rgba(255, 255, 255, 0.95);
@@ -443,7 +443,7 @@
             <button id="complexity-filter" type="button">Complexity</button>
             <span class="controls-break"></span>
             <button id="previous-mission" type="button">Previous Mission</button>
-            <button id="try-again" type="button">Try Again</button>
+            <button id="try-again" type="button">Restart</button>
             <button id="next-mission" type="button">Next Mission</button>
             <button id="select-mission" type="button">Select Mission</button>
         </div>
@@ -830,7 +830,7 @@
             const complexity = activeMission.complexity || 1;
             const complexityLabel = getComplexityLabel(complexity);
             const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
-            statusMessageEl.innerHTML = "Mission: " + activeMission.name + complexityBadge;
+            statusMessageEl.innerHTML = activeMission.name + complexityBadge;
             renderSequence();
             updateTargetHighlight();
             debugEl.textContent = "";
@@ -1220,7 +1220,7 @@
             const complexity = activeMission.complexity || 1;
             const complexityLabel = getComplexityLabel(complexity);
             const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
-            statusMessageEl.innerHTML = "Mission: " + activeMission.name + complexityBadge;
+            statusMessageEl.innerHTML = activeMission.name + complexityBadge;
 
             // Render the first move
             renderSequence();
