@@ -238,8 +238,8 @@
             <button id="style-bachata" type="button">Bachata</button>
             <button id="complexity-filter" type="button">Complexity</button>
             <span class="controls-break"></span>
-            <button id="start-mission" type="button">Start Mission</button>
-            <button id="reset-mission" type="button">Reset Mission</button>
+            <button id="previous-mission" type="button">Previous Mission</button>
+            <button id="next-mission" type="button">Next Mission</button>
         </div>
 
         <div class="modal-overlay" id="complexity-modal">
@@ -269,7 +269,7 @@
         </div>
 
         <div class="status" id="status">
-            <div id="status-message">Tap "Start Mission" to begin a sequence.</div>
+            <div id="status-message">Tap "Next Mission" to begin a sequence.</div>
             <div class="sequence" id="sequence"></div>
             <div class="debug" id="debug"></div>
         </div>
@@ -324,6 +324,8 @@
         let activeMission = null;
         let progressIndex = 0;
         let selectedComplexity = null; // null = no filter, 0-5 = specific complexity
+        let missionHistory = []; // Array to store mission history
+        let currentHistoryIndex = -1; // Current position in history (-1 means no history)
 
         const statusEl = document.getElementById("status");
         const statusMessageEl = document.getElementById("status-message");
@@ -338,7 +340,7 @@
             document.getElementById("style-salsa").classList.toggle("active", style === "salsa");
             document.getElementById("style-bachata").classList.toggle("active", style === "bachata");
             resetMission();
-            statusMessageEl.textContent = "Tap \"Start Mission\" to begin a " + style + " sequence.";
+            statusMessageEl.textContent = "Tap \"Next Mission\" to begin a " + style + " sequence.";
         }
 
         function renderSequence() {
@@ -368,6 +370,22 @@
             return labels[level] || "Unknown";
         }
 
+        function loadMission(mission, style, savedProgress = 0) {
+            activeMission = mission;
+            activeStyle = style;
+            progressIndex = savedProgress;
+            const complexity = activeMission.complexity || 1;
+            const complexityLabel = getComplexityLabel(complexity);
+            const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
+            statusMessageEl.innerHTML = "Mission: " + activeMission.name + complexityBadge + ". Follow the sequence.";
+            renderSequence();
+            updateTargetHighlight();
+            debugEl.textContent = "";
+            // Update style buttons
+            document.getElementById("style-salsa").classList.toggle("active", style === "salsa");
+            document.getElementById("style-bachata").classList.toggle("active", style === "bachata");
+        }
+
         function startMission() {
             let pool = missions[activeStyle];
             
@@ -380,15 +398,22 @@
                 }
             }
             
-            activeMission = pool[Math.floor(Math.random() * pool.length)];
-            progressIndex = 0;
-            const complexity = activeMission.complexity || 1;
-            const complexityLabel = getComplexityLabel(complexity);
-            const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
-            statusMessageEl.innerHTML = "Mission: " + activeMission.name + complexityBadge + ". Follow the sequence.";
-            renderSequence();
-            updateTargetHighlight();
-            debugEl.textContent = "";
+            const newMission = pool[Math.floor(Math.random() * pool.length)];
+            
+            // If we're not at the end of history, remove everything after current index
+            if (currentHistoryIndex < missionHistory.length - 1) {
+                missionHistory = missionHistory.slice(0, currentHistoryIndex + 1);
+            }
+            
+            // Add new mission to history
+            missionHistory.push({
+                mission: newMission,
+                style: activeStyle,
+                progressIndex: 0
+            });
+            currentHistoryIndex = missionHistory.length - 1;
+            
+            loadMission(newMission, activeStyle, 0);
         }
 
         function resetMission() {
@@ -397,11 +422,35 @@
             sequenceEl.innerHTML = "";
             updateTargetHighlight();
             debugEl.textContent = "";
+            missionHistory = [];
+            currentHistoryIndex = -1;
+        }
+
+        function previousMission() {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                const historyItem = missionHistory[currentHistoryIndex];
+                loadMission(historyItem.mission, historyItem.style, historyItem.progressIndex);
+            } else {
+                statusMessageEl.textContent = "No previous mission. Tap Next Mission to begin.";
+            }
+        }
+
+        function nextMission() {
+            if (currentHistoryIndex < missionHistory.length - 1) {
+                // Go forward in history
+                currentHistoryIndex++;
+                const historyItem = missionHistory[currentHistoryIndex];
+                loadMission(historyItem.mission, historyItem.style, historyItem.progressIndex);
+            } else {
+                // Start a new mission
+                startMission();
+            }
         }
 
         function handleTap(partName, element) {
             if (!activeMission) {
-                debugEl.textContent = "No mission active. Tap Start Mission.";
+                debugEl.textContent = "No mission active. Tap Next Mission.";
                 return;
             }
 
@@ -411,6 +460,12 @@
             if (partName === expected) {
                 element.classList.add("correct");
                 progressIndex += 1;
+                
+                // Update progress in history
+                if (currentHistoryIndex >= 0 && currentHistoryIndex < missionHistory.length) {
+                    missionHistory[currentHistoryIndex].progressIndex = progressIndex;
+                }
+                
                 if (progressIndex >= activeMission.sequence.length) {
                     const complexity = activeMission.complexity || 1;
                     const complexityLabel = getComplexityLabel(complexity);
@@ -425,6 +480,10 @@
                 element.classList.add("wrong");
                 statusMessageEl.textContent = "Wrong spot. Restart this mission.";
                 progressIndex = 0;
+                // Update progress in history
+                if (currentHistoryIndex >= 0 && currentHistoryIndex < missionHistory.length) {
+                    missionHistory[currentHistoryIndex].progressIndex = 0;
+                }
             }
 
             renderSequence();
@@ -502,11 +561,8 @@
 
         document.getElementById("style-salsa").addEventListener("click", () => setStyle("salsa"));
         document.getElementById("style-bachata").addEventListener("click", () => setStyle("bachata"));
-        document.getElementById("start-mission").addEventListener("click", startMission);
-        document.getElementById("reset-mission").addEventListener("click", () => {
-            resetMission();
-            statusMessageEl.textContent = "Mission reset. Tap Start Mission to begin.";
-        });
+        document.getElementById("next-mission").addEventListener("click", nextMission);
+        document.getElementById("previous-mission").addEventListener("click", previousMission);
     </script>
 </body>
 </html>
