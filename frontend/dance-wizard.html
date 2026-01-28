@@ -53,6 +53,64 @@
         }
         .controls button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25); }
         .controls button.active { background: #ffd166; color: #362300; }
+        .controls button.filter-active { background: #667eea; color: white; }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: linear-gradient(160deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        }
+        .modal h3 {
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+        .complexity-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .complexity-option {
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #fff;
+            font-weight: 500;
+        }
+        .complexity-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(4px);
+        }
+        .complexity-option.selected {
+            border-color: #ffd166;
+            background: rgba(255, 209, 102, 0.2);
+        }
+        .complexity-option.clear {
+            margin-top: 8px;
+            background: rgba(255, 107, 107, 0.2);
+            border-color: rgba(255, 107, 107, 0.5);
+        }
+        .complexity-option.clear:hover {
+            background: rgba(255, 107, 107, 0.3);
+        }
         .stage-wrap {
             background: rgba(255, 255, 255, 0.08);
             border-radius: 16px;
@@ -172,10 +230,37 @@
         </header>
 
         <div class="controls">
-            <button id="style-salsa" class="active" type="button">Salsa Mode</button>
-            <button id="style-bachata" type="button">Bachata Mode</button>
+            <button id="style-salsa" class="active" type="button">Salsa</button>
+            <button id="style-bachata" type="button">Bachata</button>
+            <button id="complexity-filter" type="button">Filter Complexity</button>
             <button id="start-mission" type="button">Start Mission</button>
             <button id="reset-mission" type="button">Reset Mission</button>
+        </div>
+
+        <div class="modal-overlay" id="complexity-modal">
+            <div class="modal">
+                <h3>Select Complexity Level</h3>
+                <div class="complexity-options">
+                    <div class="complexity-option" data-complexity="1">
+                        <span class="complexity complexity-1">Easy (1/5)</span> - Simple, short sequences
+                    </div>
+                    <div class="complexity-option" data-complexity="2">
+                        <span class="complexity complexity-2">Easy-Medium (2/5)</span> - Basic patterns
+                    </div>
+                    <div class="complexity-option" data-complexity="3">
+                        <span class="complexity complexity-3">Medium (3/5)</span> - Moderate complexity
+                    </div>
+                    <div class="complexity-option" data-complexity="4">
+                        <span class="complexity complexity-4">Medium-Hard (4/5)</span> - Longer, complex sequences
+                    </div>
+                    <div class="complexity-option" data-complexity="5">
+                        <span class="complexity complexity-5">Hard (5/5)</span> - Most challenging
+                    </div>
+                    <div class="complexity-option clear" data-complexity="0">
+                        Clear Filter (Random from all)
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="stage-wrap">
@@ -235,12 +320,15 @@
         let activeStyle = "salsa";
         let activeMission = null;
         let progressIndex = 0;
+        let selectedComplexity = null; // null = no filter, 0-5 = specific complexity
 
         const statusEl = document.getElementById("status");
         const statusMessageEl = document.getElementById("status-message");
         const sequenceEl = document.getElementById("sequence");
         const debugEl = document.getElementById("debug");
         const parts = Array.from(document.querySelectorAll(".part"));
+        const complexityModal = document.getElementById("complexity-modal");
+        const complexityFilterBtn = document.getElementById("complexity-filter");
 
         function setStyle(style) {
             activeStyle = style;
@@ -278,7 +366,17 @@
         }
 
         function startMission() {
-            const pool = missions[activeStyle];
+            let pool = missions[activeStyle];
+            
+            // Filter by complexity if one is selected
+            if (selectedComplexity !== null && selectedComplexity !== 0) {
+                pool = pool.filter(mission => mission.complexity === selectedComplexity);
+                if (pool.length === 0) {
+                    statusMessageEl.textContent = `No missions found for complexity ${selectedComplexity}. Try a different filter.`;
+                    return;
+                }
+            }
+            
             activeMission = pool[Math.floor(Math.random() * pool.length)];
             progressIndex = 0;
             const complexity = activeMission.complexity || 1;
@@ -337,6 +435,67 @@
                 handleTap(part.dataset.part, part);
             });
         });
+
+        function updateComplexityFilterButton() {
+            if (selectedComplexity === null || selectedComplexity === 0) {
+                complexityFilterBtn.textContent = "Filter Complexity";
+                complexityFilterBtn.classList.remove("filter-active");
+            } else {
+                const label = getComplexityLabel(selectedComplexity);
+                complexityFilterBtn.textContent = `Filter: ${label}`;
+                complexityFilterBtn.classList.add("filter-active");
+            }
+        }
+
+        function selectComplexity(complexity) {
+            if (complexity === 0) {
+                selectedComplexity = null;
+            } else {
+                selectedComplexity = complexity;
+            }
+            updateComplexityFilterButton();
+            complexityModal.classList.remove("show");
+            
+            // Update selected state in modal
+            document.querySelectorAll(".complexity-option").forEach(option => {
+                option.classList.remove("selected");
+            });
+            if (selectedComplexity !== null) {
+                const selectedOption = document.querySelector(`[data-complexity="${selectedComplexity}"]`);
+                if (selectedOption) selectedOption.classList.add("selected");
+            }
+        }
+
+        // Open complexity filter modal
+        complexityFilterBtn.addEventListener("click", () => {
+            // Update selected state in modal
+            document.querySelectorAll(".complexity-option").forEach(option => {
+                option.classList.remove("selected");
+            });
+            if (selectedComplexity !== null && selectedComplexity !== 0) {
+                const selectedOption = document.querySelector(`[data-complexity="${selectedComplexity}"]`);
+                if (selectedOption) selectedOption.classList.add("selected");
+            }
+            complexityModal.classList.add("show");
+        });
+
+        // Close modal when clicking overlay
+        complexityModal.addEventListener("click", (e) => {
+            if (e.target === complexityModal) {
+                complexityModal.classList.remove("show");
+            }
+        });
+
+        // Handle complexity option clicks
+        document.querySelectorAll(".complexity-option").forEach(option => {
+            option.addEventListener("click", () => {
+                const complexity = parseInt(option.dataset.complexity);
+                selectComplexity(complexity);
+            });
+        });
+
+        // Initialize button state
+        updateComplexityFilterButton();
 
         document.getElementById("style-salsa").addEventListener("click", () => setStyle("salsa"));
         document.getElementById("style-bachata").addEventListener("click", () => setStyle("bachata"));
