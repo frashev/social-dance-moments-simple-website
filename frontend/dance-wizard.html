@@ -78,11 +78,25 @@
         #complexity-filter { background: #95a5a6; color: white; }
         #complexity-filter.filter-active { background: #7f8c8d; color: white; }
         #previous-mission { background: #a29bfe; color: white; }
-        #try-again { background: #fd79a8; color: white; }
+        #try-again {
+            background: #fd79a8;
+            color: white;
+            animation: buttonPulsePink 2s ease-in-out infinite;
+        }
         #next-mission { 
             background: #00b894; 
             color: white; 
             animation: buttonPulse 2s ease-in-out infinite;
+        }
+        @keyframes buttonPulsePink {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(253, 121, 168, 0.75);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 0 0 8px rgba(253, 121, 168, 0);
+            }
         }
         @keyframes buttonPulse {
             0%, 100% { 
@@ -96,6 +110,28 @@
         }
         #select-mission { background: #fdcb6e; color: #2d3436; }
         .controls-break { flex-basis: 100%; }
+        .toast {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translate(-50%, -8px);
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 3000;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            white-space: nowrap;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .toast.success { background: rgba(0, 184, 148, 0.92); }
+        .toast.error { background: rgba(255, 99, 132, 0.92); }
         .modal-overlay {
             display: none;
             position: fixed;
@@ -442,32 +478,185 @@
         </div>
     </div>
 
+    <div class="toast" id="toast"></div>
+
     <script>
+        const salsaChunks = {
+            shineHead: ["head", "left-shoulder", "right-shoulder", "chest", "head"],
+            shineHands: ["left-hand", "right-hand", "left-shoulder", "right-shoulder", "neck"],
+            chestPop: ["chest", "head", "chest", "left-shoulder", "right-shoulder"],
+            hipSwitch: ["left-hip", "right-hip", "left-hip", "right-hip", "belly"],
+            hipCross: ["left-hip", "chest", "right-hip", "chest", "left-hip"],
+            bodyWaveUp: ["belly", "chest", "neck", "head", "chest"],
+            bodyWaveDown: ["head", "neck", "chest", "belly", "right-hip"],
+            footworkBasic: ["left-upper-leg", "right-upper-leg", "left-lower-leg", "right-lower-leg", "chest"],
+            footworkLadder: ["left-lower-leg", "left-upper-leg", "right-upper-leg", "right-lower-leg", "belly"],
+            turnPrep: ["right-shoulder", "chest", "left-shoulder", "head", "right-hip"],
+            turnSpiral: ["head", "left-shoulder", "chest", "right-shoulder", "left-hip"],
+            fullBody: ["head", "neck", "chest", "belly", "left-hip"],
+        };
+
+        const bachataChunks = {
+            sensualWave: ["head", "neck", "chest", "belly", "right-hip"],
+            waveReturn: ["right-hip", "belly", "chest", "neck", "head"],
+            hipCircle: ["left-hip", "belly", "right-hip", "belly", "left-hip"],
+            hipSway: ["left-hip", "right-hip", "left-hip", "right-hip", "belly"],
+            shoulderRoll: ["left-shoulder", "neck", "right-shoulder", "chest", "left-shoulder"],
+            handToHip: ["left-hand", "left-hip", "right-hand", "right-hip", "chest"],
+            handsFrame: ["left-hand", "right-hand", "neck", "chest", "belly"],
+            stepTouch: ["left-lower-leg", "right-lower-leg", "left-upper-leg", "right-upper-leg", "belly"],
+            stepSync: ["left-upper-leg", "left-lower-leg", "right-lower-leg", "right-upper-leg", "chest"],
+            bodyRoll: ["chest", "belly", "left-hip", "right-hip", "chest"],
+            headAccent: ["head", "neck", "head", "left-shoulder", "right-shoulder"],
+            softWave: ["neck", "chest", "belly", "left-hip", "right-hip"],
+        };
+
         const missions = {
+            // NOTE: Complexity → move count:
+            // 1:5 moves, 2:10 moves, 3:15 moves, 4:20 moves, 5:25 moves
             salsa: [
-                { name: "Basic Shine", complexity: 2, sequence: ["head", "chest", "left-hip", "right-hip", "left-upper-leg", "right-upper-leg"] },
-                { name: "SuziQ Shine", complexity: 3, sequence: ["left-shoulder", "neck", "right-shoulder", "chest", "left-upper-leg", "right-upper-leg"] },
-                { name: "Cross Body Flow", complexity: 4, sequence: ["head", "left-shoulder", "right-shoulder", "left-hip", "right-hip", "left-lower-leg", "right-lower-leg"] },
-                { name: "Shoulder Roll", complexity: 2, sequence: ["left-shoulder", "neck", "right-shoulder", "chest", "left-shoulder", "right-shoulder"] },
-                { name: "Hip Isolation", complexity: 2, sequence: ["left-hip", "right-hip", "left-hip", "right-hip", "chest", "head"] },
-                { name: "Hand Flow", complexity: 3, sequence: ["left-hand", "right-hand", "left-shoulder", "right-shoulder", "chest", "head"] },
-                { name: "Full Body Wave", complexity: 4, sequence: ["head", "neck", "chest", "belly", "left-hip", "right-hip", "left-upper-leg", "right-upper-leg"] },
-                { name: "Leg Work", complexity: 3, sequence: ["left-upper-leg", "right-upper-leg", "left-lower-leg", "right-lower-leg", "left-hip", "right-hip"] },
-                { name: "Chest Pop", complexity: 2, sequence: ["chest", "head", "chest", "left-shoulder", "right-shoulder", "chest"] },
-                { name: "Spiral Turn", complexity: 4, sequence: ["head", "left-shoulder", "chest", "right-shoulder", "left-hip", "right-hip", "head"] }
+                // Complexity 1 (4)
+                { name: "Salsa Head-Shoulder Shine", complexity: 1, sequence: [...salsaChunks.shineHead] },
+                { name: "Salsa Hip Switch Mini", complexity: 1, sequence: [...salsaChunks.hipSwitch] },
+                { name: "Salsa Chest Pop Mini", complexity: 1, sequence: [...salsaChunks.chestPop] },
+                { name: "Salsa Footwork Mini", complexity: 1, sequence: [...salsaChunks.footworkBasic] },
+
+                // Complexity 2 (6) - 10 moves
+                { name: "Salsa Shine + Hands", complexity: 2, sequence: [...salsaChunks.shineHead, ...salsaChunks.shineHands] },
+                { name: "Salsa Hip Switch + Chest Pop", complexity: 2, sequence: [...salsaChunks.hipSwitch, ...salsaChunks.chestPop] },
+                { name: "Salsa Full Body + Hip Cross", complexity: 2, sequence: [...salsaChunks.fullBody, ...salsaChunks.hipCross] },
+                { name: "Salsa Footwork + Turn Prep", complexity: 2, sequence: [...salsaChunks.footworkBasic, ...salsaChunks.turnPrep] },
+                { name: "Salsa Wave Down + Hip Switch", complexity: 2, sequence: [...salsaChunks.bodyWaveDown, ...salsaChunks.hipSwitch] },
+                { name: "Salsa Ladder + Chest Pop", complexity: 2, sequence: [...salsaChunks.footworkLadder, ...salsaChunks.chestPop] },
+
+                // Complexity 3 (10) - 15 moves
+                { name: "Salsa Triple Shine Circuit", complexity: 3, sequence: [...salsaChunks.shineHead, ...salsaChunks.shineHands, ...salsaChunks.chestPop] },
+                { name: "Salsa Hip Ladder Flow", complexity: 3, sequence: [...salsaChunks.hipSwitch, ...salsaChunks.footworkLadder, ...salsaChunks.hipCross] },
+                { name: "Salsa Turn + Footwork + Shine", complexity: 3, sequence: [...salsaChunks.turnPrep, ...salsaChunks.footworkBasic, ...salsaChunks.shineHead] },
+                { name: "Salsa Wave Up Combo", complexity: 3, sequence: [...salsaChunks.bodyWaveUp, ...salsaChunks.fullBody, ...salsaChunks.hipSwitch] },
+                { name: "Salsa Spiral Prep Combo", complexity: 3, sequence: [...salsaChunks.turnSpiral, ...salsaChunks.turnPrep, ...salsaChunks.shineHands] },
+                { name: "Salsa Footwork Builder", complexity: 3, sequence: [...salsaChunks.footworkBasic, ...salsaChunks.footworkLadder, ...salsaChunks.chestPop] },
+                { name: "Salsa Hip Focus Circuit", complexity: 3, sequence: [...salsaChunks.hipCross, ...salsaChunks.hipSwitch, ...salsaChunks.fullBody] },
+                { name: "Salsa Shine to Turn", complexity: 3, sequence: [...salsaChunks.shineHands, ...salsaChunks.turnPrep, ...salsaChunks.shineHead] },
+                { name: "Salsa Wave Down Builder", complexity: 3, sequence: [...salsaChunks.bodyWaveDown, ...salsaChunks.chestPop, ...salsaChunks.hipSwitch] },
+                { name: "Salsa Spiral Footwork Mix", complexity: 3, sequence: [...salsaChunks.turnSpiral, ...salsaChunks.footworkLadder, ...salsaChunks.turnPrep] },
+
+                // Complexity 4 (18) - 20 moves
+                { name: "Salsa Full Body Marathon I", complexity: 4, sequence: [...salsaChunks.fullBody, ...salsaChunks.bodyWaveDown, ...salsaChunks.hipSwitch, ...salsaChunks.footworkBasic] },
+                { name: "Salsa Full Body Marathon II", complexity: 4, sequence: [...salsaChunks.bodyWaveUp, ...salsaChunks.fullBody, ...salsaChunks.hipCross, ...salsaChunks.turnPrep] },
+                { name: "Salsa Turn & Shine Builder I", complexity: 4, sequence: [...salsaChunks.turnPrep, ...salsaChunks.shineHead, ...salsaChunks.turnSpiral, ...salsaChunks.shineHands] },
+                { name: "Salsa Turn & Shine Builder II", complexity: 4, sequence: [...salsaChunks.shineHands, ...salsaChunks.turnPrep, ...salsaChunks.shineHead, ...salsaChunks.turnSpiral] },
+                { name: "Salsa Hip & Footwork Run I", complexity: 4, sequence: [...salsaChunks.hipSwitch, ...salsaChunks.footworkLadder, ...salsaChunks.hipCross, ...salsaChunks.footworkBasic] },
+                { name: "Salsa Hip & Footwork Run II", complexity: 4, sequence: [...salsaChunks.footworkBasic, ...salsaChunks.hipSwitch, ...salsaChunks.footworkLadder, ...salsaChunks.hipCross] },
+                { name: "Salsa Shine Circuit Long I", complexity: 4, sequence: [...salsaChunks.shineHead, ...salsaChunks.shineHands, ...salsaChunks.chestPop, ...salsaChunks.shineHead] },
+                { name: "Salsa Shine Circuit Long II", complexity: 4, sequence: [...salsaChunks.shineHands, ...salsaChunks.chestPop, ...salsaChunks.shineHead, ...salsaChunks.shineHands] },
+                { name: "Salsa Wave & Hip Groove I", complexity: 4, sequence: [...salsaChunks.bodyWaveDown, ...salsaChunks.hipSwitch, ...salsaChunks.bodyWaveUp, ...salsaChunks.hipCross] },
+                { name: "Salsa Wave & Hip Groove II", complexity: 4, sequence: [...salsaChunks.hipCross, ...salsaChunks.bodyWaveUp, ...salsaChunks.hipSwitch, ...salsaChunks.bodyWaveDown] },
+                { name: "Salsa Spiral Ladder Run I", complexity: 4, sequence: [...salsaChunks.turnSpiral, ...salsaChunks.footworkLadder, ...salsaChunks.turnPrep, ...salsaChunks.chestPop] },
+                { name: "Salsa Spiral Ladder Run II", complexity: 4, sequence: [...salsaChunks.chestPop, ...salsaChunks.turnPrep, ...salsaChunks.footworkLadder, ...salsaChunks.turnSpiral] },
+                { name: "Salsa Chest-Shoulder Drive I", complexity: 4, sequence: [...salsaChunks.chestPop, ...salsaChunks.shineHead, ...salsaChunks.turnPrep, ...salsaChunks.chestPop] },
+                { name: "Salsa Chest-Shoulder Drive II", complexity: 4, sequence: [...salsaChunks.shineHead, ...salsaChunks.chestPop, ...salsaChunks.shineHands, ...salsaChunks.turnPrep] },
+                { name: "Salsa Footwork Marathon I", complexity: 4, sequence: [...salsaChunks.footworkBasic, ...salsaChunks.footworkLadder, ...salsaChunks.footworkBasic, ...salsaChunks.hipSwitch] },
+                { name: "Salsa Footwork Marathon II", complexity: 4, sequence: [...salsaChunks.footworkLadder, ...salsaChunks.footworkBasic, ...salsaChunks.hipCross, ...salsaChunks.footworkLadder] },
+                { name: "Salsa Wave-Prep Blend I", complexity: 4, sequence: [...salsaChunks.bodyWaveDown, ...salsaChunks.turnPrep, ...salsaChunks.fullBody, ...salsaChunks.shineHands] },
+                { name: "Salsa Wave-Prep Blend II", complexity: 4, sequence: [...salsaChunks.shineHands, ...salsaChunks.fullBody, ...salsaChunks.turnPrep, ...salsaChunks.bodyWaveUp] },
+
+                // Complexity 5 (22) - 25 moves
+                { name: "Salsa Ultimate Shine Marathon I", complexity: 5, sequence: [...salsaChunks.shineHead, ...salsaChunks.shineHands, ...salsaChunks.chestPop, ...salsaChunks.shineHead, ...salsaChunks.shineHands] },
+                { name: "Salsa Ultimate Shine Marathon II", complexity: 5, sequence: [...salsaChunks.shineHands, ...salsaChunks.shineHead, ...salsaChunks.chestPop, ...salsaChunks.shineHands, ...salsaChunks.shineHead] },
+                { name: "Salsa Hip-Footwork Gauntlet I", complexity: 5, sequence: [...salsaChunks.hipSwitch, ...salsaChunks.footworkBasic, ...salsaChunks.hipCross, ...salsaChunks.footworkLadder, ...salsaChunks.hipSwitch] },
+                { name: "Salsa Hip-Footwork Gauntlet II", complexity: 5, sequence: [...salsaChunks.footworkLadder, ...salsaChunks.hipCross, ...salsaChunks.footworkBasic, ...salsaChunks.hipSwitch, ...salsaChunks.hipCross] },
+                { name: "Salsa Turn Lab I", complexity: 5, sequence: [...salsaChunks.turnPrep, ...salsaChunks.turnSpiral, ...salsaChunks.turnPrep, ...salsaChunks.shineHead, ...salsaChunks.turnSpiral] },
+                { name: "Salsa Turn Lab II", complexity: 5, sequence: [...salsaChunks.turnSpiral, ...salsaChunks.turnPrep, ...salsaChunks.shineHands, ...salsaChunks.turnPrep, ...salsaChunks.turnSpiral] },
+                { name: "Salsa Full Body Wave Gauntlet I", complexity: 5, sequence: [...salsaChunks.bodyWaveDown, ...salsaChunks.fullBody, ...salsaChunks.bodyWaveUp, ...salsaChunks.hipSwitch, ...salsaChunks.fullBody] },
+                { name: "Salsa Full Body Wave Gauntlet II", complexity: 5, sequence: [...salsaChunks.fullBody, ...salsaChunks.bodyWaveUp, ...salsaChunks.bodyWaveDown, ...salsaChunks.hipCross, ...salsaChunks.bodyWaveUp] },
+                { name: "Salsa Spiral Footwork Gauntlet I", complexity: 5, sequence: [...salsaChunks.turnSpiral, ...salsaChunks.footworkLadder, ...salsaChunks.turnPrep, ...salsaChunks.footworkBasic, ...salsaChunks.turnSpiral] },
+                { name: "Salsa Spiral Footwork Gauntlet II", complexity: 5, sequence: [...salsaChunks.footworkBasic, ...salsaChunks.turnPrep, ...salsaChunks.turnSpiral, ...salsaChunks.footworkLadder, ...salsaChunks.turnPrep] },
+                { name: "Salsa Chest Pop Endurance I", complexity: 5, sequence: [...salsaChunks.chestPop, ...salsaChunks.hipSwitch, ...salsaChunks.chestPop, ...salsaChunks.turnPrep, ...salsaChunks.chestPop] },
+                { name: "Salsa Chest Pop Endurance II", complexity: 5, sequence: [...salsaChunks.turnPrep, ...salsaChunks.chestPop, ...salsaChunks.hipCross, ...salsaChunks.chestPop, ...salsaChunks.shineHead] },
+                { name: "Salsa Shine-Hip Fusion I", complexity: 5, sequence: [...salsaChunks.shineHead, ...salsaChunks.hipSwitch, ...salsaChunks.shineHands, ...salsaChunks.hipCross, ...salsaChunks.shineHead] },
+                { name: "Salsa Shine-Hip Fusion II", complexity: 5, sequence: [...salsaChunks.hipCross, ...salsaChunks.shineHands, ...salsaChunks.hipSwitch, ...salsaChunks.shineHead, ...salsaChunks.hipCross] },
+                { name: "Salsa Wave-Turn Fusion I", complexity: 5, sequence: [...salsaChunks.bodyWaveDown, ...salsaChunks.turnPrep, ...salsaChunks.bodyWaveUp, ...salsaChunks.turnSpiral, ...salsaChunks.fullBody] },
+                { name: "Salsa Wave-Turn Fusion II", complexity: 5, sequence: [...salsaChunks.fullBody, ...salsaChunks.turnSpiral, ...salsaChunks.bodyWaveUp, ...salsaChunks.turnPrep, ...salsaChunks.bodyWaveDown] },
+                { name: "Salsa Footwork Shine Endurance I", complexity: 5, sequence: [...salsaChunks.footworkLadder, ...salsaChunks.shineHead, ...salsaChunks.footworkBasic, ...salsaChunks.shineHands, ...salsaChunks.chestPop] },
+                { name: "Salsa Footwork Shine Endurance II", complexity: 5, sequence: [...salsaChunks.shineHands, ...salsaChunks.footworkBasic, ...salsaChunks.shineHead, ...salsaChunks.footworkLadder, ...salsaChunks.turnPrep] },
+                { name: "Salsa Hip Spiral Challenge I", complexity: 5, sequence: [...salsaChunks.hipSwitch, ...salsaChunks.turnSpiral, ...salsaChunks.hipCross, ...salsaChunks.turnPrep, ...salsaChunks.hipSwitch] },
+                { name: "Salsa Hip Spiral Challenge II", complexity: 5, sequence: [...salsaChunks.turnPrep, ...salsaChunks.hipCross, ...salsaChunks.turnSpiral, ...salsaChunks.hipSwitch, ...salsaChunks.turnSpiral] },
+                { name: "Salsa Full Circuit Showcase I", complexity: 5, sequence: [...salsaChunks.fullBody, ...salsaChunks.shineHead, ...salsaChunks.hipSwitch, ...salsaChunks.footworkBasic, ...salsaChunks.turnPrep] },
+                { name: "Salsa Full Circuit Showcase II", complexity: 5, sequence: [...salsaChunks.turnPrep, ...salsaChunks.footworkLadder, ...salsaChunks.hipCross, ...salsaChunks.shineHands, ...salsaChunks.fullBody] },
             ],
+
             bachata: [
-                { name: "Body Wave", complexity: 2, sequence: ["head", "neck", "chest", "belly", "left-hip", "right-hip"] },
-                { name: "Hip Tap", complexity: 2, sequence: ["left-hip", "right-hip", "left-upper-leg", "right-upper-leg", "left-hip"] },
-                { name: "Soft Step", complexity: 1, sequence: ["left-lower-leg", "right-lower-leg", "left-lower-leg", "right-lower-leg"] },
-                { name: "Hip Circle", complexity: 2, sequence: ["left-hip", "belly", "right-hip", "belly", "left-hip", "right-hip"] },
-                { name: "Sensual Wave", complexity: 4, sequence: ["head", "neck", "chest", "belly", "left-hip", "right-hip", "left-upper-leg", "right-upper-leg"] },
-                { name: "Shoulder Shake", complexity: 2, sequence: ["left-shoulder", "right-shoulder", "left-shoulder", "right-shoulder", "neck", "head"] },
-                { name: "Hip Sway", complexity: 2, sequence: ["left-hip", "right-hip", "left-hip", "right-hip", "belly", "chest"] },
-                { name: "Footwork Pattern", complexity: 3, sequence: ["left-lower-leg", "right-lower-leg", "left-upper-leg", "right-upper-leg", "left-hip", "right-hip"] },
-                { name: "Body Roll", complexity: 3, sequence: ["head", "neck", "chest", "belly", "left-hip", "right-hip", "belly", "chest"] },
-                { name: "Hand to Hip", complexity: 3, sequence: ["left-hand", "left-hip", "right-hand", "right-hip", "left-hip", "right-hip"] }
-            ]
+                // Complexity 1 (4)
+                { name: "Bachata Sensual Wave Mini", complexity: 1, sequence: [...bachataChunks.sensualWave] },
+                { name: "Bachata Hip Circle Mini", complexity: 1, sequence: [...bachataChunks.hipCircle] },
+                { name: "Bachata Step Touch Mini", complexity: 1, sequence: [...bachataChunks.stepTouch] },
+                { name: "Bachata Shoulder Roll Mini", complexity: 1, sequence: [...bachataChunks.shoulderRoll] },
+
+                // Complexity 2 (6) - 10 moves
+                { name: "Bachata Wave + Return", complexity: 2, sequence: [...bachataChunks.sensualWave, ...bachataChunks.waveReturn] },
+                { name: "Bachata Hip Circle + Sway", complexity: 2, sequence: [...bachataChunks.hipCircle, ...bachataChunks.hipSway] },
+                { name: "Bachata Hands to Hips", complexity: 2, sequence: [...bachataChunks.handToHip, ...bachataChunks.handsFrame] },
+                { name: "Bachata Step Touch + Roll", complexity: 2, sequence: [...bachataChunks.stepTouch, ...bachataChunks.bodyRoll] },
+                { name: "Bachata Shoulder + Head Accent", complexity: 2, sequence: [...bachataChunks.shoulderRoll, ...bachataChunks.headAccent] },
+                { name: "Bachata Soft Wave + Hip Sway", complexity: 2, sequence: [...bachataChunks.softWave, ...bachataChunks.hipSway] },
+
+                // Complexity 3 (10) - 15 moves
+                { name: "Bachata Sensual Builder I", complexity: 3, sequence: [...bachataChunks.sensualWave, ...bachataChunks.softWave, ...bachataChunks.hipSway] },
+                { name: "Bachata Sensual Builder II", complexity: 3, sequence: [...bachataChunks.softWave, ...bachataChunks.sensualWave, ...bachataChunks.bodyRoll] },
+                { name: "Bachata Hip Circle Chain", complexity: 3, sequence: [...bachataChunks.hipCircle, ...bachataChunks.bodyRoll, ...bachataChunks.hipCircle] },
+                { name: "Bachata Step & Frame Combo", complexity: 3, sequence: [...bachataChunks.stepTouch, ...bachataChunks.handsFrame, ...bachataChunks.stepSync] },
+                { name: "Bachata Shoulder-Head Groove", complexity: 3, sequence: [...bachataChunks.headAccent, ...bachataChunks.shoulderRoll, ...bachataChunks.headAccent] },
+                { name: "Bachata Hand to Hip Flow", complexity: 3, sequence: [...bachataChunks.handToHip, ...bachataChunks.hipSway, ...bachataChunks.handToHip] },
+                { name: "Bachata Wave Return Mix", complexity: 3, sequence: [...bachataChunks.sensualWave, ...bachataChunks.waveReturn, ...bachataChunks.softWave] },
+                { name: "Bachata Step Roll Builder", complexity: 3, sequence: [...bachataChunks.stepSync, ...bachataChunks.bodyRoll, ...bachataChunks.stepTouch] },
+                { name: "Bachata Hip Sway Endurance", complexity: 3, sequence: [...bachataChunks.hipSway, ...bachataChunks.hipCircle, ...bachataChunks.hipSway] },
+                { name: "Bachata Frame & Wave Combo", complexity: 3, sequence: [...bachataChunks.handsFrame, ...bachataChunks.sensualWave, ...bachataChunks.waveReturn] },
+
+                // Complexity 4 (18) - 20 moves
+                { name: "Bachata Sensual Marathon I", complexity: 4, sequence: [...bachataChunks.sensualWave, ...bachataChunks.softWave, ...bachataChunks.waveReturn, ...bachataChunks.bodyRoll] },
+                { name: "Bachata Sensual Marathon II", complexity: 4, sequence: [...bachataChunks.softWave, ...bachataChunks.bodyRoll, ...bachataChunks.sensualWave, ...bachataChunks.waveReturn] },
+                { name: "Bachata Hip Groove Marathon I", complexity: 4, sequence: [...bachataChunks.hipCircle, ...bachataChunks.hipSway, ...bachataChunks.hipCircle, ...bachataChunks.softWave] },
+                { name: "Bachata Hip Groove Marathon II", complexity: 4, sequence: [...bachataChunks.hipSway, ...bachataChunks.hipCircle, ...bachataChunks.softWave, ...bachataChunks.hipSway] },
+                { name: "Bachata Step & Roll Marathon I", complexity: 4, sequence: [...bachataChunks.stepTouch, ...bachataChunks.stepSync, ...bachataChunks.bodyRoll, ...bachataChunks.stepTouch] },
+                { name: "Bachata Step & Roll Marathon II", complexity: 4, sequence: [...bachataChunks.bodyRoll, ...bachataChunks.stepSync, ...bachataChunks.stepTouch, ...bachataChunks.bodyRoll] },
+                { name: "Bachata Frame Builder I", complexity: 4, sequence: [...bachataChunks.handsFrame, ...bachataChunks.handToHip, ...bachataChunks.handsFrame, ...bachataChunks.shoulderRoll] },
+                { name: "Bachata Frame Builder II", complexity: 4, sequence: [...bachataChunks.handToHip, ...bachataChunks.handsFrame, ...bachataChunks.shoulderRoll, ...bachataChunks.handToHip] },
+                { name: "Bachata Shoulder Accent Run I", complexity: 4, sequence: [...bachataChunks.shoulderRoll, ...bachataChunks.headAccent, ...bachataChunks.shoulderRoll, ...bachataChunks.softWave] },
+                { name: "Bachata Shoulder Accent Run II", complexity: 4, sequence: [...bachataChunks.headAccent, ...bachataChunks.shoulderRoll, ...bachataChunks.softWave, ...bachataChunks.headAccent] },
+                { name: "Bachata Wave-Circle Blend I", complexity: 4, sequence: [...bachataChunks.sensualWave, ...bachataChunks.hipCircle, ...bachataChunks.waveReturn, ...bachataChunks.hipSway] },
+                { name: "Bachata Wave-Circle Blend II", complexity: 4, sequence: [...bachataChunks.hipSway, ...bachataChunks.waveReturn, ...bachataChunks.hipCircle, ...bachataChunks.sensualWave] },
+                { name: "Bachata Soft Groove Run I", complexity: 4, sequence: [...bachataChunks.softWave, ...bachataChunks.hipSway, ...bachataChunks.softWave, ...bachataChunks.bodyRoll] },
+                { name: "Bachata Soft Groove Run II", complexity: 4, sequence: [...bachataChunks.bodyRoll, ...bachataChunks.softWave, ...bachataChunks.hipCircle, ...bachataChunks.softWave] },
+                { name: "Bachata Step-Frame Blend I", complexity: 4, sequence: [...bachataChunks.stepTouch, ...bachataChunks.handsFrame, ...bachataChunks.stepSync, ...bachataChunks.handToHip] },
+                { name: "Bachata Step-Frame Blend II", complexity: 4, sequence: [...bachataChunks.handToHip, ...bachataChunks.stepSync, ...bachataChunks.handsFrame, ...bachataChunks.stepTouch] },
+                { name: "Bachata Circle-Accent Blend I", complexity: 4, sequence: [...bachataChunks.hipCircle, ...bachataChunks.headAccent, ...bachataChunks.hipSway, ...bachataChunks.headAccent] },
+                { name: "Bachata Circle-Accent Blend II", complexity: 4, sequence: [...bachataChunks.headAccent, ...bachataChunks.hipCircle, ...bachataChunks.headAccent, ...bachataChunks.hipSway] },
+
+                // Complexity 5 (22) - 25 moves
+                { name: "Bachata Ultimate Sensual I", complexity: 5, sequence: [...bachataChunks.sensualWave, ...bachataChunks.softWave, ...bachataChunks.waveReturn, ...bachataChunks.bodyRoll, ...bachataChunks.sensualWave] },
+                { name: "Bachata Ultimate Sensual II", complexity: 5, sequence: [...bachataChunks.softWave, ...bachataChunks.sensualWave, ...bachataChunks.bodyRoll, ...bachataChunks.waveReturn, ...bachataChunks.softWave] },
+                { name: "Bachata Hip Mastery I", complexity: 5, sequence: [...bachataChunks.hipCircle, ...bachataChunks.hipSway, ...bachataChunks.hipCircle, ...bachataChunks.hipSway, ...bachataChunks.bodyRoll] },
+                { name: "Bachata Hip Mastery II", complexity: 5, sequence: [...bachataChunks.hipSway, ...bachataChunks.hipCircle, ...bachataChunks.bodyRoll, ...bachataChunks.hipSway, ...bachataChunks.hipCircle] },
+                { name: "Bachata Step Endurance I", complexity: 5, sequence: [...bachataChunks.stepTouch, ...bachataChunks.stepSync, ...bachataChunks.stepTouch, ...bachataChunks.bodyRoll, ...bachataChunks.stepSync] },
+                { name: "Bachata Step Endurance II", complexity: 5, sequence: [...bachataChunks.stepSync, ...bachataChunks.stepTouch, ...bachataChunks.bodyRoll, ...bachataChunks.stepTouch, ...bachataChunks.stepSync] },
+                { name: "Bachata Frame & Hips I", complexity: 5, sequence: [...bachataChunks.handsFrame, ...bachataChunks.handToHip, ...bachataChunks.hipSway, ...bachataChunks.hipCircle, ...bachataChunks.handsFrame] },
+                { name: "Bachata Frame & Hips II", complexity: 5, sequence: [...bachataChunks.handToHip, ...bachataChunks.handsFrame, ...bachataChunks.hipCircle, ...bachataChunks.hipSway, ...bachataChunks.handToHip] },
+                { name: "Bachata Shoulder Accent Gauntlet I", complexity: 5, sequence: [...bachataChunks.shoulderRoll, ...bachataChunks.headAccent, ...bachataChunks.shoulderRoll, ...bachataChunks.headAccent, ...bachataChunks.softWave] },
+                { name: "Bachata Shoulder Accent Gauntlet II", complexity: 5, sequence: [...bachataChunks.headAccent, ...bachataChunks.shoulderRoll, ...bachataChunks.softWave, ...bachataChunks.shoulderRoll, ...bachataChunks.headAccent] },
+                { name: "Bachata Wave-Circle Gauntlet I", complexity: 5, sequence: [...bachataChunks.sensualWave, ...bachataChunks.hipCircle, ...bachataChunks.waveReturn, ...bachataChunks.hipSway, ...bachataChunks.softWave] },
+                { name: "Bachata Wave-Circle Gauntlet II", complexity: 5, sequence: [...bachataChunks.softWave, ...bachataChunks.hipSway, ...bachataChunks.waveReturn, ...bachataChunks.hipCircle, ...bachataChunks.sensualWave] },
+                { name: "Bachata Roll & Frame Gauntlet I", complexity: 5, sequence: [...bachataChunks.bodyRoll, ...bachataChunks.handsFrame, ...bachataChunks.handToHip, ...bachataChunks.bodyRoll, ...bachataChunks.softWave] },
+                { name: "Bachata Roll & Frame Gauntlet II", complexity: 5, sequence: [...bachataChunks.handsFrame, ...bachataChunks.bodyRoll, ...bachataChunks.softWave, ...bachataChunks.handToHip, ...bachataChunks.bodyRoll] },
+                { name: "Bachata Step-Frame Gauntlet I", complexity: 5, sequence: [...bachataChunks.stepTouch, ...bachataChunks.handsFrame, ...bachataChunks.stepSync, ...bachataChunks.handToHip, ...bachataChunks.stepTouch] },
+                { name: "Bachata Step-Frame Gauntlet II", complexity: 5, sequence: [...bachataChunks.handToHip, ...bachataChunks.stepSync, ...bachataChunks.handsFrame, ...bachataChunks.stepTouch, ...bachataChunks.bodyRoll] },
+                { name: "Bachata Soft Sensual Showcase I", complexity: 5, sequence: [...bachataChunks.softWave, ...bachataChunks.sensualWave, ...bachataChunks.waveReturn, ...bachataChunks.softWave, ...bachataChunks.hipCircle] },
+                { name: "Bachata Soft Sensual Showcase II", complexity: 5, sequence: [...bachataChunks.hipCircle, ...bachataChunks.softWave, ...bachataChunks.waveReturn, ...bachataChunks.sensualWave, ...bachataChunks.softWave] },
+                { name: "Bachata Head-Shoulder Spotlight I", complexity: 5, sequence: [...bachataChunks.headAccent, ...bachataChunks.shoulderRoll, ...bachataChunks.headAccent, ...bachataChunks.handsFrame, ...bachataChunks.shoulderRoll] },
+                { name: "Bachata Head-Shoulder Spotlight II", complexity: 5, sequence: [...bachataChunks.shoulderRoll, ...bachataChunks.handsFrame, ...bachataChunks.headAccent, ...bachataChunks.shoulderRoll, ...bachataChunks.headAccent] },
+                { name: "Bachata Full Showcase I", complexity: 5, sequence: [...bachataChunks.sensualWave, ...bachataChunks.stepTouch, ...bachataChunks.handToHip, ...bachataChunks.hipSway, ...bachataChunks.bodyRoll] },
+                { name: "Bachata Full Showcase II", complexity: 5, sequence: [...bachataChunks.bodyRoll, ...bachataChunks.hipCircle, ...bachataChunks.handsFrame, ...bachataChunks.stepSync, ...bachataChunks.sensualWave] },
+            ],
         };
 
         let activeStyle = "salsa";
@@ -478,6 +667,7 @@
         let currentHistoryIndex = -1; // Current position in history (-1 means no history)
         let missionStartTime = null; // Track when mission started
         let sequenceRecords = {}; // Cache for sequence records
+        let poolIndexByKey = {}; // Tracks next mission index per (style+complexity filter)
 
         const statusEl = document.getElementById("status");
         const statusMessageEl = document.getElementById("status-message");
@@ -492,6 +682,8 @@
             document.getElementById("style-salsa").classList.toggle("active", style === "salsa");
             document.getElementById("style-bachata").classList.toggle("active", style === "bachata");
             resetMission();
+            // Reset sequential pointer for this style+filter
+            poolIndexByKey = {};
             statusMessageEl.textContent = "Tap \"Next Mission\" to begin a " + style + " sequence.";
         }
 
@@ -521,6 +713,45 @@
             return labels[level] || "Unknown";
         }
 
+        function getPoolKey(style = activeStyle) {
+            const filter = (selectedComplexity !== null && selectedComplexity !== 0) ? String(selectedComplexity) : "all";
+            return `${style}_${filter}`;
+        }
+
+        function getCurrentPool(style = activeStyle) {
+            let pool = missions[style] || [];
+            if (selectedComplexity !== null && selectedComplexity !== 0) {
+                pool = pool.filter((mission) => mission.complexity === selectedComplexity);
+            }
+            return pool;
+        }
+
+        function getNextMissionFromPool() {
+            const pool = getCurrentPool(activeStyle);
+            if (pool.length === 0) {
+                statusMessageEl.textContent = (selectedComplexity !== null && selectedComplexity !== 0)
+                    ? `No missions found for complexity ${selectedComplexity}. Try a different filter.`
+                    : "No missions available.";
+                return null;
+            }
+
+            const key = getPoolKey(activeStyle);
+            let idx = poolIndexByKey[key] ?? 0;
+            if (idx < 0 || idx >= pool.length) idx = 0;
+
+            const mission = pool[idx];
+            poolIndexByKey[key] = (idx + 1) % pool.length;
+            return mission;
+        }
+
+        function setNextIndexAfterMission(mission) {
+            const pool = getCurrentPool(activeStyle);
+            const idx = pool.findIndex((m) => m.name === mission.name);
+            if (idx >= 0) {
+                poolIndexByKey[getPoolKey(activeStyle)] = (idx + 1) % pool.length;
+            }
+        }
+
         function loadMission(mission, style, savedProgress = 0) {
             activeMission = mission;
             activeStyle = style;
@@ -541,18 +772,8 @@
         }
 
         function startMission() {
-            let pool = missions[activeStyle];
-            
-            // Filter by complexity if one is selected
-            if (selectedComplexity !== null && selectedComplexity !== 0) {
-                pool = pool.filter(mission => mission.complexity === selectedComplexity);
-                if (pool.length === 0) {
-                    statusMessageEl.textContent = `No missions found for complexity ${selectedComplexity}. Try a different filter.`;
-                    return;
-                }
-            }
-            
-            const newMission = pool[Math.floor(Math.random() * pool.length)];
+            const newMission = getNextMissionFromPool();
+            if (!newMission) return;
             
             // If we're not at the end of history, remove everything after current index
             if (currentHistoryIndex < missionHistory.length - 1) {
@@ -630,7 +851,7 @@
                     let completionMsg = "Nice! Mission complete: " + activeMission.name + complexityBadge;
                     if (completionTime !== null) {
                         const timeStr = formatTime(completionTime);
-                        completionMsg += `<br>Time: ${timeStr}`;
+                        showNotification(`Time: ${timeStr}`, "success", 4000);
                         // Check if this is a new record and save
                         checkAndSaveRecord(activeMission.name, activeStyle, completionTime);
                     }
@@ -691,6 +912,23 @@
             }, 3000);
         }
 
+        let toastTimeoutId = null;
+        function showNotification(message, type = "info", durationMs = 2500) {
+            const toast = document.getElementById("toast");
+            if (!toast) return;
+
+            toast.textContent = message;
+            toast.classList.remove("success", "error");
+            if (type === "success") toast.classList.add("success");
+            if (type === "error") toast.classList.add("error");
+            toast.classList.add("show");
+
+            if (toastTimeoutId) clearTimeout(toastTimeoutId);
+            toastTimeoutId = setTimeout(() => {
+                toast.classList.remove("show");
+            }, durationMs);
+        }
+
         parts.forEach((part) => {
             part.addEventListener("pointerdown", (event) => {
                 event.preventDefault();
@@ -715,6 +953,9 @@
             } else {
                 selectedComplexity = complexity;
             }
+            // Reset sequential pointer for this filter and clear current mission/history
+            resetMission();
+            poolIndexByKey = {};
             updateComplexityFilterButton();
             complexityModal.classList.remove("show");
             
@@ -957,6 +1198,9 @@
         }
 
         function selectMission(mission) {
+            // Ensure the sequential pointer continues AFTER the selected mission
+            setNextIndexAfterMission(mission);
+
             // Add to history
             if (currentHistoryIndex < missionHistory.length - 1) {
                 missionHistory = missionHistory.slice(0, currentHistoryIndex + 1);
