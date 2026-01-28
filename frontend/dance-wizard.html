@@ -171,17 +171,21 @@
         }
         .stage-tooltip {
             position: absolute;
-            padding: 6px 10px;
-            border-radius: 8px;
-            background: rgba(255, 99, 132, 0.9);
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 8px;
+            padding: 8px 10px;
+            border-radius: 12px;
+            background: rgba(255, 99, 132, 0.95);
             color: #fff;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: 400;
             pointer-events: none;
             opacity: 0;
-            transform: translate(-50%, -100%);
-            transition: opacity 0.2s ease;
-            z-index: 5;
+            z-index: 2000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease;
             white-space: nowrap;
         }
         .stage-tooltip.show { opacity: 1; }
@@ -310,6 +314,7 @@
         <div class="status" id="status">
             <div id="status-message">Tap "Next Mission" to begin a sequence.</div>
             <div class="sequence" id="sequence"></div>
+            <div class="stage-tooltip" id="stage-tooltip"></div>
             <div class="debug" id="debug"></div>
         </div>
 
@@ -328,7 +333,6 @@
             <div class="part" data-part="right-upper-leg" style="top: 69%; right: 28%;">R Upper Leg</div>
             <div class="part" data-part="left-lower-leg" style="top: 84%; left: 28%;">L Lower Leg</div>
             <div class="part" data-part="right-lower-leg" style="top: 84%; right: 28%;">R Lower Leg</div>
-            <div class="stage-tooltip" id="stage-tooltip"></div>
         </div>
     </div>
 
@@ -557,15 +561,20 @@
         let tooltipTimeoutId = null;
         function showStageTooltip(message, targetEl) {
             const tooltip = document.getElementById("stage-tooltip");
-            const stage = document.getElementById("stage");
-            if (!tooltip || !stage || !targetEl) return;
+            const sequenceEl = document.getElementById("sequence");
+            if (!tooltip || !sequenceEl) return;
 
-            const stageRect = stage.getBoundingClientRect();
-            const targetRect = targetEl.getBoundingClientRect();
+            // Position tooltip relative to the sequence element (where active move is shown)
+            const sequenceRect = sequenceEl.getBoundingClientRect();
+            const statusRect = statusEl.getBoundingClientRect();
+            
+            // Position tooltip below the sequence element
+            tooltip.style.position = 'absolute';
+            tooltip.style.top = `${sequenceRect.bottom - statusRect.top + 8}px`;
+            tooltip.style.left = '50%';
+            tooltip.style.transform = 'translateX(-50%)';
 
             tooltip.textContent = message;
-            tooltip.style.left = `${targetRect.left - stageRect.left + targetRect.width / 2}px`;
-            tooltip.style.top = `${targetRect.top - stageRect.top - 8}px`;
             tooltip.classList.add("show");
 
             if (tooltipTimeoutId) {
