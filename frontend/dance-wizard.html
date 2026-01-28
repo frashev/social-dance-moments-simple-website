@@ -851,7 +851,7 @@
                     let completionMsg = "Nice! Mission complete: " + activeMission.name + complexityBadge;
                     if (completionTime !== null) {
                         const timeStr = formatTime(completionTime);
-                        showNotification(`Time: ${timeStr}`, "success", 4000);
+                        showNotification(`Time: ${timeStr}`, "success", 6000);
                         // Check if this is a new record and save
                         checkAndSaveRecord(activeMission.name, activeStyle, completionTime);
                     }
