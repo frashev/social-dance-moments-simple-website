@@ -11,11 +11,12 @@
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(160deg, #1e3c72 0%, #2a5298 100%);
             color: #f7f7f7;
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             align-items: flex-start;
             justify-content: center;
             padding: 10px;
+            overflow: hidden;
         }
         .app {
             width: 100%;
@@ -25,6 +26,8 @@
             padding: 10px;
             margin: 5px;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            max-height: 100%;
+            overflow: hidden;
         }
         header h1 {
             font-size: 1.6rem;
@@ -115,10 +118,11 @@
         }
         .stage {
             position: relative;
-            width: 95%;
+            width: max(200px, min(95%, 400px, calc(500px / 1.2)));
             max-width: 400px;
+            max-height: 500px;
+            aspect-ratio: 1 / 1.2;
             margin: 0 auto;
-            padding-top: 120%;
             border-radius: 12px;
             background: rgba(0, 0, 0, 0.35);
             border: 2px dashed rgba(255, 255, 255, 0.2);
@@ -207,7 +211,7 @@
         @media (min-width: 900px) {
             body { padding: 40px; }
             .app { max-width: 680px; }
-            .stage { padding-top: 110%; }
+            .stage { aspect-ratio: 1 / 1.1; max-height: 500px; }
             .part { width: 60px; height: 60px; font-size: 0.68rem; }
             .part[data-part="neck"] {
                 width: 44px;
