@@ -245,6 +245,7 @@
             <button id="complexity-filter" type="button">Complexity</button>
             <span class="controls-break"></span>
             <button id="previous-mission" type="button">Previous Mission</button>
+            <button id="try-again" type="button">Try Again</button>
             <button id="next-mission" type="button">Next Mission</button>
         </div>
 
@@ -332,6 +333,8 @@
         let selectedComplexity = null; // null = no filter, 0-5 = specific complexity
         let missionHistory = []; // Array to store mission history
         let currentHistoryIndex = -1; // Current position in history (-1 means no history)
+        let missionStartTime = null; // Track when mission started
+        let sequenceRecords = {}; // Cache for sequence records
 
         const statusEl = document.getElementById("status");
         const statusMessageEl = document.getElementById("status-message");
@@ -379,6 +382,7 @@
             activeMission = mission;
             activeStyle = style;
             progressIndex = savedProgress;
+            missionStartTime = savedProgress === 0 ? performance.now() : null; // Only start timer if starting fresh
             const complexity = activeMission.complexity || 1;
             const complexityLabel = getComplexityLabel(complexity);
             const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
@@ -389,6 +393,8 @@
             // Update style buttons
             document.getElementById("style-salsa").classList.toggle("active", style === "salsa");
             document.getElementById("style-bachata").classList.toggle("active", style === "bachata");
+            // Load and display record for this sequence
+            loadSequenceRecord(mission.name, style);
         }
 
         function startMission() {
@@ -472,12 +478,23 @@
                 }
                 
                 if (progressIndex >= activeMission.sequence.length) {
+                    // Mission completed - calculate time
+                    const completionTime = missionStartTime ? (performance.now() - missionStartTime) / 1000 : null; // Convert to seconds
                     const complexity = activeMission.complexity || 1;
                     const complexityLabel = getComplexityLabel(complexity);
                     const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
-                    statusMessageEl.innerHTML = "Nice! Mission complete: " + activeMission.name + complexityBadge + ".";
+                    
+                    let completionMsg = "Nice! Mission complete: " + activeMission.name + complexityBadge;
+                    if (completionTime !== null) {
+                        const timeStr = formatTime(completionTime);
+                        completionMsg += `<br>Time: ${timeStr}`;
+                        // Save record to backend
+                        saveSequenceRecord(activeMission.name, activeStyle, completionTime);
+                    }
+                    statusMessageEl.innerHTML = completionMsg;
                     activeMission = null;
                     sequenceEl.innerHTML = "";
+                    missionStartTime = null;
                 } else {
                     statusMessageEl.textContent = "Good! Next target...";
                 }
@@ -485,6 +502,7 @@
                 element.classList.add("wrong");
                 statusMessageEl.textContent = "Wrong spot. Restart this mission.";
                 progressIndex = 0;
+                missionStartTime = performance.now(); // Restart timer
                 // Update progress in history
                 if (currentHistoryIndex >= 0 && currentHistoryIndex < missionHistory.length) {
                     missionHistory[currentHistoryIndex].progressIndex = 0;
@@ -561,6 +579,114 @@
             });
         });
 
+        function formatTime(seconds) {
+            const wholeSeconds = Math.floor(seconds);
+            const milliseconds = Math.floor((seconds - wholeSeconds) * 1000);
+            return `${wholeSeconds}.${milliseconds.toString().padStart(3, '0')}s`;
+        }
+
+        async function saveSequenceRecord(sequenceName, style, completionTime) {
+            try {
+                const response = await fetch('/api/dance-sequences/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sequence_name: sequenceName,
+                        style: style,
+                        completion_time: completionTime
+                    })
+                });
+                
+                if (response.ok) {
+                    const record = await response.json();
+                    sequenceRecords[`${sequenceName}_${style}`] = record;
+                    // Reload the record display
+                    loadSequenceRecord(sequenceName, style);
+                }
+            } catch (error) {
+                console.error('Failed to save sequence record:', error);
+            }
+        }
+
+        async function loadSequenceRecord(sequenceName, style) {
+            try {
+                const response = await fetch(`/api/dance-sequences/record/${encodeURIComponent(sequenceName)}/${style}`);
+                if (response.ok) {
+                    const record = await response.json();
+                    sequenceRecords[`${sequenceName}_${style}`] = record;
+                    displaySequenceRecord(sequenceName, style, record);
+                } else if (response.status === 404) {
+                    // No record yet
+                    displaySequenceRecord(sequenceName, style, null);
+                }
+            } catch (error) {
+                console.error('Failed to load sequence record:', error);
+            }
+        }
+
+        function displaySequenceRecord(sequenceName, style, record) {
+            // Find or create record display element
+            let recordEl = document.getElementById('sequence-record');
+            if (!recordEl) {
+                recordEl = document.createElement('div');
+                recordEl.id = 'sequence-record';
+                recordEl.style.cssText = 'margin-top: 8px; font-size: 0.85rem; color: #ffd166; text-align: center; font-weight: 600;';
+                const sequenceDiv = document.getElementById('sequence');
+                if (sequenceDiv && sequenceDiv.parentNode) {
+                    sequenceDiv.parentNode.insertBefore(recordEl, sequenceDiv);
+                } else if (statusEl) {
+                    statusEl.appendChild(recordEl);
+                }
+            }
+            
+            if (record) {
+                recordEl.textContent = `🏆 Best time: ${formatTime(record.completion_time)}`;
+            } else {
+                recordEl.textContent = '🏆 No record yet - be the first!';
+            }
+        }
+
+        function tryAgain() {
+            // If mission finished, activeMission is null but history still has it.
+            if (!activeMission) {
+                if (currentHistoryIndex >= 0 && currentHistoryIndex < missionHistory.length) {
+                    const historyItem = missionHistory[currentHistoryIndex];
+                    historyItem.progressIndex = 0;
+                    loadMission(historyItem.mission, historyItem.style, 0);
+                    return;
+                }
+                statusMessageEl.textContent = "No active mission. Tap Next Mission to begin.";
+                return;
+            }
+
+            // Restart current mission
+            progressIndex = 0;
+            missionStartTime = performance.now();
+
+            // Update history if applicable
+            if (currentHistoryIndex >= 0 && currentHistoryIndex < missionHistory.length) {
+                missionHistory[currentHistoryIndex].progressIndex = 0;
+            }
+
+            // Clear all visual feedback
+            parts.forEach((part) => {
+                part.classList.remove("correct", "wrong", "target");
+            });
+
+            // Update status message with mission info
+            const complexity = activeMission.complexity || 1;
+            const complexityLabel = getComplexityLabel(complexity);
+            const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
+            statusMessageEl.innerHTML = "Mission: " + activeMission.name + complexityBadge + ". Follow the sequence.";
+
+            // Render the first move
+            renderSequence();
+            updateTargetHighlight();
+            debugEl.textContent = "";
+        }
+
         // Initialize button state
         updateComplexityFilterButton();
 
@@ -568,6 +694,7 @@
         document.getElementById("style-bachata").addEventListener("click", () => setStyle("bachata"));
         document.getElementById("next-mission").addEventListener("click", nextMission);
         document.getElementById("previous-mission").addEventListener("click", previousMission);
+        document.getElementById("try-again").addEventListener("click", tryAgain);
     </script>
 </body>
 </html>

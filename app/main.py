@@ -8,6 +8,7 @@ from .recommend import router as recommend_router
 from .workshops import router as workshops_router
 from .events import router as events_router
 from .admin import router as admin_router
+from .dance_sequences import router as dance_sequences_router
 from .database import init_db
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ app.include_router(recommend_router)
 app.include_router(workshops_router)
 app.include_router(events_router)
 app.include_router(admin_router)
+app.include_router(dance_sequences_router)
 
 # Serve uploads directory
 uploads_path = Path(__file__).parent.parent / "frontend" / "uploads"

@@ -87,6 +87,14 @@ def init_db() -> None:
         created_at TEXT,
         FOREIGN KEY(admin_id) REFERENCES users(id)
     )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS dance_sequences (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sequence_name TEXT NOT NULL,
+        style TEXT NOT NULL,
+        completion_time REAL NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE(sequence_name, style)
+    )''')
 
     # Migration: Add title column if it doesn't exist
     try:
@@ -195,6 +203,7 @@ def init_db() -> None:
     except Exception as e:
         print(f"ℹ️ time column migration status: {e}")
 
+    conn.commit()
     conn.close()
 
 @contextmanager
