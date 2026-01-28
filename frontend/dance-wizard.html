@@ -161,8 +161,30 @@
             font-size: 0.4rem;
         }
         .part.target { background: rgba(255, 209, 102, 0.55); box-shadow: 0 0 14px rgba(255, 209, 102, 0.8); }
-        .part.correct { background: rgba(80, 200, 120, 0.6); box-shadow: 0 0 14px rgba(80, 200, 120, 0.7); }
-        .part.wrong { background: rgba(255, 99, 132, 0.65); box-shadow: 0 0 14px rgba(255, 99, 132, 0.7); }
+        .part.correct {
+            background: rgba(80, 200, 120, 0.6);
+            animation: correctPulse 0.7s ease-in-out;
+        }
+        .part.wrong {
+            background: rgba(255, 99, 132, 0.65);
+            animation: wrongPulse 0.7s ease-in-out;
+        }
+        .stage-tooltip {
+            position: absolute;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: rgba(255, 99, 132, 0.9);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, -100%);
+            transition: opacity 0.2s ease;
+            z-index: 5;
+            white-space: nowrap;
+        }
+        .stage-tooltip.show { opacity: 1; }
         .status {
             margin-top: 0px;
             margin-bottom: 8px;
@@ -194,6 +216,16 @@
         @keyframes pulse {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.7); }
             50% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 209, 102, 0); }
+        }
+        @keyframes correctPulse {
+            0% { box-shadow: 0 0 0 0 rgba(80, 200, 120, 0.7); }
+            50% { box-shadow: 0 0 0 20px rgba(80, 200, 120, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(80, 200, 120, 0); }
+        }
+        @keyframes wrongPulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 99, 132, 0.75); }
+            50% { box-shadow: 0 0 0 20px rgba(255, 99, 132, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 99, 132, 0); }
         }
         .debug {
             margin-top: 8px;
@@ -296,6 +328,7 @@
             <div class="part" data-part="right-upper-leg" style="top: 69%; right: 28%;">R Upper Leg</div>
             <div class="part" data-part="left-lower-leg" style="top: 84%; left: 28%;">L Lower Leg</div>
             <div class="part" data-part="right-lower-leg" style="top: 84%; right: 28%;">R Lower Leg</div>
+            <div class="stage-tooltip" id="stage-tooltip"></div>
         </div>
     </div>
 
@@ -386,7 +419,7 @@
             const complexity = activeMission.complexity || 1;
             const complexityLabel = getComplexityLabel(complexity);
             const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
-            statusMessageEl.innerHTML = "Mission: " + activeMission.name + complexityBadge + ". Follow the sequence.";
+            statusMessageEl.innerHTML = "Mission: " + activeMission.name + complexityBadge;
             renderSequence();
             updateTargetHighlight();
             debugEl.textContent = "";
@@ -507,11 +540,40 @@
                 if (currentHistoryIndex >= 0 && currentHistoryIndex < missionHistory.length) {
                     missionHistory[currentHistoryIndex].progressIndex = 0;
                 }
+                showStageTooltip("Start from the beginning.", element);
             }
 
             renderSequence();
-            updateTargetHighlight();
+            // Don't call updateTargetHighlight() here as it removes correct/wrong classes
+            // updateTargetHighlight();
             debugEl.textContent = "Last tap: " + partName.replace("-", " ");
+            
+            // Remove correct/wrong classes after animation completes
+            setTimeout(() => {
+                element.classList.remove("correct", "wrong");
+            }, 700);
+        }
+
+        let tooltipTimeoutId = null;
+        function showStageTooltip(message, targetEl) {
+            const tooltip = document.getElementById("stage-tooltip");
+            const stage = document.getElementById("stage");
+            if (!tooltip || !stage || !targetEl) return;
+
+            const stageRect = stage.getBoundingClientRect();
+            const targetRect = targetEl.getBoundingClientRect();
+
+            tooltip.textContent = message;
+            tooltip.style.left = `${targetRect.left - stageRect.left + targetRect.width / 2}px`;
+            tooltip.style.top = `${targetRect.top - stageRect.top - 8}px`;
+            tooltip.classList.add("show");
+
+            if (tooltipTimeoutId) {
+                clearTimeout(tooltipTimeoutId);
+            }
+            tooltipTimeoutId = setTimeout(() => {
+                tooltip.classList.remove("show");
+            }, 3000);
         }
 
         parts.forEach((part) => {
@@ -690,7 +752,7 @@
             const complexity = activeMission.complexity || 1;
             const complexityLabel = getComplexityLabel(complexity);
             const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
-            statusMessageEl.innerHTML = "Mission: " + activeMission.name + complexityBadge + ". Follow the sequence.";
+            statusMessageEl.innerHTML = "Mission: " + activeMission.name + complexityBadge;
 
             // Render the first move
             renderSequence();
