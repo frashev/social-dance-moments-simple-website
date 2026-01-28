@@ -16,6 +16,22 @@
         a { padding: 15px 40px; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 5px; cursor: pointer; transition: all 0.3s; }
         .btn-map { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; font-size: 16px; padding: 12px 30px; width: 100%; max-width: 300px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); transition: all 0.3s ease; font-weight: bold; }
         .btn-map:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5); }
+        .btn-dance-wizard { 
+            background: linear-gradient(135deg, #1a1818 0%, #da5065 50%, #d65151 100%); 
+            background-size: 200% 200%;
+            animation: gradient-shift 3s ease infinite;
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5), 0 0 20px rgba(255, 107, 107, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+        }
+        .btn-dance-wizard:hover { 
+            transform: translateY(-3px) scale(1.05); 
+            box-shadow: 0 6px 25px rgba(255, 107, 107, 0.7), 0 0 30px rgba(255, 107, 107, 0.5);
+        }
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
         .auth-buttons { display: flex; gap: 20px; width: 100%; max-width: 300px; justify-content: center; }
         .btn-login { background: #667eea; color: white; flex: 1; }
         .btn-login:hover { background: #764ba2; }
@@ -31,7 +47,7 @@
         <div class="buttons">
             <a href="/map.html" class="btn-map">Workshops & Parties Map</a>
             <a href="/events.html" class="btn-map">Festivals & Events Map</a>
-            <a href="/dance-wizard.html" class="btn-map">Dance Wizard</a>
+            <a href="/dance-wizard.html" class="btn-map btn-dance-wizard">Dance Wizard</a>
             <div class="auth-buttons">
                 <a href="/login.html" class="btn-login">Login</a>
                 <a href="/register.html" class="btn-register">Register</a>
