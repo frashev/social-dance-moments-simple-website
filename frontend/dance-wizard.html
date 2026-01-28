@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dance Wizard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(160deg, #1e3c72 0%, #2a5298 100%);
+            color: #f7f7f7;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .app {
+            width: 100%;
+            max-width: 520px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        }
+        header h1 {
+            font-size: 1.6rem;
+            margin-bottom: 6px;
+        }
+        header p {
+            font-size: 0.95rem;
+            color: #d6e2ff;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .controls button {
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #f3f6ff;
+            color: #1a2a4f;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .controls button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25); }
+        .controls button.active { background: #ffd166; color: #362300; }
+        .stage-wrap {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+        }
+        .stage {
+            position: relative;
+            width: 100%;
+            padding-top: 130%;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        .part {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.75);
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+        }
+        .part:active { transform: scale(0.96); }
+        .part[data-part="neck"] {
+            width: 36px;
+            height: 36px;
+            font-size: 0.4rem;
+        }
+        .part[data-part="belly"] {
+            width: 36px;
+            height: 36px;
+            font-size: 0.4rem;
+        }
+        .part.target { background: rgba(255, 209, 102, 0.55); box-shadow: 0 0 14px rgba(255, 209, 102, 0.8); }
+        .part.correct { background: rgba(80, 200, 120, 0.6); box-shadow: 0 0 14px rgba(80, 200, 120, 0.7); }
+        .part.wrong { background: rgba(255, 99, 132, 0.65); box-shadow: 0 0 14px rgba(255, 99, 132, 0.7); }
+        .status {
+            margin-top: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .sequence {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #cde1ff;
+        }
+        .sequence span {
+            display: inline-block;
+            margin: 2px 4px 0 0;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .sequence span.active {
+            background: #ffd166;
+            color: #362300;
+            font-weight: 600;
+        }
+        .debug {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #bcd4ff;
+            opacity: 0.9;
+        }
+        @media (min-width: 900px) {
+            body { padding: 40px; }
+            .app { max-width: 680px; }
+            .stage { padding-top: 110%; }
+            .part { width: 60px; height: 60px; font-size: 0.68rem; }
+            .part[data-part="neck"] {
+                width: 44px;
+                height: 44px;
+                font-size: 0.5rem;
+            }
+            .part[data-part="belly"] {
+                width: 44px;
+                height: 44px;
+                font-size: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>Dance Wizard</h1>
+            <p>Welcome to the Dance Wizard! Let's have fun with some dance moves!</p>
+        </header>
+
+        <div class="controls">
+            <button id="style-salsa" class="active" type="button">Salsa Mode</button>
+            <button id="style-bachata" type="button">Bachata Mode</button>
+            <button id="start-mission" type="button">Start Mission</button>
+            <button id="reset-mission" type="button">Reset</button>
+        </div>
+
+        <div class="stage-wrap">
+            <div class="stage" id="stage">
+                <div class="part" data-part="head" style="top: 3%; left: 50%; transform: translate(-50%, 0);">Head</div>
+                <div class="part" data-part="left-shoulder" style="top: 23%; left: 20%;">L Shoulder</div>
+                <div class="part" data-part="neck" style="top: 18%; left: 50%; transform: translate(-50%, 0);">Neck</div>
+                <div class="part" data-part="right-shoulder" style="top: 23%; right: 20%;">R Shoulder</div>
+                <div class="part" data-part="left-hand" style="top: 36%; left: 8%;">L Hand</div>
+                <div class="part" data-part="right-hand" style="top: 36%; right: 8%;">R Hand</div>
+                <div class="part" data-part="chest" style="top: 29%; left: 50%; transform: translate(-50%, 0);">Chest</div>
+                <div class="part" data-part="belly" style="top: 44%; left: 50%; transform: translate(-50%, 0);">Belly</div>
+                <div class="part" data-part="left-hip" style="top: 54%; left: 30%;">L Hip</div>
+                <div class="part" data-part="right-hip" style="top: 54%; right: 30%;">R Hip</div>
+                <div class="part" data-part="left-upper-leg" style="top: 69%; left: 28%;">L Upper Leg</div>
+                <div class="part" data-part="right-upper-leg" style="top: 69%; right: 28%;">R Upper Leg</div>
+                <div class="part" data-part="left-lower-leg" style="top: 84%; left: 28%;">L Lower Leg</div>
+                <div class="part" data-part="right-lower-leg" style="top: 84%; right: 28%;">R Lower Leg</div>
+            </div>
+        </div>
+
+        <div class="status" id="status">
+            Tap "Start Mission" to begin a sequence.
+            <div class="sequence" id="sequence"></div>
+            <div class="debug" id="debug"></div>
+        </div>
+    </div>
+
+    <script>
+        const missions = {
+            salsa: [
+                { name: "Basic Shine", sequence: ["head", "chest", "left-hip", "right-hip", "left-upper-leg", "right-upper-leg"] },
+                { name: "SuziQ Shine", sequence: ["left-shoulder", "neck", "right-shoulder", "chest", "left-upper-leg", "right-upper-leg"] },
+                { name: "Cross Body Flow", sequence: ["head", "left-shoulder", "right-shoulder", "left-hip", "right-hip", "left-lower-leg", "right-lower-leg"] }
+            ],
+            bachata: [
+                { name: "Body Wave", sequence: ["head", "neck", "chest", "belly", "left-hip", "right-hip"] },
+                { name: "Hip Tap", sequence: ["left-hip", "right-hip", "left-upper-leg", "right-upper-leg", "left-hip"] },
+                { name: "Soft Step", sequence: ["left-lower-leg", "right-lower-leg", "left-lower-leg", "right-lower-leg"] }
+            ]
+        };
+
+        let activeStyle = "salsa";
+        let activeMission = null;
+        let progressIndex = 0;
+
+        const statusEl = document.getElementById("status");
+        const sequenceEl = document.getElementById("sequence");
+        const debugEl = document.getElementById("debug");
+        const parts = Array.from(document.querySelectorAll(".part"));
+
+        function setStyle(style) {
+            activeStyle = style;
+            document.getElementById("style-salsa").classList.toggle("active", style === "salsa");
+            document.getElementById("style-bachata").classList.toggle("active", style === "bachata");
+            resetMission();
+            statusEl.firstChild.textContent = "Tap \"Start Mission\" to begin a " + style + " sequence.";
+        }
+
+        function renderSequence() {
+            sequenceEl.innerHTML = "";
+            if (!activeMission) return;
+            activeMission.sequence.forEach((part, index) => {
+                const pill = document.createElement("span");
+                pill.textContent = part.replace("-", " ");
+                if (index === progressIndex) {
+                    pill.classList.add("active");
+                }
+                sequenceEl.appendChild(pill);
+            });
+        }
+
+        function updateTargetHighlight() {
+            parts.forEach((part) => {
+                part.classList.remove("target", "correct", "wrong");
+                if (activeMission && part.dataset.part === activeMission.sequence[progressIndex]) {
+                    part.classList.add("target");
+                }
+            });
+        }
+
+        function startMission() {
+            const pool = missions[activeStyle];
+            activeMission = pool[Math.floor(Math.random() * pool.length)];
+            progressIndex = 0;
+            statusEl.firstChild.textContent = "Mission: " + activeMission.name + ". Follow the sequence.";
+            renderSequence();
+            updateTargetHighlight();
+            debugEl.textContent = "";
+        }
+
+        function resetMission() {
+            activeMission = null;
+            progressIndex = 0;
+            sequenceEl.innerHTML = "";
+            updateTargetHighlight();
+            debugEl.textContent = "";
+        }
+
+        function handleTap(partName, element) {
+            if (!activeMission) {
+                debugEl.textContent = "No mission active. Tap Start Mission.";
+                return;
+            }
+
+            const expected = activeMission.sequence[progressIndex];
+            parts.forEach((part) => part.classList.remove("correct", "wrong"));
+
+            if (partName === expected) {
+                element.classList.add("correct");
+                progressIndex += 1;
+                if (progressIndex >= activeMission.sequence.length) {
+                    statusEl.firstChild.textContent = "Nice! Mission complete: " + activeMission.name + ".";
+                    activeMission = null;
+                    sequenceEl.innerHTML = "";
+                } else {
+                    statusEl.firstChild.textContent = "Good! Next target...";
+                }
+            } else {
+                element.classList.add("wrong");
+                statusEl.firstChild.textContent = "Wrong spot. Restart this mission.";
+                progressIndex = 0;
+            }
+
+            renderSequence();
+            updateTargetHighlight();
+            debugEl.textContent = "Last tap: " + partName.replace("-", " ");
+        }
+
+        parts.forEach((part) => {
+            part.addEventListener("pointerdown", (event) => {
+                event.preventDefault();
+                handleTap(part.dataset.part, part);
+            });
+        });
+
+        document.getElementById("style-salsa").addEventListener("click", () => setStyle("salsa"));
+        document.getElementById("style-bachata").addEventListener("click", () => setStyle("bachata"));
+        document.getElementById("start-mission").addEventListener("click", startMission);
+        document.getElementById("reset-mission").addEventListener("click", () => {
+            resetMission();
+            statusEl.firstChild.textContent = "Mission reset. Tap Start Mission to begin.";
+        });
+    </script>
+</body>
+</html>
