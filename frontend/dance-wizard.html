@@ -309,8 +309,14 @@
             font-size: 0.95rem;
             line-height: 1.4;
         }
-        .sequence {
+        .sequence-row {
             margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .sequence {
             font-size: 0.85rem;
             color: #cde1ff;
             text-align: center;
@@ -329,12 +335,13 @@
             animation: pulse 1.5s ease-in-out infinite;
         }
         .live-timer {
-            margin-top: 10px;
+            margin-top: 0;
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             font-weight: 800;
             letter-spacing: 0.02em;
             color: rgba(255, 255, 255, 0.95);
+            min-width: 58px; /* keeps layout steady as numbers change */
         }
         @keyframes pulse {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.7); }
@@ -486,8 +493,10 @@
 
         <div class="status" id="status">
             <div id="status-message">Tap "Next Mission" to begin a sequence.</div>
-            <div class="sequence" id="sequence"></div>
-            <div class="live-timer" id="live-timer"></div>
+            <div class="sequence-row">
+                <div class="sequence" id="sequence"></div>
+                <div class="live-timer" id="live-timer"></div>
+            </div>
             <div class="debug" id="debug"></div>
         </div>
 
