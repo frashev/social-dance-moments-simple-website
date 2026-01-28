@@ -92,9 +92,20 @@ def init_db() -> None:
         sequence_name TEXT NOT NULL,
         style TEXT NOT NULL,
         completion_time REAL NOT NULL,
+        user_name TEXT,
         created_at TEXT NOT NULL,
         UNIQUE(sequence_name, style)
     )''')
+    
+    # Migration: Add user_name column if it doesn't exist
+    try:
+        c.execute("ALTER TABLE dance_sequences ADD COLUMN user_name TEXT")
+        print("✅ Added user_name column to dance_sequences table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️ user_name column already exists")
+        else:
+            raise
 
     # Migration: Add title column if it doesn't exist
     try:

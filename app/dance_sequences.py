@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 from .database import get_db
 import sqlite3
@@ -11,12 +12,14 @@ class DanceSequenceRecord(BaseModel):
     sequence_name: str
     style: str
     completion_time: float  # in seconds with milliseconds
+    user_name: Optional[str] = None  # Optional user name
 
 class DanceSequenceResponse(BaseModel):
     id: int
     sequence_name: str
     style: str
     completion_time: float
+    user_name: Optional[str] = None
     created_at: str
 
 @router.post("/save", response_model=DanceSequenceResponse)
@@ -36,9 +39,10 @@ async def save_dance_sequence(record: DanceSequenceRecord):
             if existing:
                 # Update only if new time is faster
                 if record.completion_time < existing["completion_time"]:
+                    user_name = record.user_name if record.user_name else existing.get("user_name")
                     c.execute(
-                        "UPDATE dance_sequences SET completion_time = ?, created_at = ? WHERE id = ?",
-                        (record.completion_time, datetime.utcnow().isoformat(), existing["id"])
+                        "UPDATE dance_sequences SET completion_time = ?, user_name = ?, created_at = ? WHERE id = ?",
+                        (record.completion_time, user_name, datetime.utcnow().isoformat(), existing["id"])
                     )
                     conn.commit()
                     # Fetch updated record
@@ -55,8 +59,8 @@ async def save_dance_sequence(record: DanceSequenceRecord):
                 # Insert new record
                 created_at = datetime.utcnow().isoformat()
                 c.execute(
-                    "INSERT INTO dance_sequences (sequence_name, style, completion_time, created_at) VALUES (?, ?, ?, ?)",
-                    (record.sequence_name, record.style, record.completion_time, created_at)
+                    "INSERT INTO dance_sequences (sequence_name, style, completion_time, user_name, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (record.sequence_name, record.style, record.completion_time, record.user_name, created_at)
                 )
                 conn.commit()
                 # Fetch new record

@@ -631,8 +631,8 @@
                     if (completionTime !== null) {
                         const timeStr = formatTime(completionTime);
                         completionMsg += `<br>Time: ${timeStr}`;
-                        // Save record to backend
-                        saveSequenceRecord(activeMission.name, activeStyle, completionTime);
+                        // Check if this is a new record and save
+                        checkAndSaveRecord(activeMission.name, activeStyle, completionTime);
                     }
                     statusMessageEl.innerHTML = completionMsg;
                     activeMission = null;
@@ -762,10 +762,44 @@
             return `${wholeSeconds}.${milliseconds.toString().padStart(3, '0')}s`;
         }
 
-        async function saveSequenceRecord(sequenceName, style, completionTime) {
+        async function checkAndSaveRecord(sequenceName, style, completionTime) {
             try {
-                // Optimistic UI update for faster feedback
-                displaySequenceRecord(sequenceName, style, { completion_time: completionTime });
+                // First check if there's an existing record
+                const checkResponse = await fetch(`/api/dance-sequences/record/${encodeURIComponent(sequenceName)}/${style}`);
+                let isNewRecord = false;
+                let existingRecord = null;
+                
+                if (checkResponse.ok) {
+                    existingRecord = await checkResponse.json();
+                    // Check if new time is faster
+                    if (completionTime < existingRecord.completion_time) {
+                        isNewRecord = true;
+                    }
+                } else if (checkResponse.status === 404) {
+                    // No existing record, so this is a new record
+                    isNewRecord = true;
+                }
+                
+                if (isNewRecord) {
+                    // Prompt for user name
+                    const userName = prompt(`🎉 New Record! ${formatTime(completionTime)}\n\nEnter your name to save this record:`);
+                    if (userName && userName.trim()) {
+                        await saveSequenceRecord(sequenceName, style, completionTime, userName.trim());
+                    } else if (userName !== null) {
+                        // User cancelled or entered empty name, still save without name
+                        await saveSequenceRecord(sequenceName, style, completionTime, null);
+                    }
+                } else {
+                    // Not a new record, just save normally
+                    await saveSequenceRecord(sequenceName, style, completionTime, null);
+                }
+            } catch (error) {
+                console.error('Failed to check/save sequence record:', error);
+            }
+        }
+
+        async function saveSequenceRecord(sequenceName, style, completionTime, userName = null) {
+            try {
                 const response = await fetch('/api/dance-sequences/save', {
                     method: 'POST',
                     headers: {
@@ -774,7 +808,8 @@
                     body: JSON.stringify({
                         sequence_name: sequenceName,
                         style: style,
-                        completion_time: completionTime
+                        completion_time: completionTime,
+                        user_name: userName
                     })
                 });
                 
@@ -830,7 +865,9 @@
             if (isLoading) {
                 recordEl.textContent = '🏆 Checking record...';
             } else if (record) {
-                recordEl.textContent = `🏆 Best time: ${formatTime(record.completion_time)}`;
+                const timeStr = formatTime(record.completion_time);
+                const userName = (record.user_name && record.user_name.trim()) ? ` by ${record.user_name.trim()}` : '';
+                recordEl.textContent = `🏆 Best time: ${timeStr}${userName}`;
             } else {
                 recordEl.textContent = '🏆 No record yet - be the first!';
             }
