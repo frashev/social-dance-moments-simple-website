@@ -348,6 +348,14 @@
             font-weight: 600;
             animation: pulse 1.5s ease-in-out infinite;
         }
+        .live-timer {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            color: rgba(255, 255, 255, 0.95);
+        }
         @keyframes pulse {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.7); }
             50% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 209, 102, 0); }
@@ -456,6 +464,7 @@
         <div class="status" id="status">
             <div id="status-message">Tap "Next Mission" to begin a sequence.</div>
             <div class="sequence" id="sequence"></div>
+            <div class="live-timer" id="live-timer"></div>
             <div class="stage-tooltip" id="stage-tooltip"></div>
             <div class="debug" id="debug"></div>
         </div>
@@ -672,6 +681,7 @@
         const statusEl = document.getElementById("status");
         const statusMessageEl = document.getElementById("status-message");
         const sequenceEl = document.getElementById("sequence");
+        const liveTimerEl = document.getElementById("live-timer");
         const debugEl = document.getElementById("debug");
         const parts = Array.from(document.querySelectorAll(".part"));
         const complexityModal = document.getElementById("complexity-modal");
@@ -711,6 +721,35 @@
         function getComplexityLabel(level) {
             const labels = ["", "Easy", "Easy-Medium", "Medium", "Medium-Hard", "Hard"];
             return labels[level] || "Unknown";
+        }
+
+        let timerRafId = null;
+        function stopLiveTimer(clear = false) {
+            if (timerRafId) {
+                cancelAnimationFrame(timerRafId);
+                timerRafId = null;
+            }
+            if (clear && liveTimerEl) liveTimerEl.textContent = "";
+        }
+
+        function startLiveTimer() {
+            stopLiveTimer(false);
+            if (!liveTimerEl) return;
+            if (!activeMission || missionStartTime === null) {
+                liveTimerEl.textContent = "";
+                return;
+            }
+
+            const tick = () => {
+                if (!activeMission || missionStartTime === null) {
+                    stopLiveTimer(false);
+                    return;
+                }
+                const elapsed = (performance.now() - missionStartTime) / 1000;
+                liveTimerEl.textContent = formatTime(elapsed);
+                timerRafId = requestAnimationFrame(tick);
+            };
+            timerRafId = requestAnimationFrame(tick);
         }
 
         function getPoolKey(style = activeStyle) {
@@ -769,6 +808,7 @@
             document.getElementById("style-bachata").classList.toggle("active", style === "bachata");
             // Load and display record for this sequence
             loadSequenceRecord(mission.name, style);
+            startLiveTimer();
         }
 
         function startMission() {
@@ -799,6 +839,8 @@
             debugEl.textContent = "";
             missionHistory = [];
             currentHistoryIndex = -1;
+            missionStartTime = null;
+            stopLiveTimer(true);
         }
 
         function previousMission() {
@@ -859,6 +901,7 @@
                     activeMission = null;
                     sequenceEl.innerHTML = "";
                     missionStartTime = null;
+                    stopLiveTimer(false);
                 } else {
                     statusMessageEl.textContent = "Good! Next target...";
                 }
@@ -867,6 +910,7 @@
                 statusMessageEl.textContent = "Wrong spot. Restart this mission.";
                 progressIndex = 0;
                 missionStartTime = performance.now(); // Restart timer
+                startLiveTimer();
                 // Update progress in history
                 if (currentHistoryIndex >= 0 && currentHistoryIndex < missionHistory.length) {
                     missionHistory[currentHistoryIndex].progressIndex = 0;
@@ -1130,6 +1174,7 @@
             // Restart current mission
             progressIndex = 0;
             missionStartTime = performance.now();
+            startLiveTimer();
 
             // Update history if applicable
             if (currentHistoryIndex >= 0 && currentHistoryIndex < missionHistory.length) {
