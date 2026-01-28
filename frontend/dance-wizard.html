@@ -350,6 +350,49 @@
             50% { box-shadow: 0 0 0 20px rgba(255, 99, 132, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 99, 132, 0); }
         }
+        /* Fun ambient motion: animate an inner wrapper so the part's absolute position never shifts */
+        .part .part-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none; /* keep taps on the .part itself */
+            will-change: transform;
+        }
+        @keyframes randomPulse1 {
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            25% { transform: translate(2px, -2px) scale(1.05) rotate(1deg); }
+            50% { transform: translate(-3px, 2px) scale(1.08) rotate(-1.5deg); }
+            75% { transform: translate(2px, 3px) scale(1.03) rotate(0.8deg); }
+        }
+        @keyframes randomPulse2 {
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            20% { transform: translate(-2px, 1px) scale(1.04) rotate(-1deg); }
+            50% { transform: translate(3px, -1px) scale(1.1) rotate(1.8deg); }
+            80% { transform: translate(-1px, -3px) scale(1.03) rotate(-0.6deg); }
+        }
+        @keyframes randomPulse3 {
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            30% { transform: translate(1px, 3px) scale(1.03) rotate(0.5deg); }
+            60% { transform: translate(-2px, -2px) scale(1.06) rotate(-1.2deg); }
+        }
+        @keyframes randomPulse4 {
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            25% { transform: translate(3px, 1px) scale(1.06) rotate(1.3deg); }
+            55% { transform: translate(-3px, -1px) scale(1.12) rotate(-2deg); }
+            85% { transform: translate(1px, -3px) scale(1.04) rotate(0.9deg); }
+        }
+        @keyframes randomPulse5 {
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            35% { transform: translate(-2px, 2px) scale(1.05) rotate(-1.4deg); }
+            70% { transform: translate(2px, -2px) scale(1.08) rotate(1.6deg); }
+        }
+        .part.random-pulse-1 .part-inner { animation: randomPulse1 2.5s ease-in-out infinite; }
+        .part.random-pulse-2 .part-inner { animation: randomPulse2 3s ease-in-out infinite; }
+        .part.random-pulse-3 .part-inner { animation: randomPulse3 2.2s ease-in-out infinite; }
+        .part.random-pulse-4 .part-inner { animation: randomPulse4 3.3s ease-in-out infinite; }
+        .part.random-pulse-5 .part-inner { animation: randomPulse5 2.8s ease-in-out infinite; }
         .debug {
             margin-top: 8px;
             font-size: 0.8rem;
@@ -666,6 +709,15 @@
         const complexityModal = document.getElementById("complexity-modal");
         const complexityFilterBtn = document.getElementById("complexity-filter");
 
+        // Wrap part labels so "fun random transforms" don't override the part's absolute positioning transforms
+        parts.forEach((part) => {
+            if (part.querySelector(".part-inner")) return;
+            const inner = document.createElement("span");
+            inner.className = "part-inner";
+            while (part.firstChild) inner.appendChild(part.firstChild);
+            part.appendChild(inner);
+        });
+
         function setStyle(style) {
             activeStyle = style;
             document.getElementById("style-salsa").classList.toggle("active", style === "salsa");
@@ -788,6 +840,30 @@
             // Load and display record for this sequence
             loadSequenceRecord(mission.name, style);
             startLiveTimer();
+            // Start random pulsing for all body parts
+            startRandomPulsing();
+        }
+
+        function startRandomPulsing() {
+            // Remove any existing pulse classes
+            parts.forEach(part => {
+                part.classList.remove('random-pulse-1', 'random-pulse-2', 'random-pulse-3', 'random-pulse-4', 'random-pulse-5');
+            });
+            
+            // Assign random pulse animations to each part with slight delay for variety
+            parts.forEach((part, index) => {
+                const pulseType = Math.floor(Math.random() * 5) + 1;
+                // Add a small random delay to make pulsing more varied
+                setTimeout(() => {
+                    part.classList.add(`random-pulse-${pulseType}`);
+                }, Math.random() * 500);
+            });
+        }
+
+        function stopRandomPulsing() {
+            parts.forEach(part => {
+                part.classList.remove('random-pulse-1', 'random-pulse-2', 'random-pulse-3', 'random-pulse-4', 'random-pulse-5');
+            });
         }
 
         function startMission() {
@@ -820,6 +896,7 @@
             currentHistoryIndex = -1;
             missionStartTime = null;
             stopLiveTimer(true);
+            stopRandomPulsing();
         }
 
         function previousMission() {
@@ -880,6 +957,7 @@
                     activeMission = null;
                     sequenceEl.innerHTML = "";
                     missionStartTime = null;
+                    stopRandomPulsing();
                     stopLiveTimer(false);
                 } else {
                     statusMessageEl.textContent = "Good! Next target...";

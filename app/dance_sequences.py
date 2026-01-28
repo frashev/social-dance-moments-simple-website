@@ -29,9 +29,9 @@ async def save_dance_sequence(record: DanceSequenceRecord):
         with get_db() as conn:
             c = conn.cursor()
             
-            # Check if record exists
+            # Check if record exists (select full row so response_model is always satisfiable)
             c.execute(
-                "SELECT id, completion_time FROM dance_sequences WHERE sequence_name = ? AND style = ?",
+                "SELECT * FROM dance_sequences WHERE sequence_name = ? AND style = ?",
                 (record.sequence_name, record.style)
             )
             existing = c.fetchone()
