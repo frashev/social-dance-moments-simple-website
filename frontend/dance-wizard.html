@@ -22,7 +22,7 @@
             max-width: 520px;
             background: rgba(0, 0, 0, 0.25);
             border-radius: 16px;
-            padding: 15px;
+            padding: 10px;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
         }
         header h1 {
@@ -39,7 +39,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
         .controls button {
             border: none;
@@ -158,7 +158,8 @@
         .part.correct { background: rgba(80, 200, 120, 0.6); box-shadow: 0 0 14px rgba(80, 200, 120, 0.7); }
         .part.wrong { background: rgba(255, 99, 132, 0.65); box-shadow: 0 0 14px rgba(255, 99, 132, 0.7); }
         .status {
-            margin-top: 14px;
+            margin-top: 0px;
+            margin-bottom: 8px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 12px;
             padding: 12px;
@@ -260,6 +261,12 @@
             </div>
         </div>
 
+        <div class="status" id="status">
+            <div id="status-message">Tap "Start Mission" to begin a sequence.</div>
+            <div class="sequence" id="sequence"></div>
+            <div class="debug" id="debug"></div>
+        </div>
+
         <div class="stage" id="stage">
             <div class="part" data-part="head" style="top: 3%; left: 50%; transform: translate(-50%, 0);">Head</div>
             <div class="part" data-part="left-shoulder" style="top: 23%; left: 20%;">L Shoulder</div>
@@ -275,12 +282,6 @@
             <div class="part" data-part="right-upper-leg" style="top: 69%; right: 28%;">R Upper Leg</div>
             <div class="part" data-part="left-lower-leg" style="top: 84%; left: 28%;">L Lower Leg</div>
             <div class="part" data-part="right-lower-leg" style="top: 84%; right: 28%;">R Lower Leg</div>
-        </div>
-
-        <div class="status" id="status">
-            <div id="status-message">Tap "Start Mission" to begin a sequence.</div>
-            <div class="sequence" id="sequence"></div>
-            <div class="debug" id="debug"></div>
         </div>
     </div>
 
@@ -433,7 +434,7 @@
 
         function updateComplexityFilterButton() {
             if (selectedComplexity === null || selectedComplexity === 0) {
-                complexityFilterBtn.textContent = "Filter Complexity";
+                complexityFilterBtn.textContent = "Complexity";
                 complexityFilterBtn.classList.remove("filter-active");
             } else {
                 const label = getComplexityLabel(selectedComplexity);
