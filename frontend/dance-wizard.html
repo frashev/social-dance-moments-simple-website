@@ -307,6 +307,20 @@
             background: rgba(255, 99, 132, 0.65);
             animation: wrongPulse 0.7s ease-in-out;
         }
+        .part.correct.color-pulse-1,
+        .part.correct.color-pulse-2,
+        .part.correct.color-pulse-3,
+        .part.correct.color-pulse-4,
+        .part.correct.color-pulse-5,
+        .part.correct.color-pulse-6,
+        .part.wrong.color-pulse-1,
+        .part.wrong.color-pulse-2,
+        .part.wrong.color-pulse-3,
+        .part.wrong.color-pulse-4,
+        .part.wrong.color-pulse-5,
+        .part.wrong.color-pulse-6 {
+            animation-play-state: paused;
+        }
         .status {
             margin-top: 0px;
             margin-bottom: 8px;
@@ -407,6 +421,54 @@
         .part.random-pulse-3 .part-inner { animation: randomPulse3 2.2s ease-in-out infinite; }
         .part.random-pulse-4 .part-inner { animation: randomPulse4 3.3s ease-in-out infinite; }
         .part.random-pulse-5 .part-inner { animation: randomPulse5 2.8s ease-in-out infinite; }
+        @keyframes colorPulse1 {
+            0% { background: rgba(255, 107, 107, 0.4); border-color: rgba(255, 107, 107, 0.9); }
+            25% { background: rgba(78, 205, 196, 0.4); border-color: rgba(78, 205, 196, 0.9); }
+            50% { background: rgba(255, 209, 102, 0.4); border-color: rgba(255, 209, 102, 0.9); }
+            75% { background: rgba(162, 155, 254, 0.4); border-color: rgba(162, 155, 254, 0.9); }
+            100% { background: rgba(255, 107, 107, 0.4); border-color: rgba(255, 107, 107, 0.9); }
+        }
+        @keyframes colorPulse2 {
+            0% { background: rgba(78, 205, 196, 0.4); border-color: rgba(78, 205, 196, 0.9); }
+            25% { background: rgba(255, 209, 102, 0.4); border-color: rgba(255, 209, 102, 0.9); }
+            50% { background: rgba(162, 155, 254, 0.4); border-color: rgba(162, 155, 254, 0.9); }
+            75% { background: rgba(253, 121, 168, 0.4); border-color: rgba(253, 121, 168, 0.9); }
+            100% { background: rgba(78, 205, 196, 0.4); border-color: rgba(78, 205, 196, 0.9); }
+        }
+        @keyframes colorPulse3 {
+            0% { background: rgba(255, 209, 102, 0.4); border-color: rgba(255, 209, 102, 0.9); }
+            25% { background: rgba(162, 155, 254, 0.4); border-color: rgba(162, 155, 254, 0.9); }
+            50% { background: rgba(253, 121, 168, 0.4); border-color: rgba(253, 121, 168, 0.9); }
+            75% { background: rgba(0, 184, 148, 0.4); border-color: rgba(0, 184, 148, 0.9); }
+            100% { background: rgba(255, 209, 102, 0.4); border-color: rgba(255, 209, 102, 0.9); }
+        }
+        @keyframes colorPulse4 {
+            0% { background: rgba(162, 155, 254, 0.4); border-color: rgba(162, 155, 254, 0.9); }
+            25% { background: rgba(253, 121, 168, 0.4); border-color: rgba(253, 121, 168, 0.9); }
+            50% { background: rgba(0, 184, 148, 0.4); border-color: rgba(0, 184, 148, 0.9); }
+            75% { background: rgba(255, 107, 107, 0.4); border-color: rgba(255, 107, 107, 0.9); }
+            100% { background: rgba(162, 155, 254, 0.4); border-color: rgba(162, 155, 254, 0.9); }
+        }
+        @keyframes colorPulse5 {
+            0% { background: rgba(253, 121, 168, 0.4); border-color: rgba(253, 121, 168, 0.9); }
+            25% { background: rgba(0, 184, 148, 0.4); border-color: rgba(0, 184, 148, 0.9); }
+            50% { background: rgba(255, 107, 107, 0.4); border-color: rgba(255, 107, 107, 0.9); }
+            75% { background: rgba(78, 205, 196, 0.4); border-color: rgba(78, 205, 196, 0.9); }
+            100% { background: rgba(253, 121, 168, 0.4); border-color: rgba(253, 121, 168, 0.9); }
+        }
+        @keyframes colorPulse6 {
+            0% { background: rgba(0, 184, 148, 0.4); border-color: rgba(0, 184, 148, 0.9); }
+            25% { background: rgba(255, 107, 107, 0.4); border-color: rgba(255, 107, 107, 0.9); }
+            50% { background: rgba(78, 205, 196, 0.4); border-color: rgba(78, 205, 196, 0.9); }
+            75% { background: rgba(255, 209, 102, 0.4); border-color: rgba(255, 209, 102, 0.9); }
+            100% { background: rgba(0, 184, 148, 0.4); border-color: rgba(0, 184, 148, 0.9); }
+        }
+        .part.color-pulse-1 { animation: colorPulse1 3s ease-in-out infinite; }
+        .part.color-pulse-2 { animation: colorPulse2 3.5s ease-in-out infinite; }
+        .part.color-pulse-3 { animation: colorPulse3 2.8s ease-in-out infinite; }
+        .part.color-pulse-4 { animation: colorPulse4 3.2s ease-in-out infinite; }
+        .part.color-pulse-5 { animation: colorPulse5 2.6s ease-in-out infinite; }
+        .part.color-pulse-6 { animation: colorPulse6 3.4s ease-in-out infinite; }
         .complexity {
             display: inline-block;
             margin-left: 8px;
@@ -894,14 +956,17 @@
             // Remove any existing pulse classes
             parts.forEach(part => {
                 part.classList.remove('random-pulse-1', 'random-pulse-2', 'random-pulse-3', 'random-pulse-4', 'random-pulse-5');
+                part.classList.remove('color-pulse-1', 'color-pulse-2', 'color-pulse-3', 'color-pulse-4', 'color-pulse-5', 'color-pulse-6');
             });
             
             // Assign random pulse animations to each part with slight delay for variety
             parts.forEach((part, index) => {
                 const pulseType = Math.floor(Math.random() * 5) + 1;
+                const colorPulseType = Math.floor(Math.random() * 6) + 1;
                 // Add a small random delay to make pulsing more varied
                 setTimeout(() => {
                     part.classList.add(`random-pulse-${pulseType}`);
+                    part.classList.add(`color-pulse-${colorPulseType}`);
                 }, Math.random() * 500);
             });
         }
@@ -909,6 +974,7 @@
         function stopRandomPulsing() {
             parts.forEach(part => {
                 part.classList.remove('random-pulse-1', 'random-pulse-2', 'random-pulse-3', 'random-pulse-4', 'random-pulse-5');
+                part.classList.remove('color-pulse-1', 'color-pulse-2', 'color-pulse-3', 'color-pulse-4', 'color-pulse-5', 'color-pulse-6');
             });
         }
 
