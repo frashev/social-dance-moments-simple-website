@@ -318,11 +318,11 @@
         }
         .part.correct {
             background: rgba(80, 200, 120, 0.6);
-            animation: correctPulse 0.7s ease-in-out;
+            animation: correctPulse 0.3s ease-in-out;
         }
         .part.wrong {
             background: rgba(255, 99, 132, 0.65);
-            animation: wrongPulse 0.7s ease-in-out;
+            animation: wrongPulse 0.3s ease-in-out;
         }
         .status {
             margin-top: 0px;
@@ -1126,7 +1126,7 @@
             // Remove correct/wrong classes after animation completes
             setTimeout(() => {
                 element.classList.remove("correct", "wrong");
-            }, 700);
+            }, 300);
         }
 
 
