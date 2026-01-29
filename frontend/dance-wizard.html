@@ -1066,10 +1066,8 @@
         const welcomeModal = document.getElementById("welcome-modal");
         const closeWelcomeBtn = document.getElementById("close-welcome");
         
-        // Show welcome modal on first visit (check localStorage)
-        if (!localStorage.getItem("dance-wizard-welcome-shown")) {
-            welcomeModal.classList.add("show");
-        }
+        // Show welcome modal on page load
+        welcomeModal.classList.add("show");
         
         closeWelcomeBtn.addEventListener("click", () => {
             welcomeModal.classList.remove("show");
