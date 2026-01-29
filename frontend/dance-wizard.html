@@ -499,6 +499,7 @@
         .complexity-3 { background: rgba(255, 165, 0, 0.3); color: #ffa500; }
         .complexity-4 { background: rgba(255, 107, 107, 0.3); color: #ff6b6b; }
         .complexity-5 { background: rgba(200, 50, 50, 0.3); color: #c83232; }
+        .complexity-6 { background: rgba(140, 40, 120, 0.3); color: #c44aa8; }
         @media (min-width: 900px) {
             body { padding: 40px; }
             .app { max-width: 680px; }
@@ -539,19 +540,22 @@
                 <h3>Select Complexity Level</h3>
                 <div class="complexity-options">
                     <div class="complexity-option" data-complexity="1">
-                        <span class="complexity complexity-1">Easy (1/5)</span> - Simple, short sequences
+                        <span class="complexity complexity-1">Easy (1/6)</span> - Simple, short sequences
                     </div>
                     <div class="complexity-option" data-complexity="2">
-                        <span class="complexity complexity-2">Easy-Medium (2/5)</span> - Basic patterns
+                        <span class="complexity complexity-2">Easy-Medium (2/6)</span> - Basic patterns
                     </div>
                     <div class="complexity-option" data-complexity="3">
-                        <span class="complexity complexity-3">Medium (3/5)</span> - Moderate complexity
+                        <span class="complexity complexity-3">Medium (3/6)</span> - Moderate complexity
                     </div>
                     <div class="complexity-option" data-complexity="4">
-                        <span class="complexity complexity-4">Medium-Hard (4/5)</span> - Longer, complex sequences
+                        <span class="complexity complexity-4">Medium-Hard (4/6)</span> - Longer, complex sequences
                     </div>
                     <div class="complexity-option" data-complexity="5">
-                        <span class="complexity complexity-5">Hard (5/5)</span> - Most challenging
+                        <span class="complexity complexity-5">Hard (5/6)</span> - Most challenging
+                    </div>
+                    <div class="complexity-option" data-complexity="6">
+                        <span class="complexity complexity-6">Extreme (6/6)</span> - Maximum endurance
                     </div>
                     <div class="complexity-option clear" data-complexity="0">
                         Clear Filter (Random from all)
@@ -596,7 +600,7 @@
                             <li style="margin-bottom: 6px;"><span style="color: #00b894;">Next Mission</span> - Start a new sequence</li>
                             <li style="margin-bottom: 6px;"><span style="color: #fd79a8;">Try Again</span> - Restart the current mission</li>
                             <li style="margin-bottom: 6px;"><span style="color: #a29bfe;">Previous Mission</span> - Go back to the last mission</li>
-                            <li style="margin-bottom: 6px;"><span style="color: #95a5a6;">Complexity</span> - Filter missions by difficulty (1-5)</li>
+                            <li style="margin-bottom: 6px;"><span style="color: #95a5a6;">Complexity</span> - Filter missions by difficulty (1-6)</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255, 209, 102, 0.15); padding: 12px; border-radius: 8px; border-left: 3px solid #ffd166;">
@@ -741,6 +745,12 @@
                 { name: "Salsa Hip Spiral Challenge II", complexity: 5, sequence: [...salsaChunks.turnPrep, ...salsaChunks.hipCross, ...salsaChunks.turnSpiral, ...salsaChunks.hipSwitch, ...salsaChunks.turnSpiral] },
                 { name: "Salsa Full Circuit Showcase I", complexity: 5, sequence: [...salsaChunks.fullBody, ...salsaChunks.shineHead, ...salsaChunks.hipSwitch, ...salsaChunks.footworkBasic, ...salsaChunks.turnPrep] },
                 { name: "Salsa Full Circuit Showcase II", complexity: 5, sequence: [...salsaChunks.turnPrep, ...salsaChunks.footworkLadder, ...salsaChunks.hipCross, ...salsaChunks.shineHands, ...salsaChunks.fullBody] },
+
+                // Complexity 6 (30) - 30 moves
+                { name: "Salsa Ultra Endurance I", complexity: 6, sequence: [...salsaChunks.shineHead, ...salsaChunks.shineHands, ...salsaChunks.chestPop, ...salsaChunks.bodyWaveDown, ...salsaChunks.turnPrep, ...salsaChunks.turnSpiral] },
+                { name: "Salsa Ultra Endurance II", complexity: 6, sequence: [...salsaChunks.bodyWaveUp, ...salsaChunks.fullBody, ...salsaChunks.hipSwitch, ...salsaChunks.footworkLadder, ...salsaChunks.hipCross, ...salsaChunks.turnPrep] },
+                { name: "Salsa Power Circuit I", complexity: 6, sequence: [...salsaChunks.footworkBasic, ...salsaChunks.footworkLadder, ...salsaChunks.hipSwitch, ...salsaChunks.hipCross, ...salsaChunks.turnSpiral, ...salsaChunks.fullBody] },
+                { name: "Salsa Power Circuit II", complexity: 6, sequence: [...salsaChunks.fullBody, ...salsaChunks.turnPrep, ...salsaChunks.turnSpiral, ...salsaChunks.bodyWaveDown, ...salsaChunks.hipSwitch, ...salsaChunks.footworkBasic] },
             ],
 
             bachata: [
@@ -813,13 +823,19 @@
                 { name: "Bachata Head-Shoulder Spotlight II", complexity: 5, sequence: [...bachataChunks.shoulderRoll, ...bachataChunks.handsFrame, ...bachataChunks.headAccent, ...bachataChunks.shoulderRoll, ...bachataChunks.headAccent] },
                 { name: "Bachata Full Showcase I", complexity: 5, sequence: [...bachataChunks.sensualWave, ...bachataChunks.stepTouch, ...bachataChunks.handToHip, ...bachataChunks.hipSway, ...bachataChunks.bodyRoll] },
                 { name: "Bachata Full Showcase II", complexity: 5, sequence: [...bachataChunks.bodyRoll, ...bachataChunks.hipCircle, ...bachataChunks.handsFrame, ...bachataChunks.stepSync, ...bachataChunks.sensualWave] },
+
+                // Complexity 6 (30) - 30 moves
+                { name: "Bachata Sensual Endurance I", complexity: 6, sequence: [...bachataChunks.sensualWave, ...bachataChunks.softWave, ...bachataChunks.waveReturn, ...bachataChunks.bodyRoll, ...bachataChunks.hipCircle, ...bachataChunks.hipSway] },
+                { name: "Bachata Sensual Endurance II", complexity: 6, sequence: [...bachataChunks.hipSway, ...bachataChunks.hipCircle, ...bachataChunks.bodyRoll, ...bachataChunks.sensualWave, ...bachataChunks.waveReturn, ...bachataChunks.softWave] },
+                { name: "Bachata Frame & Steps I", complexity: 6, sequence: [...bachataChunks.handsFrame, ...bachataChunks.handToHip, ...bachataChunks.stepTouch, ...bachataChunks.stepSync, ...bachataChunks.shoulderRoll, ...bachataChunks.headAccent] },
+                { name: "Bachata Frame & Steps II", complexity: 6, sequence: [...bachataChunks.stepSync, ...bachataChunks.stepTouch, ...bachataChunks.handToHip, ...bachataChunks.handsFrame, ...bachataChunks.headAccent, ...bachataChunks.shoulderRoll] },
             ],
         };
 
         let activeStyle = "salsa";
         let activeMission = null;
         let progressIndex = 0;
-        let selectedComplexity = null; // null = no filter, 0-5 = specific complexity
+        let selectedComplexity = null; // null = no filter, 0-6 = specific complexity
         let missionHistory = []; // Array to store mission history
         let currentHistoryIndex = -1; // Current position in history (-1 means no history)
         let missionStartTime = null; // Track when mission started
@@ -880,7 +896,7 @@
         }
 
         function getComplexityLabel(level) {
-            const labels = ["", "Easy", "Easy-Medium", "Medium", "Medium-Hard", "Hard"];
+            const labels = ["", "Easy", "Easy-Medium", "Medium", "Medium-Hard", "Hard", "Extreme"];
             return labels[level] || "Unknown";
         }
 
@@ -959,7 +975,7 @@
             missionStartTime = savedProgress === 0 ? performance.now() : null; // Only start timer if starting fresh
             const complexity = activeMission.complexity || 1;
             const complexityLabel = getComplexityLabel(complexity);
-            const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
+            const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/6)</span>`;
             statusMessageEl.innerHTML = activeMission.name + complexityBadge;
             renderSequence();
             updateTargetHighlight();
@@ -1091,7 +1107,7 @@
                     const completionTime = missionStartTime ? (performance.now() - missionStartTime) / 1000 : null; // Convert to seconds
                     const complexity = activeMission.complexity || 1;
                     const complexityLabel = getComplexityLabel(complexity);
-                    const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
+                    const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/6)</span>`;
                     
                     let completionMsg = "Nice! Mission complete: " + activeMission.name + complexityBadge;
                     if (completionTime !== null) {
@@ -1109,7 +1125,7 @@
                 } else {
                     const complexity = activeMission.complexity || 1;
                     const complexityLabel = getComplexityLabel(complexity);
-                    const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
+                    const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/6)</span>`;
                     statusMessageEl.innerHTML = activeMission.name + complexityBadge;
                 }
             } else {
@@ -1390,7 +1406,7 @@
             // Update status message with mission info
             const complexity = activeMission.complexity || 1;
             const complexityLabel = getComplexityLabel(complexity);
-            const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
+            const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/6)</span>`;
             statusMessageEl.innerHTML = activeMission.name + complexityBadge;
 
             // Render the first move
@@ -1427,7 +1443,7 @@
                 
                 const complexity = mission.complexity || 1;
                 const complexityLabel = getComplexityLabel(complexity);
-                const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/5)</span>`;
+                const complexityBadge = `<span class="complexity complexity-${complexity}">${complexityLabel} (${complexity}/6)</span>`;
                 
                 option.innerHTML = `
                     <div class="mission-name">${mission.name}</div>
