@@ -311,7 +311,11 @@
             height: 36px;
             font-size: 0.4rem;
         }
-        .part.target { background: rgba(255, 209, 102, 0.55); box-shadow: 0 0 14px rgba(255, 209, 102, 0.8); }
+        .part.target {
+            background: rgba(255, 209, 102, 0.55);
+            box-shadow: 0 0 14px rgba(255, 209, 102, 0.8);
+            animation: targetPulse 1.2s ease-in-out infinite;
+        }
         .part.correct {
             background: rgba(80, 200, 120, 0.6);
             animation: correctPulse 0.7s ease-in-out;
@@ -371,6 +375,16 @@
             0% { box-shadow: 0 0 0 0 rgba(80, 200, 120, 0.7); }
             50% { box-shadow: 0 0 0 20px rgba(80, 200, 120, 0); }
             100% { box-shadow: 0 0 0 0 rgba(80, 200, 120, 0); }
+        }
+        @keyframes targetPulse {
+            0%, 100% {
+                box-shadow: 0 0 14px rgba(255, 209, 102, 0.9);
+                background: rgba(255, 209, 102, 0.45);
+            }
+            50% {
+                box-shadow: 0 0 26px rgba(255, 209, 102, 1);
+                background: rgba(255, 209, 102, 0.7);
+            }
         }
         @keyframes wrongPulse {
             0% { box-shadow: 0 0 0 0 rgba(255, 99, 132, 0.75); }
@@ -854,9 +868,14 @@
 
         function updateTargetHighlight() {
             parts.forEach((part) => {
-                part.classList.remove("target", "correct", "wrong");
-                // Target highlighting removed - user must find the next move themselves
+                part.classList.remove("target");
             });
+
+            if (!activeMission || progressIndex >= activeMission.sequence.length) return;
+
+            const nextPart = activeMission.sequence[progressIndex];
+            const targetPart = parts.find((part) => part.dataset.part === nextPart);
+            if (targetPart) targetPart.classList.add("target");
         }
 
         function getComplexityLabel(level) {
@@ -1102,8 +1121,7 @@
             }
 
             renderSequence();
-            // Don't call updateTargetHighlight() here as it removes correct/wrong classes
-            // updateTargetHighlight();
+            updateTargetHighlight();
             
             // Remove correct/wrong classes after animation completes
             setTimeout(() => {
