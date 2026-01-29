@@ -407,12 +407,6 @@
         .part.random-pulse-3 .part-inner { animation: randomPulse3 2.2s ease-in-out infinite; }
         .part.random-pulse-4 .part-inner { animation: randomPulse4 3.3s ease-in-out infinite; }
         .part.random-pulse-5 .part-inner { animation: randomPulse5 2.8s ease-in-out infinite; }
-        .debug {
-            margin-top: 8px;
-            font-size: 0.8rem;
-            color: #bcd4ff;
-            opacity: 0.9;
-        }
         .complexity {
             display: inline-block;
             margin-left: 8px;
@@ -543,7 +537,6 @@
                 <div class="sequence" id="sequence"></div>
                 <div class="live-timer" id="live-timer"></div>
             </div>
-            <div class="debug" id="debug"></div>
         </div>
 
         <div class="stage" id="stage">
@@ -759,7 +752,6 @@
         const statusMessageEl = document.getElementById("status-message");
         const sequenceEl = document.getElementById("sequence");
         const liveTimerEl = document.getElementById("live-timer");
-        const debugEl = document.getElementById("debug");
         const parts = Array.from(document.querySelectorAll(".part"));
         const complexityModal = document.getElementById("complexity-modal");
         const complexityFilterBtn = document.getElementById("complexity-filter");
@@ -888,7 +880,6 @@
             statusMessageEl.innerHTML = activeMission.name + complexityBadge;
             renderSequence();
             updateTargetHighlight();
-            debugEl.textContent = "";
             // Update style buttons
             document.getElementById("style-salsa").classList.toggle("active", style === "salsa");
             document.getElementById("style-bachata").classList.toggle("active", style === "bachata");
@@ -955,7 +946,6 @@
             progressIndex = 0;
             sequenceEl.innerHTML = "";
             updateTargetHighlight();
-            debugEl.textContent = "";
             missionHistory = [];
             currentHistoryIndex = -1;
             missionStartTime = null;
@@ -987,7 +977,6 @@
 
         function handleTap(partName, element) {
             if (!activeMission) {
-                debugEl.textContent = "No mission active. Tap Next Mission.";
                 return;
             }
 
@@ -1041,7 +1030,6 @@
             renderSequence();
             // Don't call updateTargetHighlight() here as it removes correct/wrong classes
             // updateTargetHighlight();
-            debugEl.textContent = "Last tap: " + partName.replace("-", " ");
             
             // Remove correct/wrong classes after animation completes
             setTimeout(() => {
@@ -1310,7 +1298,6 @@
             // Render the first move
             renderSequence();
             updateTargetHighlight();
-            debugEl.textContent = "";
         }
 
         function populateMissionOptions(searchTerm = "") {
