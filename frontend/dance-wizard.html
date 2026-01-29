@@ -158,6 +158,13 @@
             height: 600px;
             max-height: 90vh;
         }
+        .welcome-modal {
+            height: auto;
+            max-height: 85vh;
+        }
+        #close-welcome:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
         .modal h3 {
             margin-bottom: 16px;
             font-size: 1.2rem;
@@ -487,6 +494,45 @@
                 <input type="text" id="mission-search" class="mission-search" placeholder="Search missions by name..." autocomplete="off">
                 <div class="mission-options" id="mission-options">
                     <!-- Missions will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="welcome-modal">
+            <div class="modal welcome-modal">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="margin: 0;">Welcome to Dance Wizard! 🎭</h3>
+                    <button id="close-welcome" style="background: rgba(255, 255, 255, 0.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">×</button>
+                </div>
+                <div class="welcome-content" style="flex: 1; overflow-y: auto; line-height: 1.6;">
+                    <p style="margin-bottom: 16px; color: #d6e2ff;">
+                        <strong style="color: #ffd166;">Dance Wizard</strong> is a fast-paced rhythm game where you master dance sequences by tapping body parts in the correct order as quickly as possible!
+                    </p>
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #ffd166; margin-bottom: 8px; font-size: 1rem;">🎯 How to Play:</h4>
+                        <ol style="margin-left: 20px; color: #d6e2ff;">
+                            <li style="margin-bottom: 8px;"><strong>Choose your style:</strong> Select <span style="color: #ff6b6b;">Salsa</span> or <span style="color: #4ecdc4;">Bachata</span> to begin</li>
+                            <li style="margin-bottom: 8px;"><strong>Start a mission:</strong> Click <span style="color: #00b894;">"Next Mission"</span> for a random sequence, or <span style="color: #fdcb6e;">"Select Mission"</span> to choose a specific one</li>
+                            <li style="margin-bottom: 8px;"><strong>Watch the indicator:</strong> The next body part to tap will be shown in the center with a pulsing effect</li>
+                            <li style="margin-bottom: 8px;"><strong>Tap fast!</strong> Press the correct body parts on the stage in the exact sequence shown</li>
+                            <li style="margin-bottom: 8px;"><strong>Beat your record:</strong> Complete sequences as fast as possible to set new records</li>
+                        </ol>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #ffd166; margin-bottom: 8px; font-size: 1rem;">🎮 Controls:</h4>
+                        <ul style="margin-left: 20px; color: #d6e2ff;">
+                            <li style="margin-bottom: 6px;"><span style="color: #00b894;">Next Mission</span> - Start a new sequence</li>
+                            <li style="margin-bottom: 6px;"><span style="color: #fd79a8;">Try Again</span> - Restart the current mission</li>
+                            <li style="margin-bottom: 6px;"><span style="color: #a29bfe;">Previous Mission</span> - Go back to the last mission</li>
+                            <li style="margin-bottom: 6px;"><span style="color: #95a5a6;">Complexity</span> - Filter missions by difficulty (1-5)</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255, 209, 102, 0.15); padding: 12px; border-radius: 8px; border-left: 3px solid #ffd166;">
+                        <p style="margin: 0; color: #ffd166; font-weight: 600;">💡 Tip:</p>
+                        <p style="margin: 4px 0 0 0; color: #d6e2ff; font-size: 0.9rem;">
+                            The faster you complete a sequence, the better your record! Challenge yourself to beat your best time and compete with others.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1017,6 +1063,27 @@
                 event.preventDefault();
                 handleTap(part.dataset.part, part);
             });
+        });
+
+        // Welcome modal
+        const welcomeModal = document.getElementById("welcome-modal");
+        const closeWelcomeBtn = document.getElementById("close-welcome");
+        
+        // Show welcome modal on first visit (check localStorage)
+        if (!localStorage.getItem("dance-wizard-welcome-shown")) {
+            welcomeModal.classList.add("show");
+        }
+        
+        closeWelcomeBtn.addEventListener("click", () => {
+            welcomeModal.classList.remove("show");
+            localStorage.setItem("dance-wizard-welcome-shown", "true");
+        });
+        
+        welcomeModal.addEventListener("click", (e) => {
+            if (e.target === welcomeModal) {
+                welcomeModal.classList.remove("show");
+                localStorage.setItem("dance-wizard-welcome-shown", "true");
+            }
         });
 
         function updateComplexityFilterButton() {
