@@ -265,7 +265,7 @@
             border-radius: 12px;
             background: rgba(0, 0, 0, 0.35);
             border: 2px dashed rgba(255, 255, 255, 0.2);
-            overflow: hidden;
+            overflow: visible;
             touch-action: manipulation;
         }
         .part {
@@ -283,9 +283,9 @@
             text-align: center;
             text-transform: uppercase;
             letter-spacing: 0.04em;
-            cursor: pointer;
             user-select: none;
             transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+            overflow: visible;
         }
         .part:active { transform: scale(0.96); }
         .part[data-part="neck"] {
@@ -379,14 +379,64 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 99, 132, 0); }
         }
         /* Fun ambient motion: animate an inner wrapper so the part's absolute position never shifts */
+        .part {
+            pointer-events: none; /* disable clicks on the circle, only text is clickable */
+        }
         .part .part-inner {
             width: 100%;
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            pointer-events: none; /* keep taps on the .part itself */
+            pointer-events: auto; /* enable clicks on the moving text */
             will-change: transform;
+            cursor: pointer;
+            position: relative;
+        }
+        @keyframes greenAuraGlow {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            30% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(2);
+            }
+            60% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(3);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(4);
+            }
+        }
+        .part-inner.success-aura {
+            background: rgba(0, 255, 100, 0.6) !important;
+            color: #000 !important;
+            font-weight: 900 !important;
+            text-shadow: 0 0 15px rgba(0, 255, 100, 1), 0 0 30px rgba(0, 255, 100, 0.9), 0 0 45px rgba(0, 255, 100, 0.7);
+            box-shadow: 0 0 40px rgba(0, 255, 100, 1), 
+                        0 0 80px rgba(0, 255, 100, 0.9), 
+                        0 0 120px rgba(0, 255, 100, 0.7),
+                        inset 0 0 30px rgba(0, 255, 100, 0.6) !important;
+            border: 4px solid rgba(0, 255, 100, 1) !important;
+            position: relative;
+            z-index: 1;
+        }
+        .part-inner.success-aura::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 400%;
+            height: 400%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 100, 1) 0%, rgba(0, 255, 100, 0.8) 20%, rgba(0, 255, 100, 0.5) 40%, rgba(0, 255, 100, 0.2) 60%, transparent 80%);
+            transform: translate(-50%, -50%);
+            animation: greenAuraGlow 1.5s ease-out;
+            z-index: -1;
+            pointer-events: none;
         }
         @keyframes randomPulse1 {
             0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
@@ -1051,6 +1101,15 @@
 
             if (partName === expected) {
                 element.classList.add("correct");
+                // Add green aura to the part-inner text
+                const partInner = element.querySelector(".part-inner");
+                if (partInner) {
+                    partInner.classList.add("success-aura");
+                    // Remove the class after animation completes
+                    setTimeout(() => {
+                        partInner.classList.remove("success-aura");
+                    }, 1500);
+                }
                 progressIndex += 1;
                 
                 // Update progress in history
@@ -1121,11 +1180,15 @@
             }, durationMs);
         }
 
+        // Attach event listeners to the moving text (part-inner) instead of the circle
         parts.forEach((part) => {
-            part.addEventListener("pointerdown", (event) => {
-                event.preventDefault();
-                handleTap(part.dataset.part, part);
-            });
+            const partInner = part.querySelector(".part-inner");
+            if (partInner) {
+                partInner.addEventListener("pointerdown", (event) => {
+                    event.preventDefault();
+                    handleTap(part.dataset.part, part);
+                });
+            }
         });
 
         // Welcome modal
