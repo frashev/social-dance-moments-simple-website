@@ -922,8 +922,17 @@
         }
 
         function startMission() {
-            const newMission = getNextMissionFromPool();
-            if (!newMission) return;
+            let pool = getCurrentPool(activeStyle);
+            
+            if (pool.length === 0) {
+                statusMessageEl.textContent = (selectedComplexity !== null && selectedComplexity !== 0)
+                    ? `No missions found for complexity ${selectedComplexity}. Try a different filter.`
+                    : "No missions available.";
+                return;
+            }
+            
+            // Select a random mission from the pool
+            const newMission = pool[Math.floor(Math.random() * pool.length)];
             
             // If we're not at the end of history, remove everything after current index
             if (currentHistoryIndex < missionHistory.length - 1) {
@@ -1350,8 +1359,6 @@
 
         function selectMission(mission) {
             // Ensure the sequential pointer continues AFTER the selected mission
-            setNextIndexAfterMission(mission);
-
             // Add to history
             if (currentHistoryIndex < missionHistory.length - 1) {
                 missionHistory = missionHistory.slice(0, currentHistoryIndex + 1);
